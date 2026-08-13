@@ -1,0 +1,70 @@
+/* CRT Broadcast design tokens — the single source of truth for colour,
+   type and motion. Every screen (play / present / admin) loads this first
+   and then only declares its own layout. */
+
+:root {
+  /* accents — hex for colour, rgb triplet for rgba() glows */
+  --c-green: #56ff8a;
+  --c-green-rgb: 86, 255, 138;
+  --c-cyan: #55e6ff;
+  --c-cyan-rgb: 85, 230, 255;
+  --c-amber: #ffb347;
+  --c-amber-rgb: 255, 179, 71;
+  --c-magenta: #ff6ad5;
+  --c-magenta-rgb: 255, 106, 213;
+  --c-red: #ff6a6a;
+  --c-red-rgb: 255, 106, 106;
+  --c-glow-rgb: 125, 255, 158; /* soft phosphor bloom behind bright text */
+
+  /* text ramp, brightest → dimmest */
+  --c-text-bright: #eaffe9;
+  --c-text: #c9ffd9;
+  --c-text-soft: #9ef7ba;
+  --c-dim: #2f8a4d;
+
+  /* tints of the accents, used for option/answer text */
+  --c-green-tint: #c9ffd9;
+  --c-cyan-tint: #c9f6ff;
+  --c-amber-tint: #ffe4bd;
+  --c-magenta-tint: #ffd2f1;
+  --c-red-tint: #ffb3b3;
+  --c-red-soft: #ff8f8f;
+
+  /* surfaces, darkest → lightest */
+  --bg-deep: #030906;
+  --bg: #04080a;
+  --bg-panel: #04110a;
+  --bg-input: #050f08;
+  --bg-btn: #0a1f12;
+  --bg-btn-primary: #123f22;
+
+  /* hairlines */
+  --line: #1e4d30;
+  --line-soft: #123322;
+  --line-faint: rgba(30, 77, 48, 0.35);
+
+  --font-display: 'VT323', monospace;
+  --font-ui: 'Space Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) var(--bg-panel);
+}
+
+/* Wins against display:flex on the same element, so screens can be plain
+   <section hidden> without a matching `[hidden]` override each time. */
+[hidden] { display: none !important; }
+
+@keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes popin { 0% { transform: scale(.85); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes crtflicker { 0%, 100% { opacity: .94; } 50% { opacity: 1; } }
+@keyframes crtroll { 0% { top: -12%; } 100% { top: 112%; } }
+
+.blink { animation: blink 1s steps(1) infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .blink { animation: none; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}

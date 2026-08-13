@@ -1,0 +1,47 @@
+{
+  "name": "local-trivia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Locally hosted, real-time multiplayer trivia — Kahoot-style, runs entirely on your LAN. CRT broadcast theme.",
+  "license": "MIT",
+  "author": "Sam Fox",
+  "homepage": "https://github.com/stuff-by-sam/local_trivia#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stuff-by-sam/local_trivia.git"
+  },
+  "bugs": {
+    "url": "https://github.com/stuff-by-sam/local_trivia/issues"
+  },
+  "keywords": [
+    "trivia",
+    "quiz",
+    "kahoot",
+    "multiplayer",
+    "local-network",
+    "lan",
+    "socket.io",
+    "party-game",
+    "offline"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node --test --test-force-exit test/*.test.js",
+    "check": "for f in server/*.js public/shared/*.js public/*/[a-z]*.js scripts/*.js test/*.js; do node --check \"$f\" || exit 1; done",
+    "loadtest": "node scripts/loadtest.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "express": "^4.21.2",
+    "multer": "^2.0.1",
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.1"
+  }
+}

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#04080a">
+<title>TRIVIA</title>
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="stylesheet" href="/shared/theme.css">
+<link rel="stylesheet" href="/play/play.css">
+</head>
+<body>
+<main id="screen">
+
+  <section id="s-join" class="scr">
+    <div class="logo">TRIVIA</div>
+    <div class="join-label ui">JOIN THE ROOM</div>
+    <div id="kicked-msg" class="kicked ui" hidden></div>
+    <input id="in-pin" placeholder="GAME PIN" maxlength="6" inputmode="numeric" autocomplete="off">
+    <input id="in-nick" placeholder="NICKNAME" maxlength="20" autocomplete="off">
+    <button id="btn-join">JOIN ▸</button>
+    <div id="join-err" class="join-err ui" hidden></div>
+    <div class="join-foot ui">PIN IS ON THE BIG SCREEN</div>
+  </section>
+
+  <section id="s-lobby" class="scr center" hidden>
+    <div class="mini-label ui">YOU'RE IN</div>
+    <div id="lb-name" class="you-name"></div>
+    <div id="lb-count" class="soft-16"></div>
+    <div class="waiting">WAITING FOR HOST<span class="blink">_</span></div>
+  </section>
+
+  <section id="s-wait" class="scr center" hidden>
+    <div class="hold-tight">HOLD TIGHT</div>
+    <div class="wait-copy">YOU'LL JUMP IN ON THE<br>NEXT QUESTION</div>
+    <div class="wait-muted">SCORES START THEN<span class="blink">_</span></div>
+  </section>
+
+  <section id="s-question" class="scr" hidden>
+    <div class="q-head">
+      <span id="q-nick" class="q-nick"></span>
+      <span id="q-timer" class="q-timer"></span>
+    </div>
+    <div class="q-bar"><div id="q-bar-fill" class="q-bar-fill"></div></div>
+    <div id="q-text" class="q-text"></div>
+    <div id="q-opts" class="q-opts"></div>
+    <div id="q-status" class="q-status ui"></div>
+  </section>
+
+  <section id="s-result" class="scr center" hidden>
+    <div id="r-title" class="r-title"></div>
+    <div id="r-pts" class="r-pts"></div>
+    <div id="r-total" class="r-total"></div>
+    <div id="r-rank" class="r-rank"></div>
+  </section>
+
+  <section id="s-rank" class="scr center" hidden>
+    <div class="mini-label ui">YOUR POSITION</div>
+    <div id="k-rank" class="pos-rank"></div>
+    <div id="k-score" class="soft-18"></div>
+    <div class="waiting mt12">NEXT QUESTION SOON<span class="blink">_</span></div>
+  </section>
+
+  <section id="s-final" class="scr center" hidden>
+    <div class="mini-label ui">FINAL RESULT</div>
+    <div id="f-rank" class="final-rank"></div>
+    <div id="f-name" class="final-name"></div>
+    <div id="f-score" class="soft-17"></div>
+    <div class="waiting mt10">GG<span class="blink">_</span></div>
+  </section>
+
+</main>
+<div class="scanlines"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/shared/common.js"></script>
+<script src="/shared/theme.js"></script>
+<script src="/shared/sfx.js"></script>
+<script src="/play/play.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+# Normalize text line endings in the repo; check out native on each platform.
+* text=auto eol=lf
+
+# Windows launcher must keep CRLF or cmd.exe mis-parses it.
+*.bat text eol=crlf
+
+# Mac launcher must keep LF and stay executable.
+*.command text eol=lf
+
+# Binary assets — never diff or normalize.
+*.woff2 binary
+*.jpeg  binary
+*.jpg   binary
+*.png   binary
+*.numbers binary
+*.sqlite binary
+
+# Keep generated/vendored files out of GitHub's language stats and diffs.
+package-lock.json -diff linguist-generated=true
+public/fonts/*    linguist-vendored=true
+questions/*.csv   linguist-detectable=false

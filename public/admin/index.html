@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRIVIA — ADMIN</title>
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="stylesheet" href="/shared/theme.css">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="cols">
+
+    <!-- LEFT COLUMN -->
+    <div class="col">
+
+      <section class="panel">
+        <div class="panel-head">┌ SESSION CONTROL</div>
+        <div class="panel-body">
+          <div class="badge-row">
+            <span id="state-badge" class="badge">● LOBBY</span>
+            <span class="kv">PIN <span id="pin" class="amber">····</span></span>
+            <span class="kv" id="progress">READY</span>
+          </div>
+          <div class="btn-row" id="op-btns"></div>
+          <div class="hint" id="op-hint"></div>
+          <div class="player-list" id="player-list"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">┌ GAME SETTINGS</div>
+        <div class="panel-body gap11">
+          <div class="grid3">
+            <label class="field">
+              <span class="field-label">MAX POINTS</span>
+              <input type="number" id="set-max">
+            </label>
+            <label class="field">
+              <span class="field-label">TIME LIMIT (S)</span>
+              <input type="number" id="set-time">
+            </label>
+            <label class="field">
+              <span class="field-label">WRONG ANS PTS</span>
+              <input type="number" id="set-wrong">
+            </label>
+          </div>
+          <div class="floor">
+            <div class="floor-head">
+              <span class="field-label">SCORING FLOOR — <span id="floor-label">0%</span></span>
+              <span class="amber10" id="floor-note">PURE LINEAR (SPEC DEFAULT)</span>
+            </div>
+            <input type="range" id="set-floor" min="0" max="0.9" step="0.05" value="0">
+            <div class="hint" id="formula-preview"></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn sm" id="tgl-shuffle">SHUFFLE: ON</button>
+            <button class="btn sm" id="tgl-auto">AUTO-ADVANCE: OFF</button>
+            <button class="btn sm" id="tgl-sound">SOUND: ON</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">┌ PRESENTATION</div>
+        <div class="panel-body gap11">
+          <label class="field">
+            <span class="field-label">QUESTION BANK NAME — SHOWN AS TRIVIA//<span id="bank-name-preview">LOCAL BROADCAST</span></span>
+            <input id="set-bankname" maxlength="28" placeholder="LOCAL BROADCAST">
+          </label>
+          <div class="field">
+            <span class="field-label">ACCENT COLOUR</span>
+            <div class="accent-row">
+              <input type="color" id="set-accent" value="#56ff8a" title="pick an accent colour">
+              <span class="accent-hex" id="accent-hex">#56ff8a</span>
+              <button class="btn xs" id="accent-reset">RESET TO GREEN</button>
+            </div>
+            <div class="accent-swatches" id="accent-swatches"></div>
+            <div class="hint">RETINTS EVERY SCREEN LIVE · ANSWER COLOURS A–D STAY FIXED</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">┌ CSV IMPORT</div>
+        <div class="panel-body gap8">
+          <div class="hint lh">FORMAT: question, option_a, option_b, option_c, option_d, correct, category, time_limit<br>
+            HEADER ROW OPTIONAL · CORRECT = A–D / 1–4 / option text · QUOTE FIELDS WITH COMMAS</div>
+          <textarea id="csv-text" rows="6" placeholder="PASTE CSV HERE…"></textarea>
+          <input type="file" id="csv-file" accept=".csv,text/csv,text/plain">
+          <div class="btn-row">
+            <button class="btn sm" id="csv-sample">LOAD SAMPLE</button>
+            <button class="btn sm" id="csv-parse">PARSE ▸</button>
+            <button class="btn sm" id="csv-import" disabled>IMPORT</button>
+          </div>
+          <div class="csv-msg" id="csv-msg" hidden></div>
+          <div id="csv-errs"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- RIGHT COLUMN: QUESTION BANK -->
+    <div class="col">
+      <section class="panel">
+        <div class="bank-head">
+          <span class="panel-head-inline" id="bank-title">┌ QUESTION BANK — 0 SAVED · 0 IN GAME SET</span>
+          <button class="btn sm primary" id="q-new">+ NEW QUESTION</button>
+          <button class="btn sm warn-hover" id="q-reset" title="restore sample questions">RESET SAMPLES</button>
+          <button class="btn sm danger-hover" id="q-clear" title="delete every question in the bank">DELETE ALL</button>
+        </div>
+        <div class="bank-msg" id="bank-msg" hidden></div>
+
+        <div class="editor" id="editor" hidden>
+          <div class="editor-title" id="editor-title">┌ NEW QUESTION</div>
+          <textarea id="f-text" rows="2" placeholder="QUESTION TEXT"></textarea>
+          <div class="grid2" id="f-opts"></div>
+          <div class="editor-meta">
+            <label class="field">
+              <span class="field-label">CATEGORY</span>
+              <input id="f-cat" placeholder="GENERAL">
+            </label>
+            <label class="field">
+              <span class="field-label">TIME (S)</span>
+              <input type="number" id="f-time" placeholder="100">
+            </label>
+            <label class="field">
+              <span class="field-label">IMAGE (PNG/JPG/WEBP/GIF ≤5MB)</span>
+              <input type="file" id="f-image" accept="image/png,image/jpeg,image/webp,image/gif">
+            </label>
+          </div>
+          <div class="img-preview" id="img-preview" hidden>
+            <img id="img-thumb" alt="">
+            <button class="btn xs danger-hover" id="img-remove">REMOVE IMAGE</button>
+          </div>
+          <div class="err" id="editor-err" hidden></div>
+          <div class="btn-row">
+            <button class="btn sm primary" id="f-save">SAVE ▸</button>
+            <button class="btn sm danger-hover" id="f-cancel">CANCEL</button>
+          </div>
+        </div>
+
+        <div class="bank-list" id="bank-list"></div>
+      </section>
+    </div>
+
+  </div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/shared/common.js"></script>
+<script src="/shared/theme.js"></script>
+<script src="/shared/scoring.js"></script>
+<script src="/shared/csv.js"></script>
+<script src="/admin/admin.js"></script>
+</body>
+</html>

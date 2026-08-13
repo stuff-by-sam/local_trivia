@@ -1,0 +1,14 @@
+[
+  { "text": "Which planet has the most confirmed moons?", "options": ["Jupiter", "Saturn", "Uranus", "Neptune"], "correct": 1, "category": "SCIENCE", "time_limit": null },
+  { "text": "In what year did the Berlin Wall fall?", "options": ["1987", "1989", "1991", "1993"], "correct": 1, "category": "HISTORY", "time_limit": null },
+  { "text": "Which country has the longest coastline?", "options": ["Russia", "Australia", "Canada", "Norway"], "correct": 2, "category": "GEOGRAPHY", "time_limit": null },
+  { "text": "What is the largest internal organ in the human body?", "options": ["Brain", "Lungs", "Liver", "Heart"], "correct": 2, "category": "SCIENCE", "time_limit": null },
+  { "text": "Which band released \"The Dark Side of the Moon\"?", "options": ["Led Zeppelin", "Pink Floyd", "The Who", "Queen"], "correct": 1, "category": "MUSIC", "time_limit": null },
+  { "text": "How many bones are in the adult human body?", "options": ["186", "206", "226", "246"], "correct": 1, "category": "SCIENCE", "time_limit": null },
+  { "text": "Which chess piece can only ever move diagonally?", "options": ["Rook", "Knight", "Bishop", "Queen"], "correct": 2, "category": "GAMES", "time_limit": null },
+  { "text": "What is the capital of New Zealand?", "options": ["Auckland", "Christchurch", "Wellington", "Queenstown"], "correct": 2, "category": "GEOGRAPHY", "time_limit": null },
+  { "text": "Which element has the chemical symbol 'Sn'?", "options": ["Silicon", "Sodium", "Silver", "Tin"], "correct": 3, "category": "SCIENCE", "time_limit": null },
+  { "text": "In which decade was the first email sent?", "options": ["1960s", "1970s", "1980s", "1990s"], "correct": 1, "category": "TECH", "time_limit": null },
+  { "text": "Which sea creature has three hearts?", "options": ["Dolphin", "Octopus", "Sea turtle", "Swordfish"], "correct": 1, "category": "NATURE", "time_limit": null },
+  { "text": "What does LAN stand for?", "options": ["Large Access Node", "Local Area Network", "Linked Array Node", "Long Antenna Net"], "correct": 1, "category": "TECH", "time_limit": null }
+]

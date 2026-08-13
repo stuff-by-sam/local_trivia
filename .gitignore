@@ -1,0 +1,37 @@
+# dependencies
+node_modules/
+
+# runtime state — regenerated on first run
+server/db.sqlite
+server/db.sqlite-wal
+server/db.sqlite-shm
+
+# player-uploaded question images
+uploads/*
+!uploads/.gitkeep
+
+# local working files (question CSVs in questions/ are tracked; these aren't)
+*.numbers
+*.xlsx
+questions/based.jpeg
+
+# OS + editor cruft
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+
+# logs
+*.log
+npm-debug.log*
+
+# transfer artifacts (never commit)
+_transfer.tar.gz
+_nm.tar.gz
+_src.tar.gz
+_to_delete/
+_final.tar.gz
