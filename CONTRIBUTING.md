@@ -7,7 +7,7 @@ Thanks for taking a look. This is a small project with no build step — clone i
 
 ```
 npm run check   # syntax-checks every JS file
-npm test        # boots real servers and plays a game over Socket.IO
+npm test        # boots real servers, plays a game, exercises every API route
 ```
 
 CI runs both on Node 22 and 24, plus `npm audit`.

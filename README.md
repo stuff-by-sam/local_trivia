@@ -64,8 +64,9 @@ npm test        # boot real servers, join real Socket.IO clients, play a questio
 
 `npm test` is an integration suite, not unit tests: it starts the server on a
 scratch database, joins three websocket clients, plays a question through to the
-leaderboard, and asserts the operator-authorization rules from a non-loopback
-address. CI runs it on Node 22 and 24.
+leaderboard, asserts the operator-authorization rules from a non-loopback
+address, and exercises every admin REST route — question CRUD, reordering,
+CSV import, settings clamping and image upload. CI runs it on Node 22 and 24.
 
 ## Structure
 
@@ -84,7 +85,8 @@ public/
   fonts/          self-hosted VT323 + Space Mono
 uploads/          question images
 scripts/          loadtest.js (simulated players), op.js (one-shot host command)
-test/             smoke.test.js (game loop), auth.test.js (operator boundary)
+test/             smoke.test.js (game loop), auth.test.js (operator boundary),
+                  api.test.js (admin REST routes)
 ```
 
 > **One shared scope.** The browser loads these as classic `<script>` tags, so
