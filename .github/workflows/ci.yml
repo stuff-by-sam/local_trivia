@@ -21,7 +21,7 @@ jobs:
         node: ['20', '22', '24']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
@@ -62,7 +62,7 @@ jobs:
     # PR that actually fixes it; this job exists to make the finding visible.
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
