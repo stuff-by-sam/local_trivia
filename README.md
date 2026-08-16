@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/stuff-by-sam/local_trivia/actions/workflows/ci.yml/badge.svg)](https://github.com/stuff-by-sam/local_trivia/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D20-green.svg)](https://nodejs.org)
+[![Node](https://img.shields.io/badge/node-%3E%3D22-green.svg)](https://nodejs.org)
 
 Kahoot-style trivia that runs entirely on your local network. One laptop runs the
 server; a TV shows the presenter screen; players join from their phones with a PIN.
@@ -10,7 +10,7 @@ No internet needed after install.
 
 ## Requirements
 
-- **Node.js 20 or newer** ([nodejs.org](https://nodejs.org) — the LTS build is fine)
+- **Node.js 22 or newer** ([nodejs.org](https://nodejs.org) — the LTS build is fine)
 - Every device on the **same wifi network**
 - Internet once, for `npm install`. After that it runs fully offline.
 
@@ -65,7 +65,7 @@ npm test        # boot real servers, join real Socket.IO clients, play a questio
 `npm test` is an integration suite, not unit tests: it starts the server on a
 scratch database, joins three websocket clients, plays a question through to the
 leaderboard, and asserts the operator-authorization rules from a non-loopback
-address. CI runs it on Node 20, 22 and 24.
+address. CI runs it on Node 22 and 24.
 
 ## Structure
 

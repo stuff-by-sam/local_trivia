@@ -10,7 +10,7 @@ npm run check   # syntax-checks every JS file
 npm test        # boots real servers and plays a game over Socket.IO
 ```
 
-CI runs both on Node 20, 22 and 24, plus `npm audit`.
+CI runs both on Node 22 and 24, plus `npm audit`.
 
 ## Things that will bite you
 
