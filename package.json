@@ -35,7 +35,7 @@
     "loadtest": "node scripts/loadtest.js"
   },
   "dependencies": {
-    "better-sqlite3": "^12.2.0",
+    "better-sqlite3": "^13.0.3",
     "express": "^4.21.2",
     "multer": "^2.0.1",
     "qrcode": "^1.5.4",
