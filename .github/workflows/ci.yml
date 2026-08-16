@@ -57,6 +57,10 @@ jobs:
     name: npm audit
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Advisories get published against dependencies with no change on our side,
+    # so a finding here shouldn't mark the build broken. Dependabot opens the
+    # PR that actually fixes it; this job exists to make the finding visible.
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
