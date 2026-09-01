@@ -37,7 +37,7 @@
   "dependencies": {
     "better-sqlite3": "^13.0.3",
     "express": "^5.2.1",
-    "multer": "^2.0.1",
+    "multer": "^2.3.0",
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.1"
   },
