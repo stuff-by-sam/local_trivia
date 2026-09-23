@@ -26,10 +26,36 @@
         }
       }
     },
+    "%lld of %lld answered" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld answered"
+          }
+        }
+      }
+    },
+    "%lld of %lld got it right" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld got it right"
+          }
+        }
+      }
+    },
     "%lld seconds" : {
 
     },
+    "^[%lld player](inflect: true)" : {
+
+    },
     "^[%lld question](inflect: true) ready" : {
+
+    },
+    "^[%lld question](inflect: true) to go" : {
 
     },
     "1st" : {
@@ -53,10 +79,16 @@
     "Add at least one question" : {
 
     },
+    "and %lld more" : {
+
+    },
     "Answer" : {
 
     },
     "Answer %@" : {
+
+    },
+    "Answer on your phone" : {
 
     },
     "Answers" : {
@@ -74,7 +106,13 @@
     "Choose a different game." : {
 
     },
+    "Choose your Apple TV, or a TV with AirPlay." : {
+
+    },
     "circle" : {
+
+    },
+    "Connect a TV" : {
 
     },
     "Correct" : {
@@ -149,6 +187,9 @@
     "Final Results" : {
 
     },
+    "Final results next" : {
+
+    },
     "Game" : {
 
     },
@@ -181,6 +222,9 @@
 
     },
     "Host a Game" : {
+
+    },
+    "Host a game on your phone, and it shows up here." : {
 
     },
     "Host controls" : {
@@ -277,6 +321,12 @@
     "No questions yet. Write one, or import a CSV — the same format the web admin console takes." : {
 
     },
+    "No TV yet" : {
+
+    },
+    "Nobody answered" : {
+
+    },
     "Nobody Yet" : {
 
     },
@@ -302,13 +352,25 @@
     "OK" : {
 
     },
+    "On the TV" : {
+
+    },
     "On This Network" : {
+
+    },
+    "Open Control Center and tap Screen Mirroring." : {
 
     },
     "Open Trivia on the same Wi-Fi, or scan with the Camera." : {
 
     },
+    "Open Trivia on this Wi-Fi and type the code, or scan it with the Camera." : {
+
+    },
     "or" : {
+
+    },
+    "Or connect the phone to a TV with an HDMI adapter." : {
 
     },
     "Pick a CSV file to import." : {
@@ -421,6 +483,12 @@
     "Show Join Code" : {
 
     },
+    "Show on a TV" : {
+
+    },
+    "Show on a TV…" : {
+
+    },
     "Show Standings" : {
 
     },
@@ -434,6 +502,9 @@
 
     },
     "square" : {
+
+    },
+    "Standings" : {
 
     },
     "Standings next" : {
@@ -472,7 +543,13 @@
     "The game didn't answer. Try again." : {
 
     },
+    "The game is on the TV" : {
+
+    },
     "The PIN is on the host's phone" : {
+
+    },
+    "The TV shows the join code, each question with its clock and answers, the reveal and the standings. Your phone keeps the controls, and your own answers." : {
 
     },
     "This can't be undone." : {
@@ -518,6 +595,9 @@
 
     },
     "Waiting for host" : {
+
+    },
+    "Waiting for the host to start" : {
 
     },
     "Waiting for the next game" : {
