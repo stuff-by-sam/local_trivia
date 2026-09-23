@@ -1,0 +1,29 @@
+import SwiftUI
+
+@main
+struct LocalTriviaApp: App {
+  @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+  private let models = AppModels.shared
+
+  var body: some Scene {
+    WindowGroup {
+      RootView()
+        .environment(models.store)
+        .environment(models.browser)
+        .environment(models.host)
+        .environment(models.bigScreen)
+    }
+  }
+}
+
+/// The app's models, one of each. The phone's window and a TV's share them,
+/// and UIKit creates the TV's scene outside SwiftUI — so this is where it
+/// finds them.
+final class AppModels {
+  static let shared = AppModels()
+
+  let store = GameStore()
+  let browser = GameBrowser()
+  let host = HostController()
+  let bigScreen = BigScreen()
+}

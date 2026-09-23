@@ -14,6 +14,52 @@ Everyone who can reach the server can:
 
 That is the intended surface. Everything else is operator-only.
 
+## The iOS app
+
+The app joins only games hosted from a phone, never the laptop server. Its own
+rules:
+
+- **Local network only.** It joins servers at private, link-local or loopback
+  addresses, or at names only a local resolver answers (bare hostnames,
+  `.local`, `.home.arpa`, `.lan`, `.internal`). A join link pointing anywhere
+  else is refused, so a code stuck on a wall can't send players' phones to a
+  server on the internet. App Transport Security is scoped to match
+  (`NSAllowsLocalNetworking`, no arbitrary loads).
+- **The resume token lives in the Keychain**, device-only and readable only
+  while unlocked (`kSecAttrAccessibleWhenUnlockedThisDeviceOnly`). It's a bearer
+  credential for the player's seat, so it never goes into preferences, backups,
+  or logs.
+- **Nothing leaves for anywhere but the game.** No analytics, no accounts, no
+  third-party SDKs or dependencies. Preferences hold only the nickname draft and
+  the last game's address. The privacy manifest declares exactly that.
+- **Untrusted text is rendered as text.** Questions, answers and other players'
+  nicknames are displayed verbatim — never interpreted as Markdown or links.
+
+### Hosting from a phone
+
+A phone that hosts runs a small server of its own (`ios/LocalTrivia/Hosting/`).
+Its surface is deliberately narrower than the laptop's:
+
+- **Player events only.** It speaks `join`, `resume` and `submitAnswer`; there
+  is no admin API and no `host:*` event. The host's controls act on the game
+  engine in-process and never cross the network, so nothing on the Wi-Fi can
+  start, skip, kick or end anything.
+- **Local peers only.** Connections from outside private, link-local and
+  loopback ranges are refused before the handshake.
+- **The PIN can't be walked.** A phone that guesses wrong five times can't
+  try again for a minute. That's counted by address, not by connection, so
+  reconnecting doesn't reset it. A game caps at 100 players. WebSocket frames
+  over 64 KB are
+  refused rather than buffered, and anything that doesn't decode as a known
+  player event is ignored.
+- **The answer key stays on the host's phone**, in a file encrypted whenever
+  the phone is locked (`.completeFileProtection`). Players are only ever sent a
+  question's correct answer at the reveal, exactly as on the laptop.
+- **Join links** (`localtrivia://join?url=…&pin=…`, what the host's QR code
+  holds) are held to the local-network rule above: a local-network server and
+  a four-digit PIN, or nothing. A link can put a phone into a game on your
+  Wi-Fi; it can't send it anywhere else.
+
 ## The operator boundary
 
 `/api/*` and the `admin:*` / `host:*` socket events are restricted to **loopback**

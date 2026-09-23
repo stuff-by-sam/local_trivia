@@ -32,6 +32,23 @@ handlers are registered through the guarded `on()` helper in `server/index.js`,
 and payloads are coerced with `obj()` rather than trusted to be objects. Keep new
 handlers inside that pattern.
 
+**Native install scripts are allowlisted by exact version.** `better-sqlite3`
+compiles on install, and npm only runs install scripts listed under
+`allowScripts` in `package.json`. When a bump changes its version (Dependabot
+included), review it and run `npm install-scripts approve better-sqlite3`, or a
+fresh clone installs without the native module and the server won't start.
+
+**The game rules have two implementations.** `server/gameSession.js` runs
+laptop-hosted games for the browser; `ios/LocalTrivia/Hosting/HostedGame.swift`
+is a port of it that runs phone-hosted games for the iOS app (and
+`Scoring`/`CSVImport` port `public/shared/scoring.js` and `csv.js`). The two
+speak the same events — which is what lets `scripts/loadtest.js` play against
+a phone — so a rule or protocol change (scoring, tie-breaks, late joiners, PIN
+checks, a renamed field) belongs in both. `ios/LocalTriviaTests/HostingTests.swift`
+pins the port's numbers to the JavaScript's and imports every bank in
+`questions/` to hold the CSV port to the same results; `ProtocolTests.swift`
+pins the event shapes.
+
 **Scoring has one source of truth.** `public/shared/scoring.js` is `require()`d by
 the server *and* loaded by the admin console, so the preview can't drift from
 real scoring. Change it in one place.

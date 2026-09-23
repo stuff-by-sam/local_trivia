@@ -25,6 +25,13 @@ desktop.ini
 .vscode/
 *.swp
 
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.xcresult
+
 # logs
 *.log
 npm-debug.log*

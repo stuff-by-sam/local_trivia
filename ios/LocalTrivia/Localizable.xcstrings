@@ -1,0 +1,558 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    "%@ · CONNECTING" : {
+
+    },
+    "%@ · ONLINE" : {
+
+    },
+    "%@ · UNREACHABLE" : {
+
+    },
+    "%@ pts" : {
+
+    },
+    "%@, %@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@: %3$@"
+          }
+        }
+      }
+    },
+    "%lld seconds" : {
+
+    },
+    "^[%lld question](inflect: true) ready" : {
+
+    },
+    "1st" : {
+
+    },
+    "2nd" : {
+
+    },
+    "3rd" : {
+
+    },
+    "A correct answer earns at least" : {
+
+    },
+    "A wrong answer earns" : {
+
+    },
+    "Add a question to the round first." : {
+
+    },
+    "Add at least one question" : {
+
+    },
+    "Answer" : {
+
+    },
+    "Answer %@" : {
+
+    },
+    "Answers" : {
+
+    },
+    "Away" : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Category" : {
+
+    },
+    "Choose a different game." : {
+
+    },
+    "circle" : {
+
+    },
+    "Correct" : {
+
+    },
+    "Correct! Plus %lld points." : {
+
+    },
+    "Couldn't find a free port to host on." : {
+
+    },
+    "Couldn't Import" : {
+
+    },
+    "Couldn't join that game." : {
+
+    },
+    "Couldn't Open File" : {
+
+    },
+    "Couldn't start hosting: %@" : {
+
+    },
+    "Delete All Questions" : {
+
+    },
+    "Delete All…" : {
+
+    },
+    "Delete every question?" : {
+
+    },
+    "Delete Question" : {
+
+    },
+    "Details" : {
+
+    },
+    "diamond" : {
+
+    },
+    "Done" : {
+
+    },
+    "Edit Question" : {
+
+    },
+    "Edit Round" : {
+
+    },
+    "Edit Round…" : {
+
+    },
+    "End Game" : {
+
+    },
+    "End Round Now" : {
+
+    },
+    "End the Game for Everyone" : {
+
+    },
+    "Enter your name to play" : {
+
+    },
+    "Every player goes back to the join screen." : {
+
+    },
+    "Faster answers score more" : {
+
+    },
+    "Final Results" : {
+
+    },
+    "Game" : {
+
+    },
+    "Game name" : {
+
+    },
+    "Game over" : {
+
+    },
+    "Game PIN" : {
+
+    },
+    "Game: %@. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Game: %1$@. %2$@"
+          }
+        }
+      }
+    },
+    "General" : {
+
+    },
+    "Hold tight" : {
+
+    },
+    "Host" : {
+
+    },
+    "Host a Game" : {
+
+    },
+    "Host controls" : {
+
+    },
+    "Host unreachable, retrying" : {
+
+    },
+    "Import CSV…" : {
+
+    },
+    "Imported ^[%lld question](inflect: true)" : {
+
+    },
+    "In this round" : {
+
+    },
+    "Join code" : {
+
+    },
+    "Join Game" : {
+
+    },
+    "JOIN THE HOST'S WI-FI" : {
+
+    },
+    "Leave Game" : {
+
+    },
+    "Leave this game?" : {
+
+    },
+    "Left out of this round" : {
+
+    },
+    "Locked in · %lld of %lld answered" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Locked in · %1$lld of %2$lld answered"
+          }
+        }
+      }
+    },
+    "Locked in · waiting for the room" : {
+
+    },
+    "Locking in…" : {
+
+    },
+    "Looking for games…" : {
+
+    },
+    "Mark %@ as the right answer" : {
+
+    },
+    "Minimum share for a correct answer" : {
+
+    },
+    "Move on automatically" : {
+
+    },
+    "Needs a correct answer" : {
+
+    },
+    "Needs a question" : {
+
+    },
+    "Needs all four answers" : {
+
+    },
+    "New Question" : {
+
+    },
+    "Next Question" : {
+
+    },
+    "Next question soon" : {
+
+    },
+    "Nickname" : {
+
+    },
+    "No answer" : {
+
+    },
+    "No answer." : {
+
+    },
+    "No games on this network yet" : {
+
+    },
+    "No questions yet. Write one, or import a CSV — the same format the web admin console takes." : {
+
+    },
+    "Nobody Yet" : {
+
+    },
+    "Nobody's in the game yet." : {
+
+    },
+    "Not quite" : {
+
+    },
+    "Not quite. Plus %lld points." : {
+
+    },
+    "of %lld · %@ pts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "of %1$lld · %2$@ pts"
+          }
+        }
+      }
+    },
+    "OK" : {
+
+    },
+    "On This Network" : {
+
+    },
+    "Open Trivia on the same Wi-Fi, or scan with the Camera." : {
+
+    },
+    "or" : {
+
+    },
+    "Pick a CSV file to import." : {
+
+    },
+    "PIN" : {
+
+    },
+    "PIN %@" : {
+
+    },
+    "Play Again" : {
+
+    },
+    "Play in this round" : {
+
+    },
+    "Players" : {
+
+    },
+    "Players (%lld)" : {
+
+    },
+    "Players appear here as they join." : {
+
+    },
+    "Players see the game name when they look for games. You play too, under your name." : {
+
+    },
+    "Playing as %@" : {
+
+    },
+    "Podium" : {
+
+    },
+    "Point at the QR code on the host's phone" : {
+
+    },
+    "pts" : {
+
+    },
+    "QR code to join this game" : {
+
+    },
+    "Question" : {
+
+    },
+    "Question %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Question %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "Questions · %lld in play" : {
+
+    },
+    "Rank" : {
+
+    },
+    "Rank %lld" : {
+
+    },
+    "Reconnecting" : {
+
+    },
+    "Rejoining your game" : {
+
+    },
+    "Remove" : {
+
+    },
+    "Removed by the host." : {
+
+    },
+    "Right in %llds: %@ pts · right at the buzzer: %@ · wrong: %@. Answers score more the faster they come in.%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Right in %1$llds: %2$@ pts · right at the buzzer: %3$@ · wrong: %4$@. Answers score more the faster they come in.%5$@"
+          }
+        }
+      }
+    },
+    "Round's default" : {
+
+    },
+    "Save" : {
+
+    },
+    "Scan QR Code" : {
+
+    },
+    "Scan to Join" : {
+
+    },
+    "Scan, or find %@ in the app" : {
+
+    },
+    "Scores start next question" : {
+
+    },
+    "Scoring" : {
+
+    },
+    "Show Join Code" : {
+
+    },
+    "Show Standings" : {
+
+    },
+    "Shuffle the questions" : {
+
+    },
+    "Skip Question" : {
+
+    },
+    "Skipped ^[%lld row](inflect: true):" : {
+
+    },
+    "square" : {
+
+    },
+    "Standings next" : {
+
+    },
+    "Start Game" : {
+
+    },
+    "Start Hosting" : {
+
+    },
+    "Start Over" : {
+
+    },
+    "Stop Hosting" : {
+
+    },
+    "Stop hosting?" : {
+
+    },
+    "Tap a key to mark the right answer." : {
+
+    },
+    "Tap a question to edit it, or the circle to leave it out of this round. Swipe to delete; Edit to reorder." : {
+
+    },
+    "That code isn't a game on this network" : {
+
+    },
+    "That file couldn't be read, or it's too large." : {
+
+    },
+    "The four-digit PIN on the host's phone." : {
+
+    },
+    "The game didn't answer. Try again." : {
+
+    },
+    "The PIN is on the host's phone" : {
+
+    },
+    "This can't be undone." : {
+
+    },
+    "Time limit" : {
+
+    },
+    "Time limit must be 5–600 seconds" : {
+
+    },
+    "Time per question" : {
+
+    },
+    "Time remaining" : {
+
+    },
+    "Time's up" : {
+
+    },
+    "Toggles whether this question plays." : {
+
+    },
+    "Top score per question" : {
+
+    },
+    "Total" : {
+
+    },
+    "triangle" : {
+
+    },
+    "Trivia" : {
+
+    },
+    "Trivia Night" : {
+
+    },
+    "Turn on Wi-Fi or Personal Hotspot so others can join" : {
+
+    },
+    "Unranked" : {
+
+    },
+    "Waiting for host" : {
+
+    },
+    "Waiting for the next game" : {
+
+    },
+    "What's the question?" : {
+
+    },
+    "Write a Question" : {
+
+    },
+    "You" : {
+
+    },
+    "You play as" : {
+
+    },
+    "You'll jump in on the next question." : {
+
+    },
+    "You'll need the PIN to join again." : {
+
+    },
+    "You're in" : {
+
+    },
+    "your name" : {
+
+    },
+    "Your name" : {
+
+    },
+    "Your position" : {
+
+    }
+  },
+  "version" : "1.0"
+}
