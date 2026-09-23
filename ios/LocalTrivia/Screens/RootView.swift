@@ -6,6 +6,7 @@ struct RootView: View {
   @Environment(GameStore.self) private var store
   @Environment(GameBrowser.self) private var browser
   @Environment(HostController.self) private var host
+  @Environment(Shop.self) private var shop
   @Environment(\.scenePhase) private var scenePhase
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @Environment(\.accent) private var accent
@@ -34,6 +35,7 @@ struct RootView: View {
     .task {
       store.start()
       browser.start()
+      shop.start()
     }
     .onChange(of: browser.games) { _, games in store.discovered(games) }
     .onChange(of: store.connection) { _, _ in store.discovered(browser.games) }

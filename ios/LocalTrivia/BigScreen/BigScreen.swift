@@ -43,8 +43,11 @@ final class BigScreenSceneDelegate: NSObject, UIWindowSceneDelegate {
     window.overrideUserInterfaceStyle = .dark
     window.rootViewController = UIHostingController(
       rootView: BigScreenView()
+        .chosenTheme()
+        .environment(\.backdropFollowsTilt, false)
         .environment(models.store)
         .environment(models.host)
+        .environment(models.shop)
     )
     window.isHidden = false
     self.window = window

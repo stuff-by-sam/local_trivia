@@ -14,6 +14,7 @@ struct JoinView: View {
   @State private var rejectedPins = 0
   @State private var rejectedNicknames = 0
   @State private var isSettingUpHost = false
+  @State private var isShopping = false
   @FocusState private var focus: JoinField?
 
   var body: some View {
@@ -51,6 +52,9 @@ struct JoinView: View {
     }
     .sheet(isPresented: $isSettingUpHost) {
       HostSetupView()
+    }
+    .sheet(isPresented: $isShopping) {
+      ShopView()
     }
     // From a join link: fill the PIN in, and the form takes it from there.
     .onChange(of: store.pendingPIN, initial: true) { _, pending in
@@ -140,7 +144,24 @@ struct JoinView: View {
         .padding(.top, 4)
 
       hostButton
+
+      shopLink
     }
+  }
+
+  /// Themes and icons, for anyone who goes looking. Quiet on purpose: this
+  /// screen is for getting into a game.
+  private var shopLink: some View {
+    Button {
+      isShopping = true
+    } label: {
+      Label("Themes & Icons", systemImage: "paintpalette")
+        .terminalStyle(.caption2)
+        .foregroundStyle(.tertiary)
+        .frame(minHeight: 44)
+        .contentShape(.rect)
+    }
+    .buttonStyle(.plain)
   }
 
   /// Every game is hosted from a phone, and anyone can host one.

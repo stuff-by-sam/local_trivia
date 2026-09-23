@@ -126,6 +126,64 @@ and the server comes back on the same port when the app returns. If the host
 never does come back, players aren't stranded: once the link has failed, a
 leave button appears on every screen.
 
+## Themes and icons
+
+Optional, and out of the way: a quiet **Themes & Icons** link under Host a
+Game on the join screen, and nowhere in a game. Everything is a one-time,
+non-consumable in-app purchase — each theme and icon on its own, or
+**Everything** in one go. Phosphor and the classic icon are free.
+
+- **Themes** — Amber, Cobalt, Synthwave, Noir, Gold, Holographic and
+  Chalkboard. A theme is the accent, the ink behind the glass, and the
+  texture the glass refracts: Phosphor's scanlines, Cobalt's vector grid,
+  Synthwave's horizon, Noir's dot matrix, Gold's brushed metal,
+  Chalkboard's eraser smears and dust on slate. Holographic is foil: an
+  iridescent sheen that slides across the screen as the phone tilts, the way
+  Apple Card's does. It's the one texture that moves, so it holds still
+  while a question is up (the app still does no per-frame work then), under
+  Reduce Motion, on a TV, and in the background; Core Motion runs only while
+  it's following the phone, and needs no permission.
+  Tapping one dresses the shop in it, so it's tried on before it's bought;
+  closing the shop takes it off. A theme dresses this phone and any TV it's
+  showing the game on. It never crosses the network, and never touches the
+  answer set or the status colours: B is the cyan triangle on every phone in
+  the room, whoever's wearing what, and red is still wrong.
+- **App icons** — one to match every theme: the classic icon's four
+  shapes, recoloured (Holographic's in foil, Chalkboard's in pastel chalk on
+  slate). Each is an Icon Composer file beside
+  `AppIcon.icon`, named in the target's *Alternate App Icon Sets* build
+  setting.
+- **Everything** — one product that unlocks every theme and icon, including
+  any added later: the app treats owning it as owning each of them. It's
+  offered until there's nothing left to buy. Refunding it takes back only
+  what came in it, not what was bought on its own.
+- **Restore Purchases** asks the App Store for everything the Apple Account
+  owns, for a new phone or a reinstall.
+
+How it's built:
+
+- `Shop` — StoreKit 2. Verified entitlements are the only record of what's
+  owned. They're cached in preferences so a bought theme is on screen from
+  the first frame, and checked again at every launch, so a refund takes a
+  theme (or icon) back. A `Transaction.updates` listener picks up Ask to Buy
+  approvals, refunds and purchases made elsewhere. Entitlements live on the
+  device, so what's bought works offline; only buying and restoring need the
+  internet. What the player chose and what they own are kept apart, so a
+  theme that's taken back returns by itself if the purchase does.
+- `Theme` — the catalog of looks, and the `theme` environment value the
+  `Backdrop` draws from. Views keep reading `accent`, which follows it.
+- `ShopView` — buys through SwiftUI's `purchase` action, which presents the
+  App Store's sheet over the right scene.
+
+For release, create the non-consumable products in App Store Connect with
+the IDs in `LocalTrivia/Store/Products.storekit`. That file is the local
+StoreKit configuration: the Run scheme uses it, so the shop works in the
+simulator with no App Store account, and the unit tests load it. It isn't
+copied into the app. To add a theme or icon, add its case, its product to the
+configuration (and App Store Connect), and for an icon, its `.icon` file and
+its name in the build setting; `ShopTests` fails if the code, the
+configuration and the built app disagree.
+
 ## Security and privacy
 
 The app never talks to the laptop server, and a hosting phone has no operator
@@ -143,6 +201,11 @@ surface on the network: the host's controls act on the game in-process.
   discards the old token on its first launch.
 - **No analytics, accounts, entitlements or third-party code.** Log lines
   record error kinds and codes, never tokens, PINs, nicknames or addresses.
+- **Purchases go through StoreKit, and nothing else leaves.** The app learns
+  which themes and icons the Apple Account owns, as signed transactions it
+  verifies, and nothing about the player. The owned list cached in
+  preferences is replaced by StoreKit's answer at every launch, so editing it
+  unlocks nothing.
 - **Untrusted strings render verbatim.** Server text reaches the screen only
   through `Text(verbatim:)` / `String` initialisers, or as an interpolated
   argument, never as a localized format string. So it can't inject Markdown or
@@ -171,11 +234,16 @@ LocalTrivia/
   BigScreen/
     BigScreen.swift         A connected TV gets its own scene, not a mirror of the phone
     BigScreenView.swift     The game for the room: lobby, question, reveal, standings, podium
-  Design/                   Typography, answer palette, backdrop, shared components
+  Design/                   Typography, answer palette, themes and their textures, backdrop, shared components
+  Store/
+    Shop.swift              StoreKit 2: products, verified entitlements, buying, restoring
+    ShopView.swift          Themes & Icons: try on, buy, wear
+    AppIcon.swift           The alternate app icons, and a drawing of each
+    Products.storekit       Local StoreKit configuration (Run scheme and tests; not in the app)
   Screens/                  One view per game phase, plus the QR scanner
     Host/                   Round setup, question editor, host controls
-LocalTriviaTests/           Swift Testing: wire format, payloads, the full game loop
-LocalTriviaUITests/         Hosts a game in the simulator and plays it through
+LocalTriviaTests/           Swift Testing: wire format, payloads, the full game loop, the shop
+LocalTriviaUITests/         Hosts a game in the simulator and plays it through; tries on a theme
 ```
 
 No third-party dependencies. Swift 6 with strict concurrency, main-actor
@@ -200,6 +268,19 @@ JavaScript's own results (every bank in `questions/` must import cleanly), the
 engine's state machine driven directly, and the whole stack — a real
 `HostServer` with the host and a guest, each a full `GameStore` on a real
 socket, playing a game over loopback in one process.
+
+The shop is tested against StoreKit's local test environment
+(`SKTestSession`), loaded from the same configuration the Run scheme uses:
+every product in the catalog is on sale, a theme has to be bought before
+it's worn, a refund takes a theme or icon back, the bundle unlocks
+everything and a refund of it keeps what was bought separately, Ask to Buy
+unlocks nothing until it's approved, a cancelled purchase says nothing and a
+failed one says why, the cached list gives way to StoreKit's, and every
+alternate icon is built into the app under the name the shop asks for.
+
+`ThemeTests` holds every theme to WCAG AAA contrast — its accent on its
+ink, and dark text on a control lit with the accent — and checks each theme
+for sale has an icon to match.
 
 `HostAGameUITests` hosts a real game end to end through the UI: write a
 question, start hosting, play it as the host, standings, podium, stop hosting.

@@ -46,6 +46,9 @@ they're in. Standings go to every player's phone, and if the host mirrors their
 phone to a TV (AirPlay, or an HDMI adapter), the TV becomes the big screen: the
 join code, each question and its answers, the reveal and the standings.
 
+Optional themes and app icons are sold in the app, under **Themes & Icons**
+on the join screen; the game itself is free and complete without them.
+
 The laptop server above is for browser players; the app doesn't join it.
 
 Build it with Xcode 27 for iOS 27; see [ios/README.md](ios/README.md).

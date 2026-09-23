@@ -31,9 +31,14 @@ rules:
   never syncs through iCloud Keychain, and can't be restored onto another
   phone. iOS keeps Keychain items when an app is deleted; a reinstall discards
   the old token on its first launch.
-- **Nothing leaves for anywhere but the game.** No analytics, no accounts, no
-  third-party SDKs or dependencies. Preferences hold only the nickname draft and
-  the last game's address. The privacy manifest declares exactly that.
+- **Nothing leaves for anywhere but the game — and the App Store, for
+  purchases.** No analytics, no accounts, no third-party SDKs or
+  dependencies. Optional themes and app icons are bought through StoreKit;
+  the app sees only which ones the Apple Account owns, as signed
+  transactions it verifies. Preferences hold only the nickname draft, the last
+  game's address, the chosen theme and a cache of what's owned — replaced by
+  StoreKit's answer at every launch, so editing it unlocks nothing. The
+  privacy manifest declares exactly that.
 - **Untrusted text is rendered as text.** Questions, answers and other players'
   nicknames are displayed verbatim — never interpreted as Markdown or links.
 

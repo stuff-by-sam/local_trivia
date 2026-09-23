@@ -13,6 +13,9 @@
     "%@ · UNREACHABLE" : {
 
     },
+    "%@ icon" : {
+
+    },
     "%@ pts" : {
 
     },
@@ -70,6 +73,12 @@
     "A correct answer earns at least" : {
 
     },
+    "A monochrome tube, warm as an old terminal" : {
+
+    },
+    "A theme dresses this phone, and any TV it puts the game on. Answers keep their colours and shapes on every phone, so B is always the cyan triangle." : {
+
+    },
     "A wrong answer earns" : {
 
     },
@@ -77,6 +86,19 @@
 
     },
     "Add at least one question" : {
+
+    },
+    "All ^[%lld theme](inflect: true) and ^[%lld app icon](inflect: true)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All ^[%1$lld theme](inflect: true) and ^[%2$lld app icon](inflect: true)"
+          }
+        }
+      }
+    },
+    "Amber" : {
 
     },
     "and %lld more" : {
@@ -94,13 +116,44 @@
     "Answers" : {
 
     },
+    "App Icons" : {
+
+    },
     "Away" : {
+
+    },
+    "Bought them on another device, or reinstalled Trivia? Restoring brings back everything this Apple Account owns." : {
+
+    },
+    "Brushed gold on black, for whoever keeps winning" : {
+
+    },
+    "Buy %@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Buy %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "Can't reach the App Store. What you own still works offline." : {
 
     },
     "Cancel" : {
 
     },
     "Category" : {
+
+    },
+    "Chalk on slate, still dusty from the last round" : {
+
+    },
+    "Chalkboard" : {
+
+    },
+    "Changes Trivia's icon on your Home Screen." : {
 
     },
     "Choose a different game." : {
@@ -112,13 +165,25 @@
     "circle" : {
 
     },
+    "Classic" : {
+
+    },
+    "Cobalt" : {
+
+    },
     "Connect a TV" : {
+
+    },
+    "Cool blue on navy, over a vector display's grid" : {
 
     },
     "Correct" : {
 
     },
     "Correct! Plus %lld points." : {
+
+    },
+    "Couldn't change the icon. Try again in a moment." : {
 
     },
     "Couldn't find a free port to host on." : {
@@ -131,6 +196,9 @@
 
     },
     "Couldn't Open File" : {
+
+    },
+    "Couldn't reach the App Store. Check your internet connection and try again." : {
 
     },
     "Couldn't start hosting: %@" : {
@@ -181,6 +249,9 @@
     "Every player goes back to the join screen." : {
 
     },
+    "Everything" : {
+
+    },
     "Faster answers score more" : {
 
     },
@@ -215,7 +286,13 @@
     "General" : {
 
     },
+    "Gold" : {
+
+    },
     "Hold tight" : {
+
+    },
+    "Holographic" : {
 
     },
     "Host" : {
@@ -240,6 +317,12 @@
 
     },
     "In this round" : {
+
+    },
+    "In use" : {
+
+    },
+    "Iridescent foil that catches the light as you tilt it" : {
 
     },
     "Join code" : {
@@ -333,6 +416,12 @@
     "Nobody's in the game yet." : {
 
     },
+    "Noir" : {
+
+    },
+    "Not available right now" : {
+
+    },
     "Not quite" : {
 
     },
@@ -371,6 +460,12 @@
 
     },
     "Or connect the phone to a TV with an HDMI adapter." : {
+
+    },
+    "Owned" : {
+
+    },
+    "Phosphor" : {
 
     },
     "Pick a CSV file to import." : {
@@ -449,6 +544,9 @@
     "Removed by the host." : {
 
     },
+    "Restore Purchases" : {
+
+    },
     "Right in %llds: %@ pts · right at the buzzer: %@ · wrong: %@. Answers score more the faster they come in.%@" : {
       "localizations" : {
         "en" : {
@@ -525,6 +623,9 @@
     "Stop hosting?" : {
 
     },
+    "Synthwave" : {
+
+    },
     "Tap a key to mark the right answer." : {
 
     },
@@ -535,6 +636,15 @@
 
     },
     "That file couldn't be read, or it's too large." : {
+
+    },
+    "The App Store couldn't complete that. Try again in a moment." : {
+
+    },
+    "The App Store couldn't confirm that purchase, so it hasn't been unlocked." : {
+
+    },
+    "The broadcast terminal: green on black" : {
 
     },
     "The four-digit PIN on the host's phone." : {
@@ -550,6 +660,15 @@
 
     },
     "The TV shows the join code, each question with its clock and answers, the reveal and the standings. Your phone keeps the controls, and your own answers." : {
+
+    },
+    "Themes" : {
+
+    },
+    "Themes & Icons" : {
+
+    },
+    "This Apple Account hasn't bought any themes or icons yet." : {
 
     },
     "This can't be undone." : {
@@ -582,16 +701,41 @@
     "triangle" : {
 
     },
+    "Tries this theme on." : {
+
+    },
     "Trivia" : {
 
     },
     "Trivia Night" : {
 
     },
+    "Try Again" : {
+
+    },
+    "Trying on %@" : {
+
+    },
+    "Trying on %@. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Trying on %1$@. %2$@"
+          }
+        }
+      }
+    },
     "Turn on Wi-Fi or Personal Hotspot so others can join" : {
 
     },
     "Unranked" : {
+
+    },
+    "Violet on midnight, down to the horizon" : {
+
+    },
+    "Waiting for approval. It'll unlock here once it's approved." : {
 
     },
     "Waiting for host" : {
@@ -603,7 +747,26 @@
     "Waiting for the next game" : {
 
     },
+    "Wearing %@" : {
+
+    },
+    "Wearing %@. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Wearing %1$@. %2$@"
+          }
+        }
+      }
+    },
+    "Wears this theme." : {
+
+    },
     "What's the question?" : {
+
+    },
+    "White on black, through a dot-matrix screen" : {
 
     },
     "Write a Question" : {
@@ -631,6 +794,9 @@
 
     },
     "Your position" : {
+
+    },
+    "Your themes and icons are restored." : {
 
     }
   },

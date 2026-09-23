@@ -1,0 +1,242 @@
+{
+  "identifier" : "4F1D2C7A",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000001",
+      "localizations" : [
+        {
+          "description" : "A monochrome amber terminal theme.",
+          "displayName" : "Amber Theme",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.theme.amber",
+      "referenceName" : "Theme: Amber",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000002",
+      "localizations" : [
+        {
+          "description" : "Cool blue on navy, over a vector grid.",
+          "displayName" : "Cobalt Theme",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.theme.cobalt",
+      "referenceName" : "Theme: Cobalt",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000003",
+      "localizations" : [
+        {
+          "description" : "Violet on midnight, down to the horizon.",
+          "displayName" : "Synthwave Theme",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.theme.synthwave",
+      "referenceName" : "Theme: Synthwave",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000004",
+      "localizations" : [
+        {
+          "description" : "White on black, through a dot-matrix screen.",
+          "displayName" : "Noir Theme",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.theme.noir",
+      "referenceName" : "Theme: Noir",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000005",
+      "localizations" : [
+        {
+          "description" : "The Amber app icon for your Home Screen.",
+          "displayName" : "Amber Icon",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.icon.amber",
+      "referenceName" : "Icon: Amber",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000006",
+      "localizations" : [
+        {
+          "description" : "The Cobalt app icon for your Home Screen.",
+          "displayName" : "Cobalt Icon",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.icon.cobalt",
+      "referenceName" : "Icon: Cobalt",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000007",
+      "localizations" : [
+        {
+          "description" : "The Synthwave app icon for your Home Screen.",
+          "displayName" : "Synthwave Icon",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.icon.synthwave",
+      "referenceName" : "Icon: Synthwave",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000008",
+      "localizations" : [
+        {
+          "description" : "The Noir app icon for your Home Screen.",
+          "displayName" : "Noir Icon",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.icon.noir",
+      "referenceName" : "Icon: Noir",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000009",
+      "localizations" : [
+        {
+          "description" : "The Gold app icon for your Home Screen.",
+          "displayName" : "Gold Icon",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.icon.gold",
+      "referenceName" : "Icon: Gold",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "internalID" : "6740000010",
+      "localizations" : [
+        {
+          "description" : "Every theme and every app icon.",
+          "displayName" : "Everything",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.bundle.everything",
+      "referenceName" : "Bundle: Everything",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000011",
+      "localizations" : [
+        {
+          "description" : "Brushed gold on black, for whoever keeps winning.",
+          "displayName" : "Gold Theme",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.theme.gold",
+      "referenceName" : "Theme: Gold",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000012",
+      "localizations" : [
+        {
+          "description" : "Iridescent foil that catches the light as you tilt it.",
+          "displayName" : "Holographic Theme",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.theme.holographic",
+      "referenceName" : "Theme: Holographic",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000013",
+      "localizations" : [
+        {
+          "description" : "Chalk on slate, still dusty from the last round.",
+          "displayName" : "Chalkboard Theme",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.theme.chalkboard",
+      "referenceName" : "Theme: Chalkboard",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000014",
+      "localizations" : [
+        {
+          "description" : "The Holographic app icon for your Home Screen.",
+          "displayName" : "Holographic Icon",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.icon.holographic",
+      "referenceName" : "Icon: Holographic",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000015",
+      "localizations" : [
+        {
+          "description" : "The Chalkboard app icon for your Home Screen.",
+          "displayName" : "Chalkboard Icon",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.icon.chalkboard",
+      "referenceName" : "Icon: Chalkboard",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storeKitErrors" : [],
+    "_storefront" : "USA"
+  },
+  "subscriptionGroups" : [],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

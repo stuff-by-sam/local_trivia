@@ -7,6 +7,11 @@ import SwiftUI
 /// (accent while playing, green or red at the reveal, gold on the podium),
 /// and the scanlines give the glass texture to bend, the way the TV's CRT
 /// theme does. It's static between moods — it only animates when one changes.
+///
+/// The ink and the texture come from the theme (`Theme`); what's described
+/// above is Phosphor, the game's own. Holographic's foil is the one texture
+/// that moves, following the phone's tilt — and it holds still while a
+/// question is up.
 struct Backdrop: View {
   enum Mood: Equatable {
     case idle
@@ -17,9 +22,30 @@ struct Backdrop: View {
     case celebrate
   }
 
+  /// What the glass has to bend. Each is drawn once and holds still, bar the
+  /// holographic foil (`Textures.swift`).
+  enum Texture: Equatable {
+    case scanlines
+    /// A vector display's graticule.
+    case grid
+    /// A perspective grid running to a horizon, under the scanlines.
+    case horizon
+    /// A fine mesh the glow shows through as dots.
+    case dotMatrix
+    /// Hairline streaks, like brushed metal.
+    case brushed
+    /// An iridescent sheen that slides as the phone tilts, over fine
+    /// diffraction lines.
+    case holofoil
+    /// Eraser smears and chalk dust.
+    case chalk
+  }
+
   let mood: Mood
   let accent: Color
 
+  @Environment(\.theme) private var theme
+  @Environment(\.backdropFollowsTilt) private var followsTilt
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
   var body: some View {
@@ -33,9 +59,9 @@ struct Backdrop: View {
           [0, 1], [0.5, 1], [1, 1],
         ],
         colors: colors,
-        background: .broadcastInk
+        background: theme.ink
       )
-      Scanlines()
+      texture
       // Falls off toward the edges, like a tube.
       RadialGradient(
         colors: [.clear, .black.opacity(0.55)],
@@ -48,6 +74,25 @@ struct Backdrop: View {
     .animation(reduceMotion ? nil : .easeInOut(duration: 0.9), value: mood)
     .allowsHitTesting(false)
     .accessibilityHidden(true)
+  }
+
+  @ViewBuilder
+  private var texture: some View {
+    switch theme.texture {
+    case .scanlines: Scanlines()
+    case .grid: Graticule(color: accent)
+    case .horizon:
+      ZStack {
+        Horizon(color: accent)
+        Scanlines()
+      }
+    case .dotMatrix: DotMatrix()
+    case .brushed: Brushed(color: accent)
+    // The one texture that moves — never while a question is up, when
+    // nothing may compete with reading it.
+    case .holofoil: Holofoil(followsTilt: followsTilt && !reduceMotion && mood != .question)
+    case .chalk: ChalkDust()
+    }
   }
 
   private var glow: Color {
@@ -72,7 +117,7 @@ struct Backdrop: View {
   }
 
   private var colors: [Color] {
-    let ink = Color.broadcastInk
+    let ink = theme.ink
     let crown = glow.mix(with: ink, by: depth)
     let shoulder = glow.mix(with: ink, by: min(1, depth + 0.14))
     let floor = glow.mix(with: ink, by: min(1, depth + 0.24))
@@ -98,4 +143,10 @@ private struct Scanlines: View {
       context.fill(lines, with: .color(.black.opacity(0.32)))
     }
   }
+}
+
+extension EnvironmentValues {
+  /// Whether a foil backdrop catches the light as the phone tilts. Off on a
+  /// TV, which doesn't tilt.
+  @Entry var backdropFollowsTilt = true
 }
