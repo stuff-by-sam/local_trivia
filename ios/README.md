@@ -49,6 +49,11 @@ A broadcast terminal, built from native parts.
   chip morphs from `● ROBIN` to `Q 01/12 · TECH` and back. Content goes in
   hairline readout boxes rather than glass, which is Apple's guidance and what
   keeps the glass meaningful.
+- **It opens in the dark.** The launch screen is plain black (the app is
+  dark-only, so it never flashes white), and the answer set dots on in the
+  middle — circle, triangle, square, diamond — before the game fades up.
+  That's an overlay, not a gate: the app is already finding games under it,
+  and it takes no touches.
 - **One light source.** The backdrop is near-black with a single phosphor glow
   and faint scanlines for the glass to refract. Its hue follows the game:
   the accent while playing, green or red at the reveal, gold on the podium.
@@ -244,7 +249,7 @@ LocalTrivia/
     ShopView.swift          Themes & Icons: try on, buy, wear
     AppIcon.swift           The alternate app icons, and a drawing of each
     Products.storekit       Local StoreKit configuration (Run scheme and tests; not in the app)
-  Screens/                  One view per game phase, plus the QR scanner
+  Screens/                  One view per game phase, the launch, and the QR scanner
     Host/                   Round setup, question editor, host controls
 LocalTriviaTests/           Swift Testing: wire format, payloads, the full game loop, the shop
 LocalTriviaUITests/         Hosts a game in the simulator and plays it through; tries on a theme

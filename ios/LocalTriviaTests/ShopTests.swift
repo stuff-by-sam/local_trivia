@@ -31,9 +31,16 @@ import Testing
     session.clearTransactions()
   }
 
+  /// A shop with the catalog loaded. StoreKit's test environment can take a
+  /// couple of seconds to answer when its daemon is starting cold, and the
+  /// first request may come back empty, so this asks until it's there.
   private func makeShop() async -> Shop {
     let shop = Shop(defaults: defaults, icons: icons)
-    await shop.loadProducts()
+    for _ in 0..<10 {
+      await shop.loadProducts()
+      if shop.availability == .ready { break }
+      try? await Task.sleep(for: .milliseconds(500))
+    }
     return shop
   }
 

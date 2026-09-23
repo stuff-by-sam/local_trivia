@@ -11,6 +11,8 @@ struct RootView: View {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @Environment(\.accent) private var accent
   @Namespace private var glass
+  /// Only once: coming back to the app goes straight to the game.
+  @State private var isLaunching = true
 
   var body: some View {
     @Bindable var host = host
@@ -25,6 +27,14 @@ struct RootView: View {
           // On iPad, keep the phone-sized column the game is designed for.
           .frame(maxWidth: 540)
           .frame(maxWidth: .infinity)
+      }
+    }
+    .overlay {
+      if isLaunching {
+        LaunchView {
+          withAnimation(.easeOut(duration: 0.4)) { isLaunching = false }
+        }
+        .transition(.opacity)
       }
     }
     .sheet(item: $host.sheet) { HostSheetView(sheet: $0) }
