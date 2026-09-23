@@ -49,17 +49,20 @@ appearance is designed for Standard and Increased Contrast; Reduce
 Transparency changes the backdrop and panels.
 
 Roles resolve from the environment (`Palette`, theme × contrast ×
-transparency). Use `.foregroundStyle(.danger)`, not a hex.
+transparency). Use `.foregroundStyle(.danger)` or `palette.danger`, never a
+hex. (The accent role is spelled `.themeAccent`: Xcode generates `.accent`
+from the asset catalog's `AccentColor`.)
 
 | Role | Standard | Increased contrast | Use |
 |---|---|---|---|
-| `accent` | theme accent (Phosphor `#56FF8A`) | same | primary action tint, cursor, headings, selection |
+| `themeAccent` | theme accent (Phosphor `#56FF8A`) | same | primary action tint, cursor, headings, selection |
 | `onAccent` | `#04080A` | same | text/glyphs on any lit or tinted surface |
 | `ink` | theme ink (Phosphor `#04080A`) | same | the ground under everything |
 | `primary` / `secondary` text | system `.primary` / `.secondary` | system (raised) | content / labels. **`.tertiary` is never used for text a player needs.** |
 | `panel` | white 4 % | white 10 % | readout and card fills |
 | `panelStroke` | white 12 % | white 40 % | readout and card borders |
 | `hairline` | white 8 % | white 30 % | row dividers |
+| `slot` | white 14 % | white 40 % | an empty PIN cell's underscore |
 | `success` | `#56FF8A` | same | correct, online — always with ✓ or a dot and a word |
 | `danger` | `#FF6A6A` | same | wrong, errors, low time — always with ✕, ⚠ or a word |
 | `warning` | `#FFD60A` | same | reconnecting, notices |
@@ -87,15 +90,19 @@ Dynamic Type text style; display figures scale with `@ScaledMetric` and cap.
 | `answer` | Pro | title3 → body → callout by longest option | semibold (chosen: bold) | as written | answer text |
 | `body` | Pro | body | regular | sentence | explanations |
 | `bodyEmphasis` | Pro | body | semibold | sentence | names, row titles |
+| `title` | Pro | largeTitle | bold | as written | the player's own name in the lobby |
+| `headline` | Pro | headline | semibold | as written | the game's name in the picker |
+| `detail` | Pro | footnote | regular | sentence | taglines, explanations |
 | `shout` | Mono | title3 | heavy | UPPER, 4 | verdicts, "Hold tight" |
 | `action` | Mono | headline | bold | UPPER, 1.4 | primary/secondary action labels |
 | `status` | Mono | footnote | semibold | UPPER, 1.4 | status lines, toolbar chips |
 | `label` | Mono | caption | semibold | UPPER, 1.4 | field and readout labels |
 | `labelSmall` | Mono | caption2 | semibold | UPPER, 1.4 | tertiary metadata (never essential) |
 | `figure` | Mono | body | semibold | — | readout values, scores |
-| `display(.hero/.large/.medium/.cell)` | Mono | 100 / 64 / 44 / 34 pt, relative to largeTitle, max 1.35× | heavy/bold | — | rank, points, PIN, PIN cells |
+| `figureSmall` | Mono | caption | medium | — | addresses, podium scores |
+| `display(.hero / .points / .pinLarge / .pin / .cell)` | Mono | 100 / 58 / 64 / 44 / 34 pt, relative to largeTitle, max 1.35× | heavy (points, cells: bold) | PIN only: 8 / 6 | rank, points, join code, PIN cells |
 
-The TV board has its own fixed ramp (`TVType`) on its 1920×1080 canvas —
+The TV board has its own fixed ramp (`TVRole`, with `TVMetrics` for layout) on its 1920×1080 canvas —
 Dynamic Type doesn't reach a TV.
 
 ## Space, shape
@@ -106,11 +113,16 @@ Stack gaps: related `s`, grouped `m`, sections `xl`.
 
 **Radius** — concentric. `Radius.control 20` (answers, fields, PIN cells),
 `Radius.panel 24` (readouts, cards), capsule for chips and buttons. A shape
-inside another uses `ConcentricRectangle` against its container, minimum 8, so
-the answer key inside an answer button is `20 − 14 = 6 → 8`.
+inside another takes `Radius.concentric(in:inset:)` — its container's radius
+minus the inset, minimum 8 — so the answer key inside an answer button is
+`20 − 14 = 6 → 8`, and the QR code on a card is `24 − 16 = 8`. Computed, not
+`ConcentricRectangle`: the same shapes also sit outside any container.
 
-**Targets** — 44×44 pt minimum everywhere (`Space.target`). Answer buttons
-are ≥ 60 pt tall.
+**Targets** — 44×44 pt minimum everywhere (`Size.target`). Answer buttons
+are ≥ 60 pt tall (`Size.answer`).
+
+**Glow** — the phosphor bloom behind a lit figure is `.glow(_:)`: `.edge` 6,
+`.figure` 10, `.hero` 14, `.medal` 18, `.tv` 30. Off under Increase Contrast.
 
 ## Materials
 
@@ -124,7 +136,12 @@ are ≥ 60 pt tall.
 | Panel (drawn) | readouts, join code card | `ink` mixed 8 % white, opaque | `panel`/`panelStroke` IC values |
 | Backdrop (drawn) | behind every screen | glow only: no texture, no tilt | glow only: no texture, no vignette |
 
-Sheets use the system sheet material — they don't draw the backdrop.
+Sheets use the system sheet material — they don't draw the backdrop. The
+one exception is the shop, whose job is showing a theme on its backdrop.
+
+The answer-to-verdict morph needs one `GlassEffectContainer` around the
+in-game screens. The join screen sits outside it: on iOS 27.0, glass buttons
+in a `safeAreaBar` inside a container don't receive taps.
 
 ## Motion
 
@@ -174,23 +191,29 @@ checkmark — all system, all quieted by Reduce Motion.
 
 Every component has a preview per state, plus Dynamic Type xSmall and AX5,
 Increase Contrast, Reduce Transparency, Reduce Motion, RTL, long and empty
-content (`DesignSystem/Sources/DesignSystem/Previews`).
+content (`DesignSystem/Sources/DesignSystem/Previews/ComponentPreviews.swift`).
 
 | Component | States |
 |---|---|
-| `ActionButton` (primary / secondary) | enabled, pressed, disabled, loading |
-| `AnswerButton` | open, chosen, dimmed, closed (time's up) |
+| `ActionButton` (primary / secondary), `ActionBar` | enabled, pressed, disabled, loading; optional tap haptic |
+| `AnswerButton` | open, chosen, dimmed (another chosen, or time's up) |
 | `AnswerKey` | normal, inverted (on a lit surface) |
-| `PINCells` | empty, next (lit edge + cursor), filled, rejected (shake) |
-| `PromptField` (`> name`) | empty, focused, filled, error |
-| `Readout` / `ReadoutRow` | inline, stacked (long value or AX size), empty |
-| `Panel` | standard, IC, RT |
-| `StatusLine` | waiting (cursor), steady (Reduce Motion) |
-| `StatusDot` | online, connecting (pulse), failed |
-| `RankFigure` | medal 1/2/3, other, unranked |
-| `UndoToast` | shown, counting down, undone |
+| `PINCells` | empty, next (lit edge + cursor), filled, rejected (`.rejectionShake`) |
+| `PromptField` (`> name`) | empty, focused, filled |
+| `FieldMessage` | error, notice, hint |
+| `PickerRow` | searching, online, connecting, unreachable |
+| `LabeledField`, `SectionHeader`, `DividerLabel` | — |
+| `Readout` / `ReadoutRow`, `.panel()` | inline, stacked (long value or AX size), empty; IC; RT |
+| `StatusLine` | waiting (cursor), steady |
+| `StatusDot` | online, connecting (pulse), failed (pulse), idle |
+| `Wordmark`, `AnswerSetMark` | screen, showcase |
+| `RankFigure` | medal 1/2/3, other, unranked; compact |
+| `PodiumStep` | 1st/2nd/3rd, the player's own |
+| `Badge` | glass (verdict), drawn (waiting) |
+| `UndoToast` (`.undoToast`) | shown, counting down, undone |
+| `ThemeSwatch`, `IconArtwork` | every theme and icon; shown |
 | `Backdrop` | moods idle/question/correct/wrong/missed/celebrate × 10 textures × RT/IC/RM |
-| Empty / loading / error | `ContentUnavailableView` with a status-line voice |
+| Empty / loading / error | `ContentUnavailableView`, `StatusLine`, `FieldMessage` |
 
 ## Voice
 
