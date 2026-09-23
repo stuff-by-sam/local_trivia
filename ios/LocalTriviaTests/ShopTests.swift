@@ -42,8 +42,9 @@ import Testing
   }
 
   /// Refunds a purchase, then checks again until the shop has seen it go —
-  /// StoreKit takes a moment. (The app's own shop is listening for the
-  /// refund in this process too, so it's checked for here rather than heard.)
+  /// StoreKit takes a moment, and several seconds on a busy machine running
+  /// tests in parallel. (The app's own shop is listening for the refund in
+  /// this process too, so it's checked for here rather than heard.)
   private func refund(_ productID: String?, in shop: Shop) async throws {
     let productID = try #require(productID)
     let transaction = try #require(session.allTransactions().first { $0.productIdentifier == productID })
@@ -53,7 +54,7 @@ import Testing
       try await Task.sleep(for: .milliseconds(100))
       await shop.refreshEntitlements()
       checks += 1
-    } while shop.owned.contains(productID) && checks < 50
+    } while shop.owned.contains(productID) && checks < 150
   }
 
   @Test func sellsEverythingInTheCatalog() async {

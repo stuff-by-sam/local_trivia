@@ -133,16 +133,18 @@ Game on the join screen, and nowhere in a game. Everything is a one-time,
 non-consumable in-app purchase — each theme and icon on its own, or
 **Everything** in one go. Phosphor and the classic icon are free.
 
-- **Themes** — Amber, Cobalt, Synthwave, Noir, Gold, Holographic and
-  Chalkboard. A theme is the accent, the ink behind the glass, and the
-  texture the glass refracts: Phosphor's scanlines, Cobalt's vector grid,
-  Synthwave's horizon, Noir's dot matrix, Gold's brushed metal,
-  Chalkboard's eraser smears and dust on slate. Holographic is foil: an
-  iridescent sheen that slides across the screen as the phone tilts, the way
-  Apple Card's does. It's the one texture that moves, so it holds still
-  while a question is up (the app still does no per-frame work then), under
-  Reduce Motion, on a TV, and in the background; Core Motion runs only while
-  it's following the phone, and needs no permission.
+- **Themes** — Amber, Cobalt, Synthwave, Noir, Gold, Holographic,
+  Chalkboard, Glass and Titanium. A theme is the accent, the ink behind the
+  glass, and the texture the glass refracts: Phosphor's scanlines, Cobalt's
+  vector grid, Synthwave's horizon, Noir's dot matrix, Gold's brushed metal,
+  Chalkboard's eraser smears and dust on slate. Three follow the phone's
+  tilt: Holographic's iridescent foil slides across the screen the way Apple
+  Card's does, Glass's pools of liquid colour run downhill under the glass
+  controls, and a band of light slides across Titanium's brushed metal.
+  These hold still while a question is up (the app still does no per-frame
+  work then), under Reduce Motion, on a TV, and in the background; Core
+  Motion runs only while one is following the phone, and needs no
+  permission.
   Tapping one dresses the shop in it, so it's tried on before it's bought;
   closing the shop takes it off. A theme dresses this phone and any TV it's
   showing the game on. It never crosses the network, and never touches the
@@ -150,7 +152,9 @@ non-consumable in-app purchase — each theme and icon on its own, or
   the room, whoever's wearing what, and red is still wrong.
 - **App icons** — one to match every theme: the classic icon's four
   shapes, recoloured (Holographic's in foil, Chalkboard's in pastel chalk on
-  slate). Each is an Icon Composer file beside
+  slate, Titanium's in brushed metal). Glass's shapes are glass layers over
+  liquid colour, which the system refracts and lights. Each is an Icon
+  Composer file beside
   `AppIcon.icon`, named in the target's *Alternate App Icon Sets* build
   setting.
 - **Everything** — one product that unlocks every theme and icon, including

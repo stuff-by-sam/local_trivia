@@ -9,7 +9,7 @@ import SwiftUI
 /// thing on every phone in the room and on the TV, whoever's wearing what.
 /// Status colours stay put too: green is still right and red still wrong.
 enum Theme: String, CaseIterable, Identifiable, Sendable {
-  case phosphor, amber, cobalt, synthwave, noir, gold, holographic, chalkboard
+  case phosphor, amber, cobalt, synthwave, noir, gold, holographic, chalkboard, glass, titanium
 
   var id: String { rawValue }
 
@@ -23,6 +23,8 @@ enum Theme: String, CaseIterable, Identifiable, Sendable {
     case .gold: "Gold"
     case .holographic: "Holographic"
     case .chalkboard: "Chalkboard"
+    case .glass: "Glass"
+    case .titanium: "Titanium"
     }
   }
 
@@ -36,6 +38,8 @@ enum Theme: String, CaseIterable, Identifiable, Sendable {
     case .gold: "Brushed gold on black, for whoever keeps winning"
     case .holographic: "Iridescent foil that catches the light as you tilt it"
     case .chalkboard: "Chalk on slate, still dusty from the last round"
+    case .glass: "Liquid colour under clear glass, pooling as you tilt"
+    case .titanium: "Brushed titanium: tilt it and the light moves"
     }
   }
 
@@ -51,6 +55,8 @@ enum Theme: String, CaseIterable, Identifiable, Sendable {
     case .gold: Color(hex: 0xF5C542)
     case .holographic: Color(hex: 0xD4C4FF)
     case .chalkboard: Color(hex: 0xFFF0A0)
+    case .glass: Color(hex: 0xBFEFFF)
+    case .titanium: Color(hex: 0xC5CDD8)
     }
   }
 
@@ -66,6 +72,8 @@ enum Theme: String, CaseIterable, Identifiable, Sendable {
     case .holographic: Color(hex: 0x08080E)
     // Slate, not black: a board a shade lighter than the room.
     case .chalkboard: Color(hex: 0x141D19)
+    case .glass: Color(hex: 0x04070F)
+    case .titanium: Color(hex: 0x0D0F12)
     }
   }
 
@@ -78,6 +86,8 @@ enum Theme: String, CaseIterable, Identifiable, Sendable {
     case .gold: .brushed
     case .holographic: .holofoil
     case .chalkboard: .chalk
+    case .glass: .liquid
+    case .titanium: .metal
     }
   }
 

@@ -226,6 +226,66 @@
       "productID" : "com.stuffbysam.localtrivia.icon.chalkboard",
       "referenceName" : "Icon: Chalkboard",
       "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000016",
+      "localizations" : [
+        {
+          "description" : "Liquid colour under clear glass, pooling as you tilt.",
+          "displayName" : "Glass Theme",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.theme.glass",
+      "referenceName" : "Theme: Glass",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000017",
+      "localizations" : [
+        {
+          "description" : "Brushed titanium: tilt it and the light moves.",
+          "displayName" : "Titanium Theme",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.theme.titanium",
+      "referenceName" : "Theme: Titanium",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000018",
+      "localizations" : [
+        {
+          "description" : "The Glass app icon for your Home Screen.",
+          "displayName" : "Glass Icon",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.icon.glass",
+      "referenceName" : "Icon: Glass",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000019",
+      "localizations" : [
+        {
+          "description" : "The Titanium app icon for your Home Screen.",
+          "displayName" : "Titanium Icon",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.icon.titanium",
+      "referenceName" : "Icon: Titanium",
+      "type" : "NonConsumable"
     }
   ],
   "settings" : {

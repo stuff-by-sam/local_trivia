@@ -2,8 +2,9 @@ import CoreMotion
 import SwiftUI
 
 // The themes' textures (`Backdrop.Texture`), apart from Phosphor's scanlines.
-// Each is drawn once and holds still, bar the holographic foil, which follows
-// the phone's tilt while it may.
+// Each is drawn once and holds still, bar Holographic's foil, Glass's liquid
+// and Titanium's shine, which follow the phone's tilt while they may
+// (`TiltFollowing`).
 
 /// Cobalt's texture: hairlines on a 22 pt square pitch, faint enough to read as
 /// the glass's structure rather than a pattern of its own.
@@ -93,22 +94,25 @@ struct DotMatrix: View {
 /// the light and some in shadow, like brushed metal.
 struct Brushed: View {
   let color: Color
+  /// How strongly the streaks catch the light, and how dark their shadows.
+  var light = 0.06
+  var shadow = 0.25
 
   var body: some View {
     Canvas { context, size in
       var random = Seeded(0x601D)
-      var light = Path()
-      var shadow = Path()
+      var lit = Path()
+      var shaded = Path()
       var y: CGFloat = 0
       while y < size.height {
         let length = size.width * CGFloat.random(in: 0.25...0.9, using: &random)
         let x = CGFloat.random(in: -0.2...1, using: &random) * size.width
         let streak = CGRect(x: x, y: y, width: length, height: 0.75)
-        if Bool.random(using: &random) { light.addRect(streak) } else { shadow.addRect(streak) }
+        if Bool.random(using: &random) { lit.addRect(streak) } else { shaded.addRect(streak) }
         y += CGFloat.random(in: 1.5...3.5, using: &random)
       }
-      context.fill(light, with: .color(color.opacity(0.06)))
-      context.fill(shadow, with: .color(.black.opacity(0.25)))
+      context.fill(lit, with: .color(color.opacity(light)))
+      context.fill(shaded, with: .color(.black.opacity(shadow)))
     }
   }
 }
@@ -148,15 +152,8 @@ struct ChalkDust: View {
 /// Holographic's texture: an iridescent sheen that slides across the ink as
 /// the phone tilts, the way foil catches the light, over fine diffraction
 /// lines.
-///
-/// Only the sheen redraws, and only while it's following the phone: never
-/// under Reduce Motion, while a question is up, on a TV, or with the app in
-/// the background. Otherwise it rests where a level phone would put it.
 struct Holofoil: View {
   let followsTilt: Bool
-
-  @Environment(\.scenePhase) private var scenePhase
-  @State private var isWatching = false
 
   /// The holographic icon's sweep, back round to where it started.
   private static var foil: [Color] {
@@ -164,16 +161,10 @@ struct Holofoil: View {
   }
 
   var body: some View {
-    let isLive = followsTilt && scenePhase == .active && Tilt.shared.isAvailable
     ZStack {
-      TimelineView(.animation(minimumInterval: 1.0 / 30, paused: !isLive)) { _ in
-        sheen(isLive ? Tilt.shared.angles : .level)
-      }
+      TiltFollowing(followsTilt: followsTilt) { sheen($0) }
       Diffraction()
     }
-    .onAppear { watch(isLive) }
-    .onChange(of: isLive) { _, live in watch(live) }
-    .onDisappear { watch(false) }
   }
 
   /// Rolling the phone slides the bands sideways; tipping it slides them up
@@ -189,12 +180,6 @@ struct Holofoil: View {
     .opacity(0.26)
     .blendMode(.screen)
     .mask(LinearGradient(colors: [.white, .white.opacity(0.35)], startPoint: .top, endPoint: .bottom))
-  }
-
-  private func watch(_ live: Bool) {
-    guard live != isWatching else { return }
-    isWatching = live
-    if live { Tilt.shared.watch() } else { Tilt.shared.unwatch() }
   }
 }
 
@@ -214,11 +199,126 @@ struct Diffraction: View {
   }
 }
 
-/// Which way the phone's tilted, for foil that catches the light.
+/// Glass's texture: pools of liquid colour — sky, indigo, violet — for the
+/// glass controls to refract, running downhill as the phone tilts. Each pool
+/// runs its own distance, so they slide past one another. A cool family, clear
+/// of the answer colours, so no answer's glass picks up another's hue. Half as
+/// bright while a question is up.
+struct LiquidPools: View {
+  let followsTilt: Bool
+  let isQuiet: Bool
+
+  private struct Pool {
+    let color: UInt32
+    /// Where it rests, as a fraction of the screen, and its width, as a
+    /// fraction of the screen's.
+    let x: CGFloat, y: CGFloat, size: CGFloat
+    /// How far it runs when the phone tilts.
+    let drift: CGFloat
+  }
+
+  private static var pools: [Pool] {
+    [
+      Pool(color: 0x3FB6F0, x: 0.12, y: 0.2, size: 1.1, drift: 1),
+      Pool(color: 0x5B6BFF, x: 0.92, y: 0.36, size: 1, drift: 0.6),
+      Pool(color: 0x9A6BFF, x: 0.3, y: 0.74, size: 1.2, drift: 1.4),
+      Pool(color: 0x7FA8FF, x: 0.95, y: 0.92, size: 0.9, drift: 0.8),
+    ]
+  }
+
+  var body: some View {
+    GeometryReader { proxy in
+      TiltFollowing(followsTilt: followsTilt) { tilt in
+        let run = CGSize(
+          width: CGFloat(sin(tilt.roll)) * 90,
+          height: CGFloat(sin(tilt.pitch - Tilt.Angles.level.pitch)) * 90)
+        ZStack {
+          ForEach(Array(Self.pools.enumerated()), id: \.offset) { _, pool in
+            let size = proxy.size.width * pool.size
+            let color = Color(hex: pool.color)
+            Circle()
+              .fill(RadialGradient(colors: [color.opacity(0.5), color.opacity(0)], center: .center, startRadius: 0, endRadius: size / 2))
+              .frame(width: size, height: size)
+              .position(
+                x: proxy.size.width * pool.x + run.width * pool.drift,
+                y: proxy.size.height * pool.y + run.height * pool.drift)
+          }
+          // The pane itself, catching the light along its top.
+          LinearGradient(colors: [.white.opacity(0.06), .clear], startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.3))
+        }
+      }
+    }
+    .opacity(isQuiet ? 0.5 : 1)
+    .blendMode(.screen)
+  }
+}
+
+/// Titanium's texture: brushed metal, lit from above — brighter, harsher
+/// streaks than Gold's — and a band of light across it that slides and leans
+/// as the phone tilts, the way metal catches a window.
+struct BrushedMetal: View {
+  let color: Color
+  let followsTilt: Bool
+
+  var body: some View {
+    ZStack {
+      Brushed(color: color, light: 0.1, shadow: 0.32)
+      TiltFollowing(followsTilt: followsTilt) { shine($0) }
+    }
+  }
+
+  private func shine(_ tilt: Tilt.Angles) -> some View {
+    let lean = CGFloat(sin(tilt.roll)) * 0.35
+    let middle = 0.28 + CGFloat(sin(tilt.pitch - Tilt.Angles.level.pitch)) * 0.5
+    func at(_ location: CGFloat) -> CGFloat { min(max(location, 0), 1) }
+    return LinearGradient(
+      stops: [
+        .init(color: .clear, location: at(middle - 0.14)),
+        .init(color: .white.opacity(0.12), location: at(middle)),
+        .init(color: .clear, location: at(middle + 0.14)),
+      ],
+      startPoint: UnitPoint(x: 0.5 - lean, y: 0),
+      endPoint: UnitPoint(x: 0.5 + lean, y: 1)
+    )
+    .blendMode(.screen)
+  }
+}
+
+/// Draws `content` from the phone's tilt, for the textures that follow it.
+///
+/// Only `content` redraws, and only while it's following the phone: never
+/// under Reduce Motion, while a question is up, on a TV (the backdrop decides
+/// those, through `followsTilt`), or with the app in the background. Otherwise
+/// it rests where a level phone would put it.
+struct TiltFollowing<Content: View>: View {
+  let followsTilt: Bool
+  @ViewBuilder var content: (Tilt.Angles) -> Content
+
+  @Environment(\.scenePhase) private var scenePhase
+  @State private var isWatching = false
+
+  var body: some View {
+    let isLive = followsTilt && scenePhase == .active && Tilt.shared.isAvailable
+    TimelineView(.animation(minimumInterval: 1.0 / 30, paused: !isLive)) { _ in
+      content(isLive ? Tilt.shared.angles : .level)
+    }
+    .onAppear { watch(isLive) }
+    .onChange(of: isLive) { _, live in watch(live) }
+    .onDisappear { watch(false) }
+  }
+
+  private func watch(_ live: Bool) {
+    guard live != isWatching else { return }
+    isWatching = live
+    if live { Tilt.shared.watch() } else { Tilt.shared.unwatch() }
+  }
+}
+
+/// Which way the phone's tilted, for textures that catch the light.
 ///
 /// One motion manager for the app, as Core Motion asks, and it runs only
-/// while a foil backdrop is on screen and following the phone. Device motion
-/// needs no permission.
+/// while a texture on screen is following the phone. Device motion needs no
+/// permission.
 final class Tilt {
   struct Angles {
     var roll: Double

@@ -128,6 +128,9 @@
     "Brushed gold on black, for whoever keeps winning" : {
 
     },
+    "Brushed titanium: tilt it and the light moves" : {
+
+    },
     "Buy %@, %@" : {
       "localizations" : {
         "en" : {
@@ -286,6 +289,9 @@
     "General" : {
 
     },
+    "Glass" : {
+
+    },
     "Gold" : {
 
     },
@@ -341,6 +347,9 @@
 
     },
     "Left out of this round" : {
+
+    },
+    "Liquid colour under clear glass, pooling as you tilt" : {
 
     },
     "Locked in · %lld of %lld answered" : {
@@ -687,6 +696,9 @@
 
     },
     "Time's up" : {
+
+    },
+    "Titanium" : {
 
     },
     "Toggles whether this question plays." : {

@@ -9,8 +9,8 @@ import SwiftUI
 /// theme does. It's static between moods — it only animates when one changes.
 ///
 /// The ink and the texture come from the theme (`Theme`); what's described
-/// above is Phosphor, the game's own. Holographic's foil is the one texture
-/// that moves, following the phone's tilt — and it holds still while a
+/// above is Phosphor, the game's own. Holographic's foil, Glass's liquid and
+/// Titanium's shine follow the phone's tilt — and hold still while a
 /// question is up.
 struct Backdrop: View {
   enum Mood: Equatable {
@@ -23,7 +23,7 @@ struct Backdrop: View {
   }
 
   /// What the glass has to bend. Each is drawn once and holds still, bar the
-  /// holographic foil (`Textures.swift`).
+  /// three that follow the phone's tilt (`Textures.swift`).
   enum Texture: Equatable {
     case scanlines
     /// A vector display's graticule.
@@ -39,6 +39,11 @@ struct Backdrop: View {
     case holofoil
     /// Eraser smears and chalk dust.
     case chalk
+    /// Pools of liquid colour for the glass to refract, running downhill as
+    /// the phone tilts.
+    case liquid
+    /// Brushed metal, with a band of light that slides as the phone tilts.
+    case metal
   }
 
   let mood: Mood
@@ -88,11 +93,17 @@ struct Backdrop: View {
       }
     case .dotMatrix: DotMatrix()
     case .brushed: Brushed(color: accent)
-    // The one texture that moves — never while a question is up, when
-    // nothing may compete with reading it.
-    case .holofoil: Holofoil(followsTilt: followsTilt && !reduceMotion && mood != .question)
+    case .holofoil: Holofoil(followsTilt: movesWithTilt)
     case .chalk: ChalkDust()
+    case .liquid: LiquidPools(followsTilt: movesWithTilt, isQuiet: mood == .question)
+    case .metal: BrushedMetal(color: accent, followsTilt: movesWithTilt)
     }
+  }
+
+  /// Whether a texture that can follow the phone's tilt does. Never while a
+  /// question is up, when nothing may compete with reading it.
+  private var movesWithTilt: Bool {
+    followsTilt && !reduceMotion && mood != .question
   }
 
   private var glow: Color {
@@ -146,7 +157,7 @@ private struct Scanlines: View {
 }
 
 extension EnvironmentValues {
-  /// Whether a foil backdrop catches the light as the phone tilts. Off on a
-  /// TV, which doesn't tilt.
+  /// Whether a backdrop that can follow the phone's tilt does. Off on a TV,
+  /// which doesn't tilt.
   @Entry var backdropFollowsTilt = true
 }

@@ -419,7 +419,7 @@
 		587938C67C3D1D9B03F9600A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-Amber AppIcon-Cobalt AppIcon-Synthwave AppIcon-Noir AppIcon-Gold AppIcon-Holographic AppIcon-Chalkboard";
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-Amber AppIcon-Cobalt AppIcon-Synthwave AppIcon-Noir AppIcon-Gold AppIcon-Holographic AppIcon-Chalkboard AppIcon-Glass AppIcon-Titanium";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
@@ -451,7 +451,7 @@
 		47C65A70704D192FC55EE964 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-Amber AppIcon-Cobalt AppIcon-Synthwave AppIcon-Noir AppIcon-Gold AppIcon-Holographic AppIcon-Chalkboard";
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-Amber AppIcon-Cobalt AppIcon-Synthwave AppIcon-Noir AppIcon-Gold AppIcon-Holographic AppIcon-Chalkboard AppIcon-Glass AppIcon-Titanium";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
