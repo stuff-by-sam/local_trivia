@@ -1,3 +1,4 @@
+import DesignSystem
 import SwiftUI
 
 /// The game on a TV, for the whole room: the join code while people arrive,
@@ -10,27 +11,22 @@ import SwiftUI
 struct BigScreenView: View {
   @Environment(GameStore.self) private var store
   @Environment(HostController.self) private var host
-  @Environment(\.accent) private var accent
-
-  static let canvas = CGSize(width: 1920, height: 1080)
 
   var body: some View {
     GeometryReader { proxy in
-      let scale = min(proxy.size.width / Self.canvas.width, proxy.size.height / Self.canvas.height)
+      let canvas = TVMetrics.canvas
+      let scale = min(proxy.size.width / canvas.width, proxy.size.height / canvas.height)
       board
         .id(boardID)
         .transition(.opacity)
         // TVs crop their edges: keep everything inside the title-safe area.
-        .padding(.horizontal, 110)
-        .padding(.vertical, 64)
-        .frame(width: Self.canvas.width, height: Self.canvas.height)
+        .padding(TVMetrics.safeInsets)
+        .frame(width: canvas.width, height: canvas.height)
         .scaleEffect(scale)
         .frame(width: proxy.size.width, height: proxy.size.height)
     }
-    .background { Backdrop(mood: mood, accent: accent) }
-    .animation(.smooth(duration: 0.6), value: boardID)
-    // Set outright, not requested: a TV's window is nobody's to ask.
-    .environment(\.colorScheme, .dark)
+    .background { Backdrop(mood: mood) }
+    .motion(.screen, value: boardID)
   }
 
   @ViewBuilder
@@ -81,29 +77,22 @@ struct BigScreenView: View {
 
 /// Before any game: what this screen is for.
 private struct IdleBoard: View {
-  @Environment(\.accent) private var accent
 
   var body: some View {
-    VStack(spacing: 44) {
-      HStack(spacing: 36) {
-        ForEach(AnswerStyle.allCases) { style in
-          Image(systemName: style.symbol)
-            .foregroundStyle(style.color)
-        }
-      }
-      .font(.system(size: 56))
+    VStack(spacing: TVMetrics.gap) {
+      AnswerSetMark()
+        .tvRole(.answerSet)
 
       HStack(spacing: 0) {
         Text(verbatim: "TRIVIA")
-          .tracking(20)
         BlinkingCursor(glyph: "█")
       }
-      .font(.mono(size: 180, weight: .heavy))
-      .foregroundStyle(accent)
-      .shadow(color: accent.opacity(0.45), radius: 30)
+      .tvRole(.wordmark)
+      .foregroundStyle(.themeAccent)
+      .glow(.tv)
 
       Text("Host a game on your phone, and it shows up here.")
-        .font(.system(size: 44, weight: .medium))
+        .tvRole(.idleLine)
         .foregroundStyle(.secondary)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -116,7 +105,6 @@ private struct LobbyBoard: View {
 
   @Environment(GameStore.self) private var store
   @Environment(HostController.self) private var host
-  @Environment(\.accent) private var accent
 
   private static let shownNames = 24
 
@@ -127,40 +115,37 @@ private struct LobbyBoard: View {
           .foregroundStyle(.secondary)
       }
 
-      Spacer(minLength: 40)
+      Spacer(minLength: TVMetrics.gap)
 
       if host.isHosting, let game = host.game {
-        HStack(alignment: .center, spacing: 110) {
-          VStack(alignment: .leading, spacing: 20) {
+        HStack(alignment: .center, spacing: TVMetrics.wideGap) {
+          VStack(alignment: .leading, spacing: TVMetrics.rowGap * 2) {
             Text("Join code")
-              .font(.mono(size: 36, weight: .semibold))
-              .textCase(.uppercase)
-              .tracking(4)
+              .tvRole(.joinLabel)
               .foregroundStyle(.secondary)
             Text(verbatim: game.pin)
-              .font(.mono(size: 250, weight: .heavy))
-              .tracking(24)
-              .foregroundStyle(accent)
-              .shadow(color: accent.opacity(0.45), radius: 30)
+              .tvRole(.pin)
+              .foregroundStyle(.themeAccent)
+              .glow(.tv)
             Text("Open Trivia on this Wi-Fi and type the code, or scan it with the Camera.")
-              .font(.system(size: 38, weight: .medium))
+              .tvRole(.instruction)
               .foregroundStyle(.secondary)
-              .frame(maxWidth: 900, alignment: .leading)
+              .frame(maxWidth: TVMetrics.instructionWidth, alignment: .leading)
               .fixedSize(horizontal: false, vertical: true)
           }
           if let link = host.joinLink {
             QRCodeView(payload: link.url.absoluteString)
-              .frame(width: 400, height: 400)
+              .frame(width: TVMetrics.qr, height: TVMetrics.qr)
           }
         }
       } else {
         WaitingLine("Waiting for the host to start")
       }
 
-      Spacer(minLength: 40)
+      Spacer(minLength: TVMetrics.gap)
 
       names
-        .frame(minHeight: 150, alignment: .top)
+        .frame(minHeight: TVMetrics.tileHeight, alignment: .top)
     }
   }
 
@@ -174,22 +159,22 @@ private struct LobbyBoard: View {
   private var names: some View {
     if let players = host.game?.connectedPlayers, !players.isEmpty {
       let shown = players.prefix(Self.shownNames)
-      LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 20), count: 6), spacing: 16) {
+      LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: TVMetrics.rowGap * 2), count: 6), spacing: TVMetrics.rowGap) {
         ForEach(shown) { player in
           Text(verbatim: player.nickname)
-            .font(.system(size: 32, weight: .semibold))
+            .tvRole(.name)
             .lineLimit(1)
             .minimumScaleFactor(0.6)
-            .padding(.horizontal, 20)
-            .frame(maxWidth: .infinity, minHeight: 64)
-            .background(.white.opacity(0.07), in: .capsule)
+            .padding(.horizontal, TVMetrics.rowGap * 2)
+            .frame(maxWidth: .infinity, minHeight: TVMetrics.nameHeight)
+            .background(.panel, in: .capsule)
         }
       }
       if players.count > shown.count {
         Text("and \(players.count - shown.count) more")
-          .font(.mono(size: 30, weight: .semibold))
+          .tvRole(.nameOverflow)
           .foregroundStyle(.secondary)
-          .padding(.top, 16)
+          .padding(.top, TVMetrics.rowGap)
       }
     }
   }
@@ -202,23 +187,24 @@ private struct QuestionBoard: View {
   let window: ClosedRange<Date>
   let answered: AnsweredCount?
 
-  @Environment(\.accent) private var accent
   @State private var isRunningLow = false
 
   /// The phones and the TV presenter turn the clock red for the last ten seconds.
   private static let lowTime: TimeInterval = 10
 
   var body: some View {
-    VStack(spacing: 36) {
+    VStack(spacing: TVMetrics.gap) {
       Masthead(gameName: gameName) {
-        HStack(spacing: 36) {
-          QuestionNumber(question: question)
-          HStack(spacing: 14) {
-            Image(systemName: "timer")
+        HStack(spacing: TVMetrics.gap) {
+          QuestionHeading(question: question)
+          Label {
             Text(timerInterval: window, countsDown: true, showsHours: false)
+          } icon: {
+            Image(systemName: "timer")
           }
+          .labelStyle(.titleAndIcon)
           .monospacedDigit()
-          .foregroundStyle(isRunningLow ? Color.broadcastRed : .primary)
+          .foregroundStyle(isRunningLow ? AnyShapeStyle(.danger) : AnyShapeStyle(.primary))
         }
       }
 
@@ -228,17 +214,17 @@ private struct QuestionBoard: View {
         EmptyView()
       }
       .progressViewStyle(.linear)
-      .tint(isRunningLow ? Color.broadcastRed : accent)
-      .scaleEffect(x: 1, y: 2.5)
+      .tint(isRunningLow ? AnyShapeStyle(.danger) : AnyShapeStyle(.themeAccent))
+      .scaleEffect(x: 1, y: TVMetrics.progressScale)
 
       Spacer(minLength: 0)
 
       // Host-authored: verbatim, never a localization key or Markdown.
       Text(verbatim: question.text)
-        .font(.system(size: questionSize, weight: .bold))
+        .tvRole(.question(length: question.text.count))
         .multilineTextAlignment(.center)
         .minimumScaleFactor(0.6)
-        .frame(maxWidth: 1540)
+        .frame(maxWidth: TVMetrics.textWidth)
 
       Spacer(minLength: 0)
 
@@ -251,24 +237,12 @@ private struct QuestionBoard: View {
           Text("Answer on your phone")
         }
       }
-      .font(.mono(size: 32, weight: .semibold))
-      .textCase(.uppercase)
-      .tracking(3)
+      .tvRole(.footer)
       .foregroundStyle(.secondary)
       .contentTransition(.numericText())
-      .animation(.snappy, value: answered)
+      .motion(.snap, value: answered)
     }
     .task(id: question.questionId) { await runClock() }
-  }
-
-  /// Short questions go big; long ones step down so the answers keep their room.
-  private var questionSize: CGFloat {
-    switch question.text.count {
-    case ...60: 92
-    case ...120: 76
-    case ...200: 62
-    default: 52
-    }
   }
 
   private func runClock() async {
@@ -277,7 +251,7 @@ private struct QuestionBoard: View {
     guard !isRunningLow else { return }
     try? await Task.sleep(for: .seconds(end.timeIntervalSinceNow - Self.lowTime))
     guard !Task.isCancelled else { return }
-    withAnimation(.smooth) { isRunningLow = true }
+    Motion.settle.perform { isRunningLow = true }
   }
 }
 
@@ -288,29 +262,27 @@ private struct RevealBoard: View {
   let reveal: Reveal
 
   var body: some View {
-    VStack(spacing: 36) {
+    VStack(spacing: TVMetrics.gap) {
       Masthead(gameName: gameName) {
-        QuestionNumber(question: question)
+        QuestionHeading(question: question)
       }
 
       Spacer(minLength: 0)
 
       Text(verbatim: question.text)
-        .font(.system(size: 52, weight: .semibold))
+        .tvRole(.questionAtReveal)
         .multilineTextAlignment(.center)
         .lineLimit(3)
         .minimumScaleFactor(0.6)
         .foregroundStyle(.secondary)
-        .frame(maxWidth: 1540)
+        .frame(maxWidth: TVMetrics.textWidth)
 
       Spacer(minLength: 0)
 
       AnswerGrid(options: question.options, correctIndex: reveal.correctIndex, votes: reveal.distribution)
 
       Text(summary)
-        .font(.mono(size: 32, weight: .semibold))
-        .textCase(.uppercase)
-        .tracking(3)
+        .tvRole(.footer)
         .foregroundStyle(.secondary)
     }
   }
@@ -327,29 +299,25 @@ private struct StandingsBoard: View {
   let gameName: String
   let board: Leaderboard
 
-  @Environment(\.accent) private var accent
-
   private static let shownRows = 8
 
   var body: some View {
-    VStack(spacing: 36) {
+    VStack(spacing: TVMetrics.gap) {
       Masthead(gameName: gameName) {
         Text(verbatim: "Q \(board.afterQuestion.twoDigits)/\(board.totalQuestions.twoDigits)")
           .foregroundStyle(.secondary)
       }
 
       Text("Standings")
-        .font(.mono(size: 64, weight: .heavy))
-        .textCase(.uppercase)
-        .tracking(10)
-        .foregroundStyle(accent)
+        .tvRole(.sectionTitle)
+        .foregroundStyle(.themeAccent)
 
-      VStack(spacing: 12) {
+      VStack(spacing: TVMetrics.rowGap) {
         ForEach(board.standings.prefix(Self.shownRows), id: \.self) { row in
           StandingRow(row: row)
         }
       }
-      .frame(maxWidth: 1400)
+      .frame(maxWidth: TVMetrics.tableWidth)
 
       Spacer(minLength: 0)
 
@@ -360,9 +328,7 @@ private struct StandingsBoard: View {
           Text("^[\(board.remaining) question](inflect: true) to go")
         }
       }
-      .font(.mono(size: 32, weight: .semibold))
-      .textCase(.uppercase)
-      .tracking(3)
+      .tvRole(.footer)
       .foregroundStyle(.secondary)
     }
   }
@@ -372,27 +338,27 @@ private struct StandingRow: View {
   let row: Leaderboard.Row
 
   var body: some View {
-    HStack(spacing: 32) {
+    HStack(spacing: TVMetrics.gap) {
       Text(verbatim: row.rank.twoDigits)
-        .font(.mono(size: 44, weight: .heavy))
-        .foregroundStyle(LeaderboardTable.medal(row.rank) ?? .secondary)
-        .frame(width: 90, alignment: .leading)
+        .tvRole(.rank)
+        .foregroundStyle(Medal(rank: row.rank).map { AnyShapeStyle($0.color) } ?? AnyShapeStyle(.secondary))
+        .frame(width: TVMetrics.rankWidth, alignment: .leading)
       Text(verbatim: row.nickname)
-        .font(.system(size: 46, weight: .semibold))
+        .tvRole(.standingName)
         .lineLimit(1)
       if let delta = row.delta, delta != 0 {
         Text(verbatim: delta > 0 ? "▲\(delta)" : "▼\(-delta)")
-          .font(.mono(size: 32, weight: .bold))
-          .foregroundStyle(delta > 0 ? Color.broadcastGreen : Color.broadcastRed)
+          .tvRole(.standingDelta)
+          .foregroundStyle(delta > 0 ? AnyShapeStyle(.success) : AnyShapeStyle(.danger))
       }
-      Spacer(minLength: 32)
+      Spacer(minLength: TVMetrics.gap)
       Text(verbatim: row.score.grouped)
-        .font(.mono(size: 46, weight: .bold))
+        .tvRole(.standingScore)
         .monospacedDigit()
     }
-    .padding(.horizontal, 36)
-    .frame(minHeight: 76)
-    .background(.white.opacity(row.rank <= 3 ? 0.08 : 0.04), in: .rect(cornerRadius: 18))
+    .padding(.horizontal, TVMetrics.gap)
+    .frame(minHeight: TVMetrics.rowHeight)
+    .background(.panel, in: .rect(cornerRadius: TVMetrics.rowRadius))
   }
 }
 
@@ -405,69 +371,61 @@ private struct FinalBoard: View {
     VStack(spacing: 0) {
       Masthead(gameName: gameName) {
         Text("Game over")
-          .foregroundStyle(Color.broadcastGold)
+          .foregroundStyle(Medal.first.color)
       }
 
-      Spacer(minLength: 40)
+      Spacer(minLength: TVMetrics.gap)
 
       // 2nd, 1st, 3rd — as on the phones.
-      HStack(alignment: .bottom, spacing: 48) {
-        ForEach([2, 1, 3], id: \.self) { rank in
-          if let placing = podium.first(where: { $0.rank == rank }) ?? podium[safe: rank - 1] {
-            PodiumStep(placing: placing, place: rank)
+      HStack(alignment: .bottom, spacing: TVMetrics.gap) {
+        ForEach([Medal.second, .first, .third], id: \.self) { medal in
+          if let placing = podium.first(where: { $0.rank == medal.rawValue }) ?? podium[safe: medal.rawValue - 1] {
+            TVPodiumStep(placing: placing, medal: medal)
           } else {
-            Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
+            Color.clear.frame(maxWidth: .infinity, maxHeight: 0)
           }
         }
       }
-      .frame(maxWidth: 1500)
+      .frame(maxWidth: TVMetrics.podiumWidth)
     }
   }
 }
 
-private struct PodiumStep: View {
+private struct TVPodiumStep: View {
   let placing: Placing
-  /// 1, 2 or 3: which step, whatever ties did to `placing.rank`.
-  let place: Int
+  /// Which step, whatever ties did to `placing.rank`.
+  let medal: Medal
 
   var body: some View {
-    let color = LeaderboardTable.medal(place) ?? .secondary
-    VStack(spacing: 20) {
-      if place == 1 {
+    VStack(spacing: TVMetrics.rowGap * 2) {
+      if medal == .first {
         Image(systemName: "trophy.fill")
-          .font(.system(size: 88))
-          .foregroundStyle(Color.broadcastGold)
-          .shadow(color: Color.broadcastGold.opacity(0.5), radius: 24)
+          .tvRole(.trophy)
+          .foregroundStyle(medal.color)
+          .glow(.tv, color: medal.color)
       }
       Text(verbatim: placing.nickname)
-        .font(.system(size: 56, weight: .bold))
+        .tvRole(.podiumName)
         .lineLimit(1)
         .minimumScaleFactor(0.5)
       Text(verbatim: placing.score.grouped)
-        .font(.mono(size: 38, weight: .semibold))
+        .tvRole(.podiumScore)
         .foregroundStyle(.secondary)
-      Text(verbatim: ["1ST", "2ND", "3RD"][place - 1])
-        .font(.mono(size: 56, weight: .heavy))
-        .foregroundStyle(color)
-        .frame(maxWidth: .infinity, minHeight: height, alignment: .top)
-        .padding(.top, 28)
+      Text(medal.label)
+        .tvRole(.podiumPlace)
+        .textCase(.uppercase)
+        .foregroundStyle(medal.color)
+        .frame(maxWidth: .infinity, minHeight: TVMetrics.podiumStep(medal), alignment: .top)
+        .padding(.top, TVMetrics.tileGap)
         .background {
-          UnevenRoundedRectangle(topLeadingRadius: 24, topTrailingRadius: 24)
-            .fill(LinearGradient(colors: [color.opacity(0.3), color.opacity(0.03)], startPoint: .top, endPoint: .bottom))
+          UnevenRoundedRectangle(topLeadingRadius: TVMetrics.stepRadius, topTrailingRadius: TVMetrics.stepRadius)
+            .fill(LinearGradient(colors: [medal.color.opacity(0.3), medal.color.opacity(0.03)], startPoint: .top, endPoint: .bottom))
         }
         .overlay(alignment: .top) {
-          Rectangle().fill(color.opacity(0.85)).frame(height: 4)
+          Rectangle().fill(medal.color.opacity(0.85)).frame(height: Space.xs)
         }
     }
     .frame(maxWidth: .infinity)
-  }
-
-  private var height: CGFloat {
-    switch place {
-    case 1: 360
-    case 2: 270
-    default: 200
-    }
   }
 }
 
@@ -478,39 +436,36 @@ private struct Masthead<Trailing: View>: View {
   let gameName: String
   @ViewBuilder var trailing: Trailing
 
-  @Environment(\.accent) private var accent
-
   var body: some View {
-    HStack(alignment: .firstTextBaseline, spacing: 40) {
+    HStack(alignment: .firstTextBaseline, spacing: TVMetrics.gap) {
       HStack(spacing: 0) {
         Text(verbatim: "TRIVIA")
-          .foregroundStyle(accent)
+          .foregroundStyle(.themeAccent)
         if !gameName.isEmpty {
           Text(verbatim: "//\(gameName)")
             .foregroundStyle(.secondary)
         }
       }
-      .tracking(4)
       .lineLimit(1)
       .minimumScaleFactor(0.6)
-      Spacer(minLength: 40)
+      Spacer(minLength: TVMetrics.gap)
       trailing
         .textCase(.uppercase)
     }
-    .font(.mono(size: 40, weight: .heavy))
+    .tvRole(.masthead)
   }
 }
 
 /// "Q 03/12 · SCIENCE".
-private struct QuestionNumber: View {
+private struct QuestionHeading: View {
   let question: Question
 
   var body: some View {
-    HStack(spacing: 16) {
+    HStack(spacing: TVMetrics.rowGap) {
       Text(verbatim: "Q \(question.qNum.twoDigits)/\(question.total.twoDigits)")
       if let category = question.category {
         Text(verbatim: "·")
-          .foregroundStyle(.tertiary)
+          .foregroundStyle(.secondary)
         Text(verbatim: category)
           .foregroundStyle(.secondary)
           .lineLimit(1)
@@ -526,13 +481,11 @@ private struct WaitingLine: View {
   init(_ text: LocalizedStringKey) { self.text = text }
 
   var body: some View {
-    HStack(spacing: 2) {
+    HStack(spacing: Space.xxs) {
       Text(text)
       BlinkingCursor()
     }
-    .font(.mono(size: 56, weight: .bold))
-    .textCase(.uppercase)
-    .tracking(6)
+    .tvRole(.waiting)
     .foregroundStyle(.secondary)
   }
 }
@@ -546,7 +499,7 @@ private struct AnswerGrid: View {
 
   var body: some View {
     let styles = Array(AnswerStyle.allCases.prefix(options.count))
-    Grid(horizontalSpacing: 28, verticalSpacing: 28) {
+    Grid(horizontalSpacing: TVMetrics.tileGap, verticalSpacing: TVMetrics.tileGap) {
       ForEach(Array(stride(from: 0, to: styles.count, by: 2)), id: \.self) { start in
         GridRow {
           ForEach(styles[start..<min(start + 2, styles.count)]) { style in
@@ -585,54 +538,53 @@ private struct AnswerTile: View {
   var share: Double?
 
   var body: some View {
-    let ink = state == .correct ? Color.broadcastInk : style.color
-    HStack(spacing: 28) {
-      HStack(spacing: 12) {
+    let ink = state == .correct ? Palette.onAccentInk : style.color
+    let shape = RoundedRectangle(cornerRadius: TVMetrics.tileRadius)
+    HStack(spacing: TVMetrics.tileGap) {
+      HStack(spacing: TVMetrics.rowGap) {
         Image(systemName: style.symbol)
           .imageScale(.small)
         Text(verbatim: style.letter)
       }
-      .font(.mono(size: 44, weight: .bold))
+      .tvRole(.answerKey)
       .foregroundStyle(ink)
-      .frame(width: 110, alignment: .leading)
+      .frame(width: TVMetrics.keyWidth, alignment: .leading)
 
       Text(verbatim: text)
-        .font(.system(size: 46, weight: .semibold))
+        .tvRole(.answer)
         .lineLimit(2)
         .minimumScaleFactor(0.6)
         .frame(maxWidth: .infinity, alignment: .leading)
 
       if let votes {
         Text(votes, format: .number)
-          .font(.mono(size: 52, weight: .heavy))
+          .tvRole(.votes)
           .monospacedDigit()
       }
       if state == .correct {
         Image(systemName: "checkmark")
-          .font(.system(size: 44, weight: .heavy))
+          .tvRole(.answerKey)
       }
     }
-    .foregroundStyle(state == .correct ? Color.broadcastInk : .primary)
-    .padding(.horizontal, 36)
-    .frame(maxWidth: .infinity, minHeight: 150)
+    .foregroundStyle(state == .correct ? AnyShapeStyle(.onAccent) : AnyShapeStyle(.primary))
+    .padding(.horizontal, TVMetrics.gap)
+    .frame(maxWidth: .infinity, minHeight: TVMetrics.tileHeight)
     .background {
-      RoundedRectangle(cornerRadius: 28)
-        .fill(state == .correct ? style.color : style.color.opacity(0.12))
+      shape.fill(state == .correct ? style.color : style.color.opacity(0.12))
     }
     .overlay {
-      RoundedRectangle(cornerRadius: 28)
-        .strokeBorder(style.color.opacity(state == .correct ? 0 : 0.5), lineWidth: 3)
+      shape.strokeBorder(style.color.opacity(state == .correct ? 0 : 0.5), lineWidth: 3)
     }
     .overlay(alignment: .bottomLeading) {
       if let share, share > 0 {
         GeometryReader { proxy in
           Capsule()
-            .fill(state == .correct ? Color.broadcastInk.opacity(0.35) : style.color)
-            .frame(width: proxy.size.width * share, height: 10)
+            .fill(state == .correct ? Palette.onAccentInk.opacity(0.35) : style.color)
+            .frame(width: proxy.size.width * share, height: TVMetrics.voteBar)
         }
-        .frame(height: 10)
-        .padding(.horizontal, 36)
-        .padding(.bottom, 16)
+        .frame(height: TVMetrics.voteBar)
+        .padding(.horizontal, TVMetrics.gap)
+        .padding(.bottom, TVMetrics.rowGap)
       }
     }
     .opacity(state == .wrong ? 0.4 : 1)

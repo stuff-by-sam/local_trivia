@@ -1,3 +1,4 @@
+import DesignSystem
 import SwiftUI
 
 /// Find a game, type the PIN, play — or host one.
@@ -7,7 +8,6 @@ import SwiftUI
 /// the fourth PIN digit joins on its own — no button to find.
 struct JoinView: View {
   @Environment(GameStore.self) private var store
-  @Environment(\.accent) private var accent
 
   @State private var pin = ""
   @State private var isScanning = false
@@ -20,33 +20,43 @@ struct JoinView: View {
   var body: some View {
     ScrollViewReader { scroller in
       ScrollView {
-        VStack(spacing: 30) {
-          Wordmark()
-            .padding(.top, 28)
+        VStack(spacing: Space.xl) {
+          VStack(spacing: Space.l) {
+            AnswerSetMark()
+            Wordmark()
+          }
+          .padding(.top, Space.l)
 
           LabeledField("Game") {
             GamePicker(isScanning: $isScanning)
           }
 
           if store.isRejoining {
-            rejoining
+            StatusLine(store.connection.hasFailed ? "Host unreachable, retrying" : "Rejoining your game")
+              .padding(.top, Space.s)
           } else {
             form
           }
         }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 28)
+        .padding(.horizontal, Space.screen)
+        .padding(.bottom, Space.xl)
       }
+      .scrollDismissesKeyboard(.interactively)
+      .scrollBounceBehavior(.basedOnSize)
+      .safeAreaBar(edge: .bottom) { actions }
       // Moving from the PIN to the name swaps the number pad for a taller
       // keyboard, which would cover the field. Centre it — and anything said
       // about it — in what's left.
       .onChange(of: focus) { _, field in
         guard field == .nickname else { return }
-        withAnimation(.smooth) { scroller.scrollTo(JoinField.nickname, anchor: .center) }
+        Motion.settle.perform { scroller.scrollTo(JoinField.nickname, anchor: .center) }
       }
     }
-    .scrollDismissesKeyboard(.interactively)
-    .scrollBounceBehavior(.basedOnSize)
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        Button("Themes & Icons", systemImage: "paintpalette") { isShopping = true }
+      }
+    }
     .sheet(isPresented: $isScanning) {
       QRScannerSheet { store.join($0.server, pin: $0.pin) }
     }
@@ -99,14 +109,14 @@ struct JoinView: View {
   // MARK: - Form
 
   private var form: some View {
-    VStack(spacing: 22) {
+    VStack(spacing: Space.xl) {
       LabeledField("PIN") {
-        VStack(alignment: .leading, spacing: 12) {
-          pinCells
+        VStack(alignment: .leading, spacing: Space.m) {
+          PINField(pin: $pin, focus: $focus)
+            .rejectionShake(trigger: rejectedPins)
           // Right under the cells: the keyboard can cover anything lower,
           // and this is exactly what the player is looking at.
           messages
-            .padding(.leading, 4)
         }
       }
       .onChange(of: pin) { _, typed in
@@ -124,84 +134,48 @@ struct JoinView: View {
       }
 
       LabeledField("Nickname") {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Space.m) {
           nicknameField
-            .modifier(RejectionShake(trigger: rejectedNicknames))
+            .rejectionShake(trigger: rejectedNicknames)
           if let error = store.joinError, error.field == .nickname {
-            Label(error.message, systemImage: "exclamationmark.triangle.fill")
-              .foregroundStyle(Color.broadcastRed)
-              .terminalStyle(.caption)
-              .multilineTextAlignment(.leading)
-              .frame(maxWidth: .infinity, alignment: .leading)
-              .padding(.leading, 4)
+            FieldMessage(Text(error.message), kind: .error)
               .transition(.opacity)
           }
         }
         .id(JoinField.nickname)
       }
-
-      joinButton
-        .padding(.top, 4)
-
-      hostButton
-
-      shopLink
     }
   }
 
-  /// Themes and icons, for anyone who goes looking. Quiet on purpose: this
-  /// screen is for getting into a game.
-  private var shopLink: some View {
-    Button {
-      isShopping = true
-    } label: {
-      Label("Themes & Icons", systemImage: "paintpalette")
-        .terminalStyle(.caption2)
-        .foregroundStyle(.tertiary)
-        .frame(minHeight: 44)
-        .contentShape(.rect)
-    }
-    .buttonStyle(.plain)
-  }
-
-  /// Every game is hosted from a phone, and anyone can host one.
-  private var hostButton: some View {
-    VStack(spacing: 10) {
-      HStack(spacing: 12) {
-        Rectangle().fill(.white.opacity(0.1)).frame(height: 1)
-        Text("or")
-          .terminalStyle(.caption2)
-          .foregroundStyle(.tertiary)
-        Rectangle().fill(.white.opacity(0.1)).frame(height: 1)
+  /// Join, and — when nobody's typing — Host a Game under it. At the bottom,
+  /// where the thumb is; above the keyboard while it's up.
+  private var actions: some View {
+    ActionBar {
+      if store.isRejoining {
+        ActionButton("Start Over", prominence: .secondary) { store.leave() }
+      } else {
+        ActionButton(
+          "Join Game",
+          systemImage: "arrow.forward",
+          isLoading: store.isJoining,
+          action: submit
+        )
+        .disabled(!(store.canJoin && pin.count == GameStore.pinLength) && !store.isJoining)
+        if focus == nil {
+          ActionButton("Host a Game", systemImage: "antenna.radiowaves.left.and.right", prominence: .secondary) {
+            isSettingUpHost = true
+          }
+          .transition(.opacity)
+        }
       }
-      .accessibilityHidden(true)
-      Button {
-        isSettingUpHost = true
-      } label: {
-        Label("Host a Game", systemImage: "antenna.radiowaves.left.and.right")
-          .terminalStyle(.footnote, weight: .bold)
-          .frame(maxWidth: .infinity, minHeight: 28)
-      }
-      .buttonStyle(.glass)
-      .controlSize(.large)
     }
-    .padding(.top, 10)
-  }
-
-  private var pinCells: some View {
-    PINField(pin: $pin, focus: $focus)
-      .modifier(RejectionShake(trigger: rejectedPins))
+    .motion(.settle, value: focus == nil)
   }
 
   private var nicknameField: some View {
     @Bindable var store = store
-    return HStack(spacing: 12) {
-      Text(verbatim: ">")
-        .font(.mono(.title3, weight: .bold))
-        .foregroundStyle(accent)
-        .accessibilityHidden(true)
+    return PromptField {
       TextField("Nickname", text: $store.nickname, prompt: Text("your name"))
-        .font(.mono(.title3, weight: .semibold))
         .textInputAutocapitalization(.never)
         .autocorrectionDisabled()
         .textContentType(.nickname)
@@ -219,33 +193,6 @@ struct JoinView: View {
           store.nickname = clamped
         }
     }
-    .padding(.horizontal, 18)
-    .frame(minHeight: 58)
-    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))
-  }
-
-  private var joinButton: some View {
-    let isReady = store.canJoin && pin.count == GameStore.pinLength
-    return Button(action: submit) {
-      ZStack {
-        HStack(spacing: 10) {
-          Text("Join Game")
-          Image(systemName: "arrow.right")
-        }
-        .opacity(store.isJoining ? 0 : 1)
-        if store.isJoining {
-          ProgressView()
-            .tint(Color.broadcastInk)
-        }
-      }
-      .terminalStyle(.headline, weight: .bold)
-      .foregroundStyle(isReady || store.isJoining ? Color.broadcastInk : Color.secondary)
-      .frame(maxWidth: .infinity, minHeight: 32)
-    }
-    .buttonStyle(.glassProminent)
-    .tint(accent)
-    .controlSize(.large)
-    .disabled(!isReady)
   }
 
   @ViewBuilder
@@ -253,31 +200,14 @@ struct JoinView: View {
     Group {
       // A nickname error sits under the nickname instead.
       if let error = store.joinError, error.field != .nickname {
-        Label(error.message, systemImage: "exclamationmark.triangle.fill")
-          .foregroundStyle(Color.broadcastRed)
+        FieldMessage(Text(error.message), kind: .error)
       } else if let notice = store.notice {
-        Label(notice, systemImage: "hand.raised.fill")
-          .foregroundStyle(Color.broadcastGold)
+        FieldMessage(Text(notice), kind: .notice)
       } else {
-        Text("The PIN is on the host's phone")
-          .foregroundStyle(.tertiary)
+        FieldMessage(Text("The PIN is on the host's phone"), kind: .hint)
       }
     }
-    .terminalStyle(.caption)
-    .multilineTextAlignment(.leading)
-    .frame(maxWidth: .infinity, alignment: .leading)
     .transition(.opacity)
-  }
-
-  private var rejoining: some View {
-    VStack(spacing: 22) {
-      StatusLine(store.connection.hasFailed ? "Host unreachable, retrying" : "Rejoining your game")
-      Button("Start Over") { store.leave() }
-        .terminalStyle(.footnote, weight: .bold)
-        .buttonStyle(.glass)
-        .controlSize(.large)
-    }
-    .padding(.top, 8)
   }
 
   private func submit() {
@@ -289,92 +219,15 @@ struct JoinView: View {
 
 private enum JoinField { case pin, nickname }
 
-/// A quick head-shake and an error haptic: "not that".
-private struct RejectionShake: ViewModifier {
-  let trigger: Int
-
-  func body(content: Content) -> some View {
-    content
-      .keyframeAnimator(initialValue: 0.0, trigger: trigger) { view, offset in
-        view.offset(x: offset)
-      } keyframes: { _ in
-        KeyframeTrack {
-          CubicKeyframe(-14, duration: 0.07)
-          CubicKeyframe(12, duration: 0.07)
-          CubicKeyframe(-8, duration: 0.07)
-          CubicKeyframe(0, duration: 0.09)
-        }
-      }
-      .sensoryFeedback(.error, trigger: trigger)
-  }
-}
-
-/// A mono label over its control, like a form in a terminal.
-private struct LabeledField<Content: View>: View {
-  let label: LocalizedStringKey
-  @ViewBuilder var content: Content
-
-  init(_ label: LocalizedStringKey, @ViewBuilder content: () -> Content) {
-    self.label = label
-    self.content = content()
-  }
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 9) {
-      Text(label)
-        .terminalStyle(.caption)
-        .foregroundStyle(.secondary)
-        .padding(.leading, 4)
-        .accessibilityHidden(true)
-      content
-    }
-  }
-}
-
-/// Four cells, one digit each, with the cursor in the next empty one.
-///
-/// The cells only draw. A real text field sits over them — invisible, but it
-/// owns focus, the number pad, paste, and what VoiceOver reads — so the
-/// custom look costs nothing in behaviour or accessibility.
+/// The PIN's cells, with a real text field laid over them: invisible, but it
+/// owns focus, the number pad, paste, and what VoiceOver reads.
 private struct PINField: View {
   @Binding var pin: String
   var focus: FocusState<JoinField?>.Binding
 
-  @Environment(\.accent) private var accent
-
   var body: some View {
-    let digits = Array(pin)
-    let isFocused = focus.wrappedValue == .pin
     ZStack {
-      HStack(spacing: 10) {
-        ForEach(0..<GameStore.pinLength, id: \.self) { index in
-          let isNext = isFocused && index == digits.count
-          ZStack {
-            if index < digits.count {
-              Text(String(digits[index]))
-                .transition(.scale(scale: 0.6).combined(with: .opacity))
-            } else if isNext {
-              BlinkingCursor()
-                .foregroundStyle(accent)
-            } else {
-              // A faint slot, so four empty cells read as four digits to fill.
-              Text(verbatim: "_")
-                .foregroundStyle(.white.opacity(0.14))
-            }
-          }
-          .font(.mono(size: 34, weight: .bold))
-          .frame(maxWidth: .infinity, minHeight: 72)
-          .glassEffect(in: .rect(cornerRadius: 16))
-          .overlay {
-            // The cell the next digit lands in: lit edge, not a filled one.
-            RoundedRectangle(cornerRadius: 16)
-              .strokeBorder(accent.opacity(isNext ? 0.75 : 0), lineWidth: 1.5)
-              .shadow(color: accent.opacity(isNext ? 0.4 : 0), radius: 6)
-          }
-        }
-      }
-      .animation(.snappy(duration: 0.18), value: pin)
-      .accessibilityHidden(true)
+      PINCells(pin: pin, length: GameStore.pinLength, isFocused: focus.wrappedValue == .pin)
 
       TextField("", text: $pin)
         .keyboardType(.numberPad)
@@ -387,44 +240,6 @@ private struct PINField: View {
     }
     .contentShape(.rect)
     .onTapGesture { focus.wrappedValue = .pin }
-  }
-}
-
-/// The answer set above the name, and a cursor after it.
-private struct Wordmark: View {
-  @Environment(\.accent) private var accent
-
-  var body: some View {
-    VStack(spacing: 18) {
-      HStack(spacing: 16) {
-        ForEach(AnswerStyle.allCases) { style in
-          Image(systemName: style.symbol)
-            .foregroundStyle(style.color)
-        }
-      }
-      .font(.body)
-      .padding(.horizontal, 20)
-      .padding(.vertical, 11)
-      .glassEffect(in: .capsule)
-
-      Text(verbatim: "TRIVIA")
-        .tracking(6)
-        // Hangs past the word rather than sitting in the row, so "TRIVIA"
-        // itself is what's centred. (The offset evens out tracking's trailing gap.)
-        .overlay(alignment: .trailing) {
-          BlinkingCursor(glyph: "█")
-            .fixedSize()
-            .alignmentGuide(.trailing) { $0[.leading] }
-        }
-        .offset(x: 3)
-      .font(.mono(size: 46, weight: .heavy))
-      .foregroundStyle(accent)
-      // The TV's phosphor bloom, carried over.
-      .shadow(color: accent.opacity(0.45), radius: 14)
-    }
-    .accessibilityElement(children: .ignore)
-    .accessibilityLabel("Trivia")
-    .accessibilityAddTraits(.isHeader)
   }
 }
 
@@ -456,27 +271,7 @@ private struct GamePicker: View {
         }
       }
     } label: {
-      HStack(spacing: 14) {
-        status
-          .frame(width: 16)
-        VStack(alignment: .leading, spacing: 4) {
-          Text(title)
-            .font(.headline)
-            .foregroundStyle(.primary)
-          Text(detail)
-            .font(.mono(.caption, weight: .medium))
-            .foregroundStyle(.secondary)
-        }
-        .lineLimit(1)
-        Spacer(minLength: 0)
-        Image(systemName: "chevron.up.chevron.down")
-          .font(.footnote.weight(.semibold))
-          .foregroundStyle(.tertiary)
-      }
-      .padding(.horizontal, 18)
-      .frame(minHeight: 66)
-      .contentShape(.rect)
-      .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))
+      PickerRow(title: title, detail: detail) { status }
     }
     .buttonStyle(.plain)
     .accessibilityLabel(Text("Game: \(title). \(detail)"))
@@ -490,12 +285,9 @@ private struct GamePicker: View {
         .controlSize(.small)
     } else {
       switch store.connection {
-      case .online:
-        StatusDot(color: .broadcastGreen)
-      case .connecting(let attempt) where attempt > 0:
-        StatusDot(color: .broadcastGold, isPulsing: true)
-      default:
-        StatusDot(color: .secondary, isPulsing: true)
+      case .online: StatusDot(.online)
+      case .connecting(let attempt) where attempt > 0: StatusDot(.failed)
+      default: StatusDot(.connecting)
       }
     }
   }

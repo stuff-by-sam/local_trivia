@@ -1,29 +1,22 @@
+import DesignSystem
 import SwiftUI
 
 /// Joined, waiting for the host to start.
 struct LobbyView: View {
-  let glass: Namespace.ID
-
   @Environment(GameStore.self) private var store
   @Environment(HostController.self) private var host
 
   var body: some View {
     VStack(spacing: 0) {
-      TopBar(glass: glass) {
-        PlayerChip()
-      } trailing: {
-        if host.isHosting { HostMenu() } else { LeaveButton() }
-      }
-
       Spacer()
 
-      VStack(spacing: 26) {
-        VStack(spacing: 10) {
+      VStack(spacing: Space.xl) {
+        VStack(spacing: Space.s) {
           Text("You're in")
-            .terminalStyle(.caption)
+            .textRole(.label)
             .foregroundStyle(.secondary)
           Text(verbatim: store.playerName)
-            .font(.system(size: 44, weight: .bold))
+            .textRole(.title)
             .lineLimit(1)
             .minimumScaleFactor(0.5)
             .accessibilityAddTraits(.isHeader)
@@ -40,7 +33,7 @@ struct LobbyView: View {
           ReadoutRow("Players") {
             Text(store.playerCount, format: .number)
               .contentTransition(.numericText(value: Double(store.playerCount)))
-              .animation(.snappy, value: store.playerCount)
+              .motion(.snap, value: store.playerCount)
           }
         }
       }
@@ -50,45 +43,29 @@ struct LobbyView: View {
       FooterStatus("Waiting for host")
     }
     .screenPadding()
+    .gameToolbar(.player, controls: .always)
   }
 }
 
 /// Joined mid-question: the server scores you from the next one.
 struct SpectatingView: View {
-  let glass: Namespace.ID
-
   @Environment(GameStore.self) private var store
 
   var body: some View {
     VStack(spacing: 0) {
-      TopBar(glass: glass) {
-        PlayerChip()
-      } trailing: {
-        HStack(spacing: 8) {
-          ProgressChip(glass: glass)
-          GameControls()
-        }
-      }
-
       Spacer()
 
-      VStack(spacing: 28) {
-        VStack(spacing: 18) {
-          Image(systemName: "hourglass")
-            .font(.system(size: 36, weight: .semibold))
-            .foregroundStyle(.secondary)
+      VStack(spacing: Space.xl) {
+        VStack(spacing: Space.l) {
+          Badge(symbol: "hourglass", color: .secondary, isGlass: false)
             .symbolEffect(.pulse, options: .repeating)
-            .frame(width: 92, height: 92)
-            .glassEffect(in: .circle)
-            .accessibilityHidden(true)
 
-          VStack(spacing: 8) {
+          VStack(spacing: Space.s) {
             Text("Hold tight")
-              .font(.mono(.title3, weight: .heavy))
-              .textCase(.uppercase)
-              .tracking(4)
+              .textRole(.shout)
               .accessibilityAddTraits(.isHeader)
             Text("You'll jump in on the next question.")
+              .textRole(.body)
               .foregroundStyle(.secondary)
               .multilineTextAlignment(.center)
           }
@@ -107,5 +84,6 @@ struct SpectatingView: View {
       StatusLine("Scores start next question")
     }
     .screenPadding()
+    .gameToolbar(.player, status: .progress)
   }
 }

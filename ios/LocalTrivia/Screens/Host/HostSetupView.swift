@@ -1,3 +1,4 @@
+import DesignSystem
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -11,7 +12,6 @@ struct HostSetupView: View {
 
   @Environment(HostController.self) private var host
   @Environment(GameStore.self) private var store
-  @Environment(\.accent) private var accent
   @Environment(\.dismiss) private var dismiss
 
   @State private var editing: HostQuestion?
@@ -57,16 +57,12 @@ struct HostSetupView: View {
           } footer: {
             Text("Players see the game name when they look for games. You play too, under your name.")
           }
-          .listRowBackground(RowBackground())
         }
 
         questionsSection
 
         ScoringSection(rules: $library.rules)
-          .listRowBackground(RowBackground())
       }
-      .scrollContentBackground(.hidden)
-      .background { Backdrop(mood: .idle, accent: accent) }
       .navigationTitle(isLive ? "Edit Round" : "Host a Game")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -78,11 +74,12 @@ struct HostSetupView: View {
             .disabled(library.questions.isEmpty)
         }
       }
-      // A bar, not an inset: the list softens under it with the system's
-      // scroll-edge effect instead of colliding with its text.
+      // A bar, not an inset, with a hard edge: the list stops under it
+      // rather than showing through the hint above the button.
       .safeAreaBar(edge: .bottom) {
         if !isLive { startBar }
       }
+      .scrollEdgeEffectStyle(isLive ? nil : .hard, for: .bottom)
       .navigationDestination(item: $editing) { question in
         QuestionEditorView(
           question: question,
@@ -103,8 +100,6 @@ struct HostSetupView: View {
         Text("This can't be undone.")
       }
     }
-    .preferredColorScheme(.dark)
-    .tint(accent)
   }
 
   // MARK: - Questions
@@ -113,9 +108,9 @@ struct HostSetupView: View {
     Section {
       if host.library.questions.isEmpty {
         Text("No questions yet. Write one, or import a CSV — the same format the web admin console takes.")
-          .font(.subheadline)
+          .textRole(.detail)
           .foregroundStyle(.secondary)
-          .padding(.vertical, 6)
+          .padding(.vertical, Space.xs)
       }
       ForEach(host.library.questions) { question in
         QuestionRow(question: question) {
@@ -149,7 +144,6 @@ struct HostSetupView: View {
     } footer: {
       Text("Tap a question to edit it, or the circle to leave it out of this round. Swipe to delete; Edit to reorder.")
     }
-    .listRowBackground(RowBackground())
   }
 
   private func toggleIncluded(_ question: HostQuestion) {
@@ -161,44 +155,24 @@ struct HostSetupView: View {
   // MARK: - Start
 
   private var startBar: some View {
-    VStack(spacing: 10) {
+    ActionBar {
       if case .failed(let reason) = host.status {
-        Label(reason, systemImage: "exclamationmark.triangle.fill")
-          .terminalStyle(.caption)
-          .foregroundStyle(Color.broadcastRed)
+        FieldMessage(Text(reason), kind: .error)
       } else {
-        Text(startHint)
-          .terminalStyle(.caption)
-          .foregroundStyle(.secondary)
+        FieldMessage(Text(startHint), kind: .hint)
       }
-      Button {
+      ActionButton(
+        "Start Hosting",
+        systemImage: "antenna.radiowaves.left.and.right",
+        isLoading: host.status == .starting
+      ) {
         Task {
           await host.start(joining: store)
           if host.isHosting { dismiss() }
         }
-      } label: {
-        ZStack {
-          HStack(spacing: 10) {
-            Text("Start Hosting")
-            Image(systemName: "antenna.radiowaves.left.and.right")
-          }
-          .opacity(host.status == .starting ? 0 : 1)
-          if host.status == .starting {
-            ProgressView().tint(Color.broadcastInk)
-          }
-        }
-        .terminalStyle(.headline, weight: .bold)
-        .foregroundStyle(canStart ? Color.broadcastInk : Color.secondary)
-        .frame(maxWidth: .infinity, minHeight: 32)
       }
-      .buttonStyle(.glassProminent)
-      .tint(accent)
-      .controlSize(.large)
-      .disabled(!canStart)
+      .disabled(!canStart && host.status != .starting)
     }
-    .padding(.horizontal, 20)
-    .padding(.top, 12)
-    .padding(.bottom, 4)
   }
 
   private var canStart: Bool {
@@ -253,40 +227,40 @@ private struct QuestionRow: View {
   let onToggle: () -> Void
   let onOpen: () -> Void
 
-  @Environment(\.accent) private var accent
-
   var body: some View {
-    HStack(alignment: .firstTextBaseline, spacing: 12) {
+    HStack(alignment: .firstTextBaseline, spacing: Space.xs) {
       Button(action: onToggle) {
         Image(systemName: question.isIncluded ? "checkmark.circle.fill" : "circle")
           .font(.title3)
-          .foregroundStyle(question.isIncluded ? accent : .secondary)
+          .foregroundStyle(question.isIncluded ? AnyShapeStyle(.themeAccent) : AnyShapeStyle(.secondary))
+          .frame(minWidth: Size.target, minHeight: Size.target)
+          .contentShape(.rect)
       }
       .buttonStyle(.borderless)
       .accessibilityLabel(question.isIncluded ? "In this round" : "Left out of this round")
       .accessibilityHint("Toggles whether this question plays.")
 
       Button(action: onOpen) {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: Space.xs) {
           Text(verbatim: question.text.isEmpty ? "—" : question.text)
-            .font(.body.weight(.semibold))
+            .textRole(.bodyEmphasis)
             .lineLimit(2)
             .foregroundStyle(question.isIncluded ? .primary : .secondary)
           if let problem = question.problem {
             Label(problem.message, systemImage: "exclamationmark.triangle.fill")
-              .terminalStyle(.caption2)
-              .foregroundStyle(Color.broadcastGold)
+              .textRole(.labelSmall)
+              .foregroundStyle(.warning)
           } else if let style = AnswerStyle(rawValue: question.correct) {
-            HStack(spacing: 8) {
+            HStack(spacing: Space.s) {
               AnswerKey(style: style)
               Text(verbatim: question.options[question.correct])
-                .font(.subheadline)
+                .textRole(.detail)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
-              Spacer(minLength: 8)
+              Spacer(minLength: Space.s)
               Text(verbatim: "\(question.category)\(question.timeLimit.map { " · \($0)S" } ?? "")")
-                .terminalStyle(.caption2)
-                .foregroundStyle(.tertiary)
+                .textRole(.labelSmall)
+                .foregroundStyle(.secondary)
                 .lineLimit(1)
             }
           }
@@ -296,7 +270,7 @@ private struct QuestionRow: View {
       }
       .buttonStyle(.plain)
     }
-    .padding(.vertical, 4)
+    .padding(.vertical, Space.xs)
     .opacity(question.isIncluded ? 1 : 0.7)
   }
 }
@@ -319,7 +293,7 @@ struct ScoringSection: View {
           Text("\(seconds) seconds").tag(seconds)
         }
       }
-      VStack(alignment: .leading, spacing: 8) {
+      VStack(alignment: .leading, spacing: Space.s) {
         LabeledContent("A correct answer earns at least") {
           Text(verbatim: "\(Int((rules.minCorrectFraction * 100).rounded()))%").monospacedDigit()
         }
@@ -350,25 +324,6 @@ struct ScoringSection: View {
       localized:
         "Right in \(quickSeconds)s: \(quick.grouped) pts · right at the buzzer: \(buzzer.grouped) · wrong: \(rules.wrongAnswerPoints.grouped). Answers score more the faster they come in.\(rules.autoAdvance ? " Auto-advance moves on 5 seconds after each reveal and standings." : "")"
     )
-  }
-}
-
-/// Mono, uppercase section titles, like the rest of the app's labels.
-struct SectionHeader: View {
-  let text: LocalizedStringKey
-  init(_ text: LocalizedStringKey) { self.text = text }
-
-  var body: some View {
-    Text(text)
-      .terminalStyle(.caption)
-      .foregroundStyle(.secondary)
-  }
-}
-
-/// Form rows as the app's readouts: a faint panel over the backdrop.
-struct RowBackground: View {
-  var body: some View {
-    Rectangle().fill(.white.opacity(0.055))
   }
 }
 

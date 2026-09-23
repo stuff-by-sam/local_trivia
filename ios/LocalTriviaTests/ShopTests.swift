@@ -1,6 +1,7 @@
 import Foundation
 import StoreKit
 import StoreKitTest
+import DesignSystem
 import Testing
 
 @testable import LocalTrivia

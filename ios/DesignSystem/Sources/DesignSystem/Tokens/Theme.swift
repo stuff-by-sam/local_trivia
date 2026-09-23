@@ -2,18 +2,18 @@ import SwiftUI
 
 /// A look for the whole app: the accent, the ink behind the glass, and the
 /// texture the glass refracts. Phosphor is the game's own; the rest are sold
-/// in the shop (`Shop`).
+/// in the app's shop.
 ///
 /// A theme is this phone's alone — it never crosses the network — and it
-/// never touches the answer set. "B, the cyan triangle" has to mean the same
-/// thing on every phone in the room and on the TV, whoever's wearing what.
-/// Status colours stay put too: green is still right and red still wrong.
-enum Theme: String, CaseIterable, Identifiable, Sendable {
+/// never touches the answer set or the status colours. "B, the cyan triangle"
+/// has to mean the same thing on every phone in the room and on the TV,
+/// whoever's wearing what; green is still right and red still wrong.
+nonisolated public enum Theme: String, CaseIterable, Identifiable, Sendable {
   case phosphor, amber, cobalt, synthwave, noir, gold, holographic, chalkboard, glass, titanium
 
-  var id: String { rawValue }
+  public var id: String { rawValue }
 
-  var name: LocalizedStringResource {
+  public var name: LocalizedStringResource {
     switch self {
     case .phosphor: "Phosphor"
     case .amber: "Amber"
@@ -28,7 +28,7 @@ enum Theme: String, CaseIterable, Identifiable, Sendable {
     }
   }
 
-  var tagline: LocalizedStringResource {
+  public var tagline: LocalizedStringResource {
     switch self {
     case .phosphor: "The broadcast terminal: green on black"
     case .amber: "A monochrome tube, warm as an old terminal"
@@ -44,10 +44,10 @@ enum Theme: String, CaseIterable, Identifiable, Sendable {
   }
 
   /// Headings, the cursor, the lit edge of controls. Bright enough for
-  /// `broadcastInk` to sit on it wherever a control is filled with it.
-  var accent: Color {
+  /// `Palette.onAccentInk` to sit on it wherever a control is filled with it.
+  public var accent: Color {
     switch self {
-    case .phosphor: .broadcastGreen
+    case .phosphor: Color(hex: 0x56FF8A)
     case .amber: Color(hex: 0xFFB000)
     case .cobalt: Color(hex: 0x7C9DFF)
     case .synthwave: Color(hex: 0xC77DFF)
@@ -61,9 +61,9 @@ enum Theme: String, CaseIterable, Identifiable, Sendable {
   }
 
   /// The near-black the glow sinks into.
-  var ink: Color {
+  public var ink: Color {
     switch self {
-    case .phosphor: .broadcastInk
+    case .phosphor: Color(hex: 0x04080A)
     case .amber: Color(hex: 0x0A0703)
     case .cobalt: Color(hex: 0x03060F)
     case .synthwave: Color(hex: 0x0A0414)
@@ -77,7 +77,7 @@ enum Theme: String, CaseIterable, Identifiable, Sendable {
     }
   }
 
-  var texture: Backdrop.Texture {
+  public var texture: Backdrop.Texture {
     switch self {
     case .phosphor, .amber: .scanlines
     case .cobalt: .grid
@@ -90,36 +90,17 @@ enum Theme: String, CaseIterable, Identifiable, Sendable {
     case .titanium: .metal
     }
   }
-
-  /// Nil for the one every phone has.
-  var productID: String? {
-    self == .phosphor ? nil : "com.stuffbysam.localtrivia.theme.\(rawValue)"
-  }
 }
 
-extension EnvironmentValues {
-  /// The theme the backdrop is drawn in. Views that only need the accent
-  /// read `accent`, which `theme(_:)` keeps in step with it.
-  @Entry var theme: Theme = .phosphor
+nonisolated extension EnvironmentValues {
+  /// The theme everything inside is drawn in. `palette` follows it.
+  @Entry public var theme: Theme = .phosphor
 }
 
 extension View {
-  /// Dresses everything inside in `theme`.
-  func theme(_ theme: Theme) -> some View {
+  /// Dresses everything inside in `theme`, tint included.
+  public func theme(_ theme: Theme) -> some View {
     environment(\.theme, theme)
-      .environment(\.accent, theme.accent)
-  }
-
-  /// Dresses everything inside in the theme this phone chose in the shop.
-  func chosenTheme() -> some View {
-    modifier(ChosenTheme())
-  }
-}
-
-private struct ChosenTheme: ViewModifier {
-  @Environment(Shop.self) private var shop
-
-  func body(content: Content) -> some View {
-    content.theme(shop.theme)
+      .tint(theme.accent)
   }
 }

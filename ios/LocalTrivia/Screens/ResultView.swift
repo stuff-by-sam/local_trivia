@@ -1,3 +1,4 @@
+import DesignSystem
 import SwiftUI
 
 /// The reveal, from this player's side: right or wrong, what it was worth,
@@ -8,6 +9,7 @@ struct ResultView: View {
 
   @State private var shownPoints = 0
   @State private var appeared = false
+  @Environment(\.palette) private var palette
 
   enum Verdict {
     case correct, wrong, missed
@@ -32,11 +34,11 @@ struct ResultView: View {
       }
     }
 
-    var color: Color {
+    func color(in palette: Palette) -> Color {
       switch self {
-      case .correct: .broadcastGreen
-      case .wrong: .broadcastRed
-      case .missed: Color(hex: 0x9AA8BA)
+      case .correct: palette.success
+      case .wrong: palette.danger
+      case .missed: palette.neutral
       }
     }
   }
@@ -45,45 +47,30 @@ struct ResultView: View {
   private var verdict: Verdict { Verdict(result) }
 
   var body: some View {
+    let color = verdict.color(in: palette)
     VStack(spacing: 0) {
-      TopBar(glass: glass) {
-        PlayerChip()
-      } trailing: {
-        HStack(spacing: 8) {
-          ProgressChip(glass: glass)
-          GameControls()
-        }
-      }
-
       Spacer()
 
-      VStack(spacing: 28) {
-        VStack(spacing: 18) {
-          Image(systemName: verdict.symbol)
-            .font(.system(size: 40, weight: .bold))
-            .foregroundStyle(verdict.color)
+      VStack(spacing: Space.xl) {
+        VStack(spacing: Space.l) {
+          Badge(symbol: verdict.symbol, color: color, isGlass: true)
             .symbolEffect(.bounce.up, options: .nonRepeating, value: appeared)
-            .frame(width: 92, height: 92)
-            .glassEffect(.regular.tint(verdict.color.opacity(0.2)), in: .circle)
             // Takes the chosen answer's glass identity: the button you tapped
             // flows into this badge.
             .glassEffectID(result.answered ? GlassID.answer(result.chosenIndex) : GlassID.hero, in: glass)
-            .accessibilityHidden(true)
 
-          VStack(spacing: 4) {
+          VStack(spacing: Space.xs) {
             Text(verdict.title)
-              .font(.mono(.title3, weight: .heavy))
-              .textCase(.uppercase)
-              .tracking(4)
-              .foregroundStyle(verdict.color)
+              .textRole(.shout)
+              .foregroundStyle(color)
               .accessibilityAddTraits(.isHeader)
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: Space.s) {
               Text(verbatim: "+\(shownPoints.grouped)")
-                .font(.mono(size: 58, weight: .bold))
+                .textRole(.display(.points))
                 .contentTransition(.numericText(value: Double(shownPoints)))
                 .minimumScaleFactor(0.5)
               Text("pts")
-                .terminalStyle(.subheadline)
+                .textRole(.label)
                 .foregroundStyle(.secondary)
             }
             .lineLimit(1)
@@ -96,10 +83,10 @@ struct ResultView: View {
             ReadoutRow("Answer") {
               // Keycap on the first line, like a list marker, however far
               // a long answer wraps.
-              HStack(alignment: .firstTextBaseline, spacing: 10) {
+              HStack(alignment: .firstTextBaseline, spacing: Space.s) {
                 AnswerKey(style: answer.style)
                 Text(verbatim: answer.text)
-                  .font(.body.weight(.semibold))
+                  .textRole(.bodyEmphasis)
               }
             }
           }
@@ -113,12 +100,14 @@ struct ResultView: View {
       FooterStatus("Standings next")
     }
     .screenPadding()
+    .gameToolbar(.player, status: .progress)
     .task(id: result) {
       shownPoints = 0
+      // The badge lands first, then the points count up.
       try? await Task.sleep(for: .milliseconds(220))
       guard !Task.isCancelled else { return }
       appeared = true
-      withAnimation(.snappy(duration: 0.6)) { shownPoints = result.points }
+      Motion.count.perform { shownPoints = result.points }
     }
     .onAppear {
       AccessibilityNotification.Announcement(announcement).post()

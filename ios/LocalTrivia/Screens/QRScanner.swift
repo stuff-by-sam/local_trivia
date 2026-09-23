@@ -1,3 +1,4 @@
+import DesignSystem
 import SwiftUI
 import Vision
 import VisionKit
@@ -28,13 +29,17 @@ struct QRScannerSheet: View {
         Group {
           if isRejected {
             Label("That code isn't a game on this network", systemImage: "exclamationmark.triangle.fill")
-              .foregroundStyle(Color.broadcastGold)
+              .foregroundStyle(.warning)
           } else {
             Label("Point at the QR code on the host's phone", systemImage: "qrcode")
           }
         }
-        .chip()
-          .padding(.bottom, 32)
+        .textRole(.status)
+        .padding(.horizontal, Space.l)
+        .frame(minHeight: Size.target)
+        .glassEffect(in: .capsule)
+        .padding(.horizontal, Space.screen)
+        .padding(.bottom, Space.xxl)
       }
       .navigationTitle("Scan to Join")
       .navigationBarTitleDisplayMode(.inline)
@@ -90,7 +95,7 @@ struct QRScanner: UIViewControllerRepresentable {
         guard let payload = code.payloadStringValue, onPayload(payload) else { continue }
         isFinished = true
         dataScanner.stopScanning()
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        Haptic.found.play()
         return
       }
     }

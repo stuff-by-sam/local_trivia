@@ -1,3 +1,4 @@
+import DesignSystem
 import SwiftUI
 
 /// Writing or editing one question: the question, four answers (tap a key to
@@ -8,7 +9,6 @@ struct QuestionEditorView: View {
   let onDelete: (HostQuestion) -> Void
 
   @State private var draft: HostQuestion
-  @Environment(\.accent) private var accent
   @Environment(\.dismiss) private var dismiss
   @FocusState private var focus: Field?
 
@@ -27,14 +27,13 @@ struct QuestionEditorView: View {
     Form {
       Section {
         TextField("What's the question?", text: $draft.text, axis: .vertical)
-          .font(.title3.weight(.semibold))
+          .textRole(.question(length: .max))
           .lineLimit(2...6)
           .focused($focus, equals: .question)
           .submitLabel(.next)
       } header: {
         SectionHeader("Question")
       }
-      .listRowBackground(RowBackground())
 
       Section {
         ForEach(AnswerStyle.allCases) { style in
@@ -45,7 +44,6 @@ struct QuestionEditorView: View {
       } footer: {
         Text("Tap a key to mark the right answer.")
       }
-      .listRowBackground(RowBackground())
 
       Section {
         LabeledContent("Category") {
@@ -65,7 +63,6 @@ struct QuestionEditorView: View {
       } header: {
         SectionHeader("Details")
       }
-      .listRowBackground(RowBackground())
 
       if !isNew {
         Section {
@@ -74,11 +71,8 @@ struct QuestionEditorView: View {
             dismiss()
           }
         }
-        .listRowBackground(RowBackground())
       }
     }
-    .scrollContentBackground(.hidden)
-    .background { Backdrop(mood: .idle, accent: accent) }
     .navigationTitle(isNew ? "New Question" : "Edit Question")
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
@@ -97,12 +91,14 @@ struct QuestionEditorView: View {
 
   private func answerRow(_ style: AnswerStyle) -> some View {
     let isCorrect = draft.correct == style.rawValue
-    return HStack(spacing: 12) {
+    return HStack(spacing: Space.s) {
       Button {
         draft.correct = style.rawValue
       } label: {
         AnswerKey(style: style, isInverted: isCorrect)
-          .background(isCorrect ? style.color : .clear, in: .rect(cornerRadius: 8))
+          .background(isCorrect ? style.color : .clear, in: .rect(cornerRadius: Radius.minimum))
+          .frame(minWidth: Size.target, minHeight: Size.target)
+          .contentShape(.rect)
       }
       .buttonStyle(.borderless)
       .accessibilityLabel(Text("Mark \(style.letter) as the right answer"))
@@ -116,11 +112,11 @@ struct QuestionEditorView: View {
 
       if isCorrect {
         Image(systemName: "checkmark")
-          .font(.body.weight(.bold))
+          .fontWeight(.bold)
           .foregroundStyle(style.color)
           .accessibilityHidden(true)
       }
     }
-    .animation(.snappy(duration: 0.2), value: draft.correct)
+    .motion(.snap, value: draft.correct)
   }
 }

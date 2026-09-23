@@ -1,3 +1,4 @@
+import DesignSystem
 import SwiftUI
 import Testing
 import UIKit
@@ -6,12 +7,12 @@ import UIKit
 
 /// What every theme has to keep, whoever adds the next one.
 struct ThemeTests {
-  /// The accent is text on the theme's ink, and `broadcastInk` is text on the
+  /// The accent is text on the theme's ink, and `onAccentInk` is text on the
   /// accent wherever a control is lit with it. Both hold to WCAG AAA.
   @Test func everyThemeStaysReadable() {
     for theme in Theme.allCases {
       #expect(contrast(theme.accent, theme.ink) >= 7, "\(theme.rawValue): accent on its ink")
-      #expect(contrast(.broadcastInk, theme.accent) >= 7, "\(theme.rawValue): ink on a lit control")
+      #expect(contrast(Palette.onAccentInk, theme.accent) >= 7, "\(theme.rawValue): ink on a lit control")
       #expect(contrast(.white, theme.ink) >= 12, "\(theme.rawValue): text on its ink")
     }
   }

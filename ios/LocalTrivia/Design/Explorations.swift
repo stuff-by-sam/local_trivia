@@ -1,4 +1,5 @@
 #if DEBUG
+import DesignSystem
 import SwiftUI
 
 // Three directions for the key screens — join, a question, the host's lobby —
@@ -79,20 +80,20 @@ private struct BroadcastJoin: View {
             }
             .font(.body)
             Text(verbatim: "TRIVIA")
-              .font(.mono(size: 46, weight: .heavy))
+              .font(.system(size: 46, weight: .heavy, design: .monospaced))
               .tracking(6)
-              .foregroundStyle(Color.broadcastGreen)
-              .shadow(color: Color.broadcastGreen.opacity(0.45), radius: 14)
+              .foregroundStyle(Theme.phosphor.accent)
+              .shadow(color: Theme.phosphor.accent.opacity(0.45), radius: 14)
           }
           .padding(.top, 12)
 
           VStack(alignment: .leading, spacing: 8) {
-            Text("Game").terminalStyle().foregroundStyle(.secondary)
+            Text("Game").textRole(.label).foregroundStyle(.secondary)
             HStack(spacing: 14) {
-              StatusDot(color: .broadcastGreen)
+              StatusDot(.online)
               VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: "FRIDAY QUIZ").font(.headline)
-                Text(verbatim: "192.168.1.20 · ONLINE").font(.mono(.caption)).foregroundStyle(.secondary)
+                Text(verbatim: "192.168.1.20 · ONLINE").font(.system(.caption, design: .monospaced)).foregroundStyle(.secondary)
               }
               Spacer()
               Image(systemName: "chevron.up.chevron.down").foregroundStyle(.secondary)
@@ -103,24 +104,24 @@ private struct BroadcastJoin: View {
           }
 
           VStack(alignment: .leading, spacing: 8) {
-            Text("PIN").terminalStyle().foregroundStyle(.secondary)
+            Text("PIN").textRole(.label).foregroundStyle(.secondary)
             HStack(spacing: 8) {
               ForEach(0..<4, id: \.self) { index in
                 Text(verbatim: index < 2 ? String(Array(Mock.pin)[index]) : index == 2 ? "_" : " ")
-                  .font(.mono(size: 34, weight: .bold))
-                  .foregroundStyle(index == 2 ? Color.broadcastGreen : .primary)
+                  .font(.system(size: 34, weight: .bold, design: .monospaced))
+                  .foregroundStyle(index == 2 ? Theme.phosphor.accent : .primary)
                   .frame(maxWidth: .infinity, minHeight: 72)
                   .glassEffect(in: .rect(cornerRadius: 20))
               }
             }
-            Text("The PIN is on the host's phone").terminalStyle().foregroundStyle(.secondary)
+            Text("The PIN is on the host's phone").textRole(.label).foregroundStyle(.secondary)
           }
 
           VStack(alignment: .leading, spacing: 8) {
-            Text("Nickname").terminalStyle().foregroundStyle(.secondary)
+            Text("Nickname").textRole(.label).foregroundStyle(.secondary)
             HStack(spacing: 12) {
-              Text(verbatim: ">").font(.mono(.title3, weight: .bold)).foregroundStyle(Color.broadcastGreen)
-              Text(verbatim: "robin").font(.mono(.title3, weight: .semibold))
+              Text(verbatim: ">").font(.system(.title3, design: .monospaced, weight: .bold)).foregroundStyle(Theme.phosphor.accent)
+              Text(verbatim: "robin").font(.system(.title3, design: .monospaced, weight: .semibold))
               Spacer()
             }
             .padding(.horizontal, 16)
@@ -142,7 +143,7 @@ private struct BroadcastJoin: View {
           .buttonStyle(.glass)
         }
         .controlSize(.large)
-        .terminalStyle(.subheadline, weight: .bold)
+        .textRole(.action)
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
       }
@@ -151,9 +152,9 @@ private struct BroadcastJoin: View {
           Button("Themes & Icons", systemImage: "paintpalette") {}
         }
       }
-      .containerBackground(for: .navigation) { Backdrop(mood: .idle, accent: .broadcastGreen) }
+      .containerBackground(for: .navigation) { Backdrop(mood: .idle) }
     }
-    .tint(.broadcastGreen)
+    .tint(Theme.phosphor.accent)
   }
 }
 
@@ -175,7 +176,7 @@ private struct BroadcastQuestion: View {
               Spacer()
               if style == .b { Image(systemName: "checkmark").fontWeight(.bold) }
             }
-            .foregroundStyle(style == .b ? Color.broadcastInk : .primary)
+            .foregroundStyle(style == .b ? Palette.onAccentInk : .primary)
             .padding(.horizontal, 14)
             .frame(minHeight: 60)
             .glassEffect(.regular.tint(style.color.opacity(style == .b ? 0.8 : 0.09)), in: .rect(cornerRadius: 20))
@@ -187,12 +188,12 @@ private struct BroadcastQuestion: View {
       .padding(.horizontal, 16)
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
-          Text(verbatim: "Q 03/12 · SCIENCE").font(.mono(.footnote, weight: .semibold)).fixedSize()
+          Text(verbatim: "Q 03/12 · SCIENCE").font(.system(.footnote, design: .monospaced, weight: .semibold)).fixedSize()
         }
         ToolbarItem(placement: .topBarTrailing) {
           Label { Text(timerInterval: Mock.window, countsDown: true) } icon: { Image(systemName: "timer") }
             .labelStyle(.titleAndIcon)
-            .font(.mono(.footnote, weight: .semibold))
+            .font(.system(.footnote, design: .monospaced, weight: .semibold))
             .monospacedDigit()
         }
         ToolbarSpacer(.fixed, placement: .topBarTrailing)
@@ -200,9 +201,9 @@ private struct BroadcastQuestion: View {
           Button("Host controls", systemImage: "slider.horizontal.3") {}
         }
       }
-      .containerBackground(for: .navigation) { Backdrop(mood: .question, accent: .broadcastGreen) }
+      .containerBackground(for: .navigation) { Backdrop(mood: .question) }
     }
-    .tint(.broadcastGreen)
+    .tint(Theme.phosphor.accent)
   }
 }
 
@@ -213,13 +214,13 @@ private struct BroadcastLobby: View {
         VStack(spacing: 24) {
           HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
-              Text("Join code").terminalStyle().foregroundStyle(.secondary)
+              Text("Join code").textRole(.label).foregroundStyle(.secondary)
               Text(verbatim: Mock.pin)
-                .font(.mono(size: 64, weight: .heavy))
+                .font(.system(size: 64, weight: .heavy, design: .monospaced))
                 .tracking(8)
-                .foregroundStyle(Color.broadcastGreen)
-                .shadow(color: Color.broadcastGreen.opacity(0.4), radius: 12)
-              Text("Scan, or find FRIDAY QUIZ in the app").terminalStyle(.caption2).foregroundStyle(.secondary)
+                .foregroundStyle(Theme.phosphor.accent)
+                .shadow(color: Theme.phosphor.accent.opacity(0.4), radius: 12)
+              Text("Scan, or find FRIDAY QUIZ in the app").textRole(.labelSmall).foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
             RoundedRectangle(cornerRadius: 12).fill(.white).frame(width: 112, height: 112)
@@ -230,7 +231,7 @@ private struct BroadcastLobby: View {
           .overlay { RoundedRectangle(cornerRadius: 24).strokeBorder(.white.opacity(0.14)) }
 
           VStack(alignment: .leading, spacing: 10) {
-            Text("In the game · \(Mock.players.count)").terminalStyle().foregroundStyle(.secondary)
+            Text("In the game · \(Mock.players.count)").textRole(.label).foregroundStyle(.secondary)
             FlowChips(names: Mock.players)
           }
           .frame(maxWidth: .infinity, alignment: .leading)
@@ -242,21 +243,21 @@ private struct BroadcastLobby: View {
         Button {} label: { Label("Start Game", systemImage: "play.fill").frame(maxWidth: .infinity) }
           .buttonStyle(.glassProminent)
           .controlSize(.large)
-          .terminalStyle(.subheadline, weight: .bold)
+          .textRole(.action)
           .padding(.horizontal, 16)
           .padding(.bottom, 8)
       }
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
-          Text(verbatim: "FRIDAY QUIZ").font(.mono(.footnote, weight: .semibold)).fixedSize()
+          Text(verbatim: "FRIDAY QUIZ").font(.system(.footnote, design: .monospaced, weight: .semibold)).fixedSize()
         }
         ToolbarItem(placement: .topBarTrailing) {
           Button("Host controls", systemImage: "slider.horizontal.3") {}
         }
       }
-      .containerBackground(for: .navigation) { Backdrop(mood: .idle, accent: .broadcastGreen) }
+      .containerBackground(for: .navigation) { Backdrop(mood: .idle) }
     }
-    .tint(.broadcastGreen)
+    .tint(Theme.phosphor.accent)
   }
 }
 
@@ -265,11 +266,11 @@ private struct FlowChips: View {
   var body: some View {
     HStack(spacing: 8) {
       ForEach(names.prefix(4), id: \.self) { name in
-        Text(verbatim: name).font(.mono(.subheadline, weight: .semibold))
+        Text(verbatim: name).font(.system(.subheadline, design: .monospaced, weight: .semibold))
           .padding(.horizontal, 12).frame(minHeight: 36)
           .background(.white.opacity(0.08), in: .capsule)
       }
-      Text(verbatim: "+\(names.count - 4)").font(.mono(.subheadline)).foregroundStyle(.secondary)
+      Text(verbatim: "+\(names.count - 4)").font(.system(.subheadline, design: .monospaced)).foregroundStyle(.secondary)
     }
   }
 }
