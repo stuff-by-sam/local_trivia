@@ -7,14 +7,26 @@ struct LocalTriviaApp: App {
 
   var body: some Scene {
     WindowGroup {
-      RootView()
-        .chosenTheme()
-        .environment(models.store)
-        .environment(models.browser)
-        .environment(models.host)
-        .environment(models.bigScreen)
-        .environment(models.shop)
+      #if DEBUG
+      if let exploration = ExplorationScreen.fromLaunchArguments() {
+        exploration
+      } else {
+        game
+      }
+      #else
+      game
+      #endif
     }
+  }
+
+  private var game: some View {
+    RootView()
+      .chosenTheme()
+      .environment(models.store)
+      .environment(models.browser)
+      .environment(models.host)
+      .environment(models.bigScreen)
+      .environment(models.shop)
   }
 }
 
