@@ -6,8 +6,8 @@ import Security
 ///
 /// The token is a bearer credential: whoever presents it takes over this
 /// player's seat — name, score, the answer they're about to give. So it's kept
-/// in the Keychain rather than preferences: on this device only, never copied
-/// into a backup or onto a new phone, and unreadable while the phone is locked.
+/// in the Keychain rather than preferences: on this device only (never synced,
+/// never restorable onto another phone) and unreadable while it's locked.
 nonisolated protocol TokenStore: Sendable {
   func load() -> String?
   func save(_ token: String?)

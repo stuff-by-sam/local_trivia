@@ -27,8 +27,10 @@ rules:
   (`NSAllowsLocalNetworking`, no arbitrary loads).
 - **The resume token lives in the Keychain**, device-only and readable only
   while unlocked (`kSecAttrAccessibleWhenUnlockedThisDeviceOnly`). It's a bearer
-  credential for the player's seat, so it never goes into preferences, backups,
-  or logs.
+  credential for the player's seat, so it never goes into preferences or logs,
+  never syncs through iCloud Keychain, and can't be restored onto another
+  phone. iOS keeps Keychain items when an app is deleted; a reinstall discards
+  the old token on its first launch.
 - **Nothing leaves for anywhere but the game.** No analytics, no accounts, no
   third-party SDKs or dependencies. Preferences hold only the nickname draft and
   the last game's address. The privacy manifest declares exactly that.

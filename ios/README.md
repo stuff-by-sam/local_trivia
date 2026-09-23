@@ -137,8 +137,10 @@ surface on the network: the host's controls act on the game in-process.
   applied when the last game is restored from settings, so there's no path to
   an internet host. ATS allows local networking and nothing broader.
 - **The resume token is a credential**, so it's stored in the Keychain
-  (`TokenStore`), device-only and unlock-only, and never in `UserDefaults`,
-  backups or logs.
+  (`TokenStore`), device-only and unlock-only, and never in `UserDefaults` or
+  logs. It never syncs through iCloud Keychain and can't be restored onto
+  another phone. iOS keeps Keychain items when an app is deleted; a reinstall
+  discards the old token on its first launch.
 - **No analytics, accounts, entitlements or third-party code.** Log lines
   record error kinds and codes, never tokens, PINs, nicknames or addresses.
 - **Untrusted strings render verbatim.** Server text reaches the screen only
