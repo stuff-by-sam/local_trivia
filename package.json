@@ -45,6 +45,6 @@
     "socket.io-client": "^4.8.1"
   },
   "allowScripts": {
-    "better-sqlite3@12.11.1": true
+    "better-sqlite3@13.0.3": true
   }
 }
