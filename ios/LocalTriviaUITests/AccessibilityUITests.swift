@@ -111,7 +111,9 @@ final class AccessibilityUITests: XCTestCase {
     // The host is the only player, so answering ends the question at once.
     answer.tap()
     XCTAssertTrue(app.element(containing: "pts").waitForExistence(timeout: 10), "no result")
-    try screen.capture("Result")
+    // It moves on to the standings by itself after five seconds: too soon to
+    // audit reliably, so it's captured but not audited.
+    try screen.capture("Result", audit: false)
 
     XCTAssertTrue(app.element(containing: "Your position").waitForExistence(timeout: 15))
     try screen.capture("Standings")
@@ -182,12 +184,13 @@ private struct Screens {
     let visible = CGRect(x: window.minX, y: top, width: window.width, height: window.maxY - top)
     let lists = app.collectionViews.allElementsBoundByIndex.map(\.frame)
     try app.performAccessibilityAudit(for: [.textClipped, .dynamicType, .sufficientElementDescription, .hitRegion, .trait]) { [failsOnClippedText] issue in
-      let clipped = issue.auditType == .textClipped
-      // An element can be gone by the time it's reported: reading it then fails.
-      let frame = issue.element.flatMap { $0.exists ? $0.frame : nil } ?? .null
-      let excused = clipped && (!failsOnClippedText || !visible.contains(frame) || lists.contains { $0.contains(frame) })
-      let expected = Self.isExpected(issue) || excused
-      let described = issue.element.flatMap { $0.exists ? String($0.debugDescription.prefix(160)) : nil } ?? "no element"
+      // A snapshot, not the live element: one that's gone by the time it's
+      // reported can't then fail the test for being looked at.
+      let element = try? issue.element?.snapshot()
+      let frame = element?.frame ?? .null
+      let excused = issue.auditType == .textClipped && (!failsOnClippedText || !visible.contains(frame) || lists.contains { $0.contains(frame) })
+      let expected = Self.isExpected(issue, element) || excused
+      let described = element.map { "\($0.elementType.rawValue) '\($0.label)' \($0.frame)" } ?? "no element"
       found.append("\(name): \(expected ? "expected" : "FAILED") \(issue.compactDescription) — \(described)")
       return expected
     }
@@ -195,10 +198,10 @@ private struct Screens {
 
   /// What the audit reports that's by design, and so doesn't fail the test.
   /// Everything it finds is still in the report.
-  private static func isExpected(_ issue: XCUIAccessibilityAuditIssue) -> Bool {
+  private static func isExpected(_ issue: XCUIAccessibilityAuditIssue, _ element: (any XCUIElementSnapshot)?) -> Bool {
     // Nothing on screen to point at: text scrolled past the fold, or an
     // element that's gone by the time it's reported.
-    guard let element = issue.element, element.exists else { return true }
+    guard let element else { return true }
     switch issue.auditType {
     // Bars, display figures and the wordmark stop growing on purpose
     // (DESIGN.md, "Type"); a bar offers the Large Content Viewer instead.
