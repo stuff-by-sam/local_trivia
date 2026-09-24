@@ -24,7 +24,7 @@ final class HostController {
 
   /// The one thing to do next, for the host's action bar.
   enum Action: Equatable {
-    case start, showStandings, nextQuestion, finish, newGame
+    case start, nextQuestion, finish, newGame
   }
 
   /// A sheet opened from the host's menu (see `HostSheetView`).
@@ -164,8 +164,8 @@ final class HostController {
     guard let game else { return nil }
     switch game.state {
     case .lobby: return .start
-    case .questionActive: return nil
-    case .reveal: return .showStandings
+    // The reveal moves to the standings by itself (`HostedGame.revealHold`).
+    case .questionActive, .reveal: return nil
     case .leaderboard: return game.isLastQuestion ? .finish : .nextQuestion
     case .podium: return .newGame
     }
@@ -184,7 +184,6 @@ final class HostController {
         case .noPlayers: actionError = String(localized: "Nobody's in the game yet.")
         }
       }
-    case .showStandings: game.showLeaderboard()
     case .nextQuestion, .finish: game.next()
     case .newGame: game.newGame()
     }

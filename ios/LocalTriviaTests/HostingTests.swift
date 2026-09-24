@@ -366,8 +366,8 @@ import Testing
     return store
   }
 
-  func eventually(_ what: String, _ condition: () -> Bool) async throws {
-    let deadline = ContinuousClock.now + .seconds(5)
+  func eventually(_ what: String, within limit: Duration = .seconds(5), _ condition: () -> Bool) async throws {
+    let deadline = ContinuousClock.now + limit
     while !condition() {
       guard ContinuousClock.now < deadline else {
         Issue.record("timed out waiting for \(what)")
@@ -411,8 +411,10 @@ import Testing
     if case .result(let outcome) = hostPlayer.phase { #expect(!outcome.result.correct) }
     try await eventually("the room's answered count") { guest.answered?.answered == 2 || guest.answered == nil }
 
-    host.perform(.showStandings)
-    try await eventually("standings for everyone") { guest.leaderboard?.standings.count == 2 }
+    // No tap: the reveal moves to the standings by itself.
+    try await eventually("standings for everyone", within: HostedGame.revealHold + .seconds(3)) {
+      guest.leaderboard?.standings.count == 2
+    }
     #expect(guest.leaderboard?.standings.first?.nickname == "Guest")
 
     await host.stop(leaving: hostPlayer)

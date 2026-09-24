@@ -322,7 +322,7 @@ struct ScoringSection: View {
     let quickSeconds = Int((limit * 0.1).rounded())
     return String(
       localized:
-        "Right in \(quickSeconds)s: \(quick.grouped) pts · right at the buzzer: \(buzzer.grouped) · wrong: \(rules.wrongAnswerPoints.grouped). Answers score more the faster they come in.\(rules.autoAdvance ? " Auto-advance moves on 5 seconds after each reveal and standings." : "")"
+        "Right in \(quickSeconds)s: \(quick.grouped) pts · right at the buzzer: \(buzzer.grouped) · wrong: \(rules.wrongAnswerPoints.grouped). Answers score more the faster they come in. The standings follow each reveal after 5 seconds; \(rules.autoAdvance ? "the next question follows them 5 seconds later." : "you start the next question.")"
     )
   }
 }

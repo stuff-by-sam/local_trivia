@@ -101,7 +101,6 @@ private struct HostActionBar: View {
   private var title: LocalizedStringKey {
     switch action {
     case .start: "Start Game"
-    case .showStandings: "Show Standings"
     case .nextQuestion: "Next Question"
     case .finish: "Final Results"
     case .newGame: "Play Again"
@@ -111,7 +110,6 @@ private struct HostActionBar: View {
   private var symbol: String {
     switch action {
     case .start: "play.fill"
-    case .showStandings: "list.number"
     case .nextQuestion: "arrow.forward"
     case .finish: "flag.checkered"
     case .newGame: "arrow.counterclockwise"
