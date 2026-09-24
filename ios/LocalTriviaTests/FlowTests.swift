@@ -36,6 +36,63 @@ struct QuestionDrafterTests {
   }
 }
 
+/// Drafting the same topic twice mustn't fill the round with the same
+/// questions in new words.
+struct DraftRepeatTests {
+  private func question(_ text: String, _ answer: String, wrong: [String] = ["W1", "W2", "W3"]) -> HostQuestion {
+    HostQuestion(text: text, options: [answer] + wrong, correct: 0)
+  }
+
+  private let round = [
+    HostQuestion(text: "Which planet is the largest?", options: ["Mars", "Jupiter", "Venus", "Earth"], correct: 1),
+    HostQuestion(text: "In which year did the Berlin Wall fall?", options: ["1987", "1988", "1989", "1991"], correct: 2),
+  ]
+
+  @Test func dropsTheSameQuestionHoweverItsWritten() {
+    let drafts = [question("which planet is the LARGEST", "Saturn"), question("In which year did the Berlin Wall fall ?!", "1990")]
+    #expect(QuestionDrafter.dropRepeats(drafts, of: round).isEmpty, "same words, even with another answer")
+  }
+
+  @Test func dropsTheSameAnswerToTheSameQuestionInNewWords() {
+    let drafts = [
+      question("What is the largest planet in the solar system?", "Jupiter"),
+      question("When did the Berlin Wall fall?", "1989"),
+    ]
+    #expect(QuestionDrafter.dropRepeats(drafts, of: round).isEmpty)
+  }
+
+  @Test func keepsNewQuestionsThatShareAnAnswerOrAWord() {
+    let drafts = [
+      // Same answer as the round's largest planet, but it asks something else.
+      question("Which planet has the Great Red Spot?", "Jupiter"),
+      // Same words, different answer: a different question.
+      question("Which planet is the smallest?", "Mercury"),
+      question("Which planet is closest to the Sun?", "Mercury"),
+    ]
+    #expect(QuestionDrafter.dropRepeats(drafts, of: round).map(\.text) == drafts.map(\.text))
+  }
+
+  /// Function words only tell subjects apart in English: elsewhere, only
+  /// the same words repeat.
+  @Test func matchesOtherLanguagesOnlyWordForWord() {
+    let round = [question("Quelle planète est la plus proche du Soleil ?", "Mercure")]
+    let drafts = [question("Quelle planète est la plus petite ?", "Mercure"), question("quelle planete est la plus proche du soleil", "Mercure")]
+    #expect(QuestionDrafter.dropRepeats(drafts, of: round).map(\.text) == ["Quelle planète est la plus petite ?"])
+  }
+
+  @Test func dropsARepeatWithinTheDrafts() {
+    let drafts = [question("Who wrote Hamlet?", "William Shakespeare"), question("Which playwright wrote Hamlet?", "william shakespeare")]
+    #expect(QuestionDrafter.dropRepeats(drafts, of: []).map(\.text) == ["Who wrote Hamlet?"])
+  }
+
+  @Test func comparesAgainstUnfinishedQuestionsByTheirWordsAlone() {
+    var unfinished = HostQuestion.blank()
+    unfinished.text = "Who wrote Hamlet?"
+    let drafts = [question("Who wrote Hamlet", "William Shakespeare"), question("Which playwright wrote Hamlet?", "William Shakespeare")]
+    #expect(QuestionDrafter.dropRepeats(drafts, of: [unfinished]).map(\.text) == ["Which playwright wrote Hamlet?"])
+  }
+}
+
 struct HostLibraryFlowTests {
   @Test func aNewQuestionHasNoRightAnswerUntilOneIsPicked() {
     var question = HostQuestion.blank()

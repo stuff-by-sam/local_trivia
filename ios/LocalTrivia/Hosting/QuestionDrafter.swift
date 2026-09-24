@@ -37,17 +37,26 @@ enum QuestionDrafter {
 
   private static let log = Logger(subsystem: "com.stuffbysam.localtrivia", category: "drafting")
 
-  private static let instructions = """
+  /// One right answer, anywhere: "Which planet has no moons? → Mercury" is
+  /// marked wrong for anyone who says Venus. Asking for superlatives, firsts,
+  /// names, numbers and dates steers the model toward questions that have one.
+  static let instructions = """
     You write questions for a pub quiz. Every question has exactly one correct \
-    answer, and that answer is a well-established fact, not an opinion or a \
-    recent event. The three wrong answers are plausible for the question but \
-    certainly wrong. Keep every question to one short sentence and every answer \
-    to a few words. Don't repeat a question.
+    answer — not just among the four options, but anywhere: if anything else \
+    would also be right, write a different question. Questions about which \
+    one of a group has or lacks something, or that ask for "a" or "one" of \
+    something, usually have several right answers (Mercury and Venus both have \
+    no moons), so ask for a superlative, a first, a name, a number or a date \
+    instead. The answer is a well-established fact, not an opinion or a recent \
+    event. The three wrong answers are plausible for the question but \
+    certainly wrong. Keep every question to one short sentence and every \
+    answer to a few words. Every question asks something different.
     """
 
   /// Drafts `count` questions about `topic`, ready to review. The right
-  /// answer lands on a random key in each.
-  static func draft(topic: String, count: Int) async throws(Failure) -> [HostQuestion] {
+  /// answer lands on a random key in each. Drafts that ask what the round
+  /// already asks are left out (`dropRepeats`), so there may be fewer.
+  static func draft(topic: String, count: Int, avoiding round: [HostQuestion] = []) async throws(Failure) -> [HostQuestion] {
     guard isAvailable else { throw .unavailable }
     let session = LanguageModelSession(model: .default, instructions: instructions)
     let response: LanguageModelSession.Response<DraftedRound>
@@ -72,9 +81,10 @@ enum QuestionDrafter {
     }
     let category = category(for: topic)
     var keys = SystemRandomNumberGenerator()
-    return response.content.questions.prefix(count).compactMap {
+    let drafts = response.content.questions.prefix(count).compactMap {
       question(from: $0, category: category, correctAt: Int.random(in: 0..<4, using: &keys))
     }
+    return dropRepeats(drafts, of: round)
   }
 
   /// A draft as a round's question, or nil if it isn't a usable one: no
@@ -97,6 +107,67 @@ enum QuestionDrafter {
   static func category(for topic: String) -> String {
     let trimmed = topic.trimmingCharacters(in: .whitespacesAndNewlines)
     return trimmed.isEmpty ? "GENERAL" : String(trimmed.prefix(24)).uppercased()
+  }
+
+  /// `drafts` without the ones that ask what `round` — or an earlier draft —
+  /// already asks: the same question however it's cased or punctuated, or
+  /// the same answer to a question about the same things ("Which planet is
+  /// the largest?" and "What's the largest planet in the solar system?").
+  static func dropRepeats(_ drafts: [HostQuestion], of round: [HostQuestion]) -> [HostQuestion] {
+    var asked = round.map(Fingerprint.init)
+    var kept: [HostQuestion] = []
+    for draft in drafts {
+      let fingerprint = Fingerprint(draft)
+      guard !asked.contains(where: fingerprint.repeats) else { continue }
+      asked.append(fingerprint)
+      kept.append(draft)
+    }
+    return kept
+  }
+
+  /// What a question asks, for spotting the same one twice.
+  struct Fingerprint {
+    /// The question's words, folded: case, accents and punctuation aside.
+    let words: String
+    /// What it's about: its words but for question words, articles,
+    /// prepositions and auxiliaries. "Which planet is closest to the Sun?"
+    /// and "Which planet is the smallest?" share only "planet".
+    let subjects: Set<String>
+    /// The right answer's words, or nil if it has none yet.
+    let answer: String?
+
+    init(_ question: HostQuestion) {
+      words = Self.words(in: question.text)
+      let all = Set(words.split(separator: " ").map(String.init))
+      // Drafts are written in English. A question with none of its function
+      // words is in another language, where they can't be told apart from
+      // its subjects, so it repeats only word for word.
+      subjects = all.isDisjoint(with: Self.functionWords) ? [] : all.subtracting(Self.functionWords)
+      answer = question.options.indices.contains(question.correct) ? Self.words(in: question.options[question.correct]) : nil
+    }
+
+    /// Asks the same thing as `other`: the same words, or the same answer
+    /// to a question about (nearly) all the same things.
+    func repeats(_ other: Fingerprint) -> Bool {
+      if !words.isEmpty, words == other.words { return true }
+      guard let answer, answer == other.answer, !answer.isEmpty else { return false }
+      let smaller = min(subjects.count, other.subjects.count)
+      guard smaller > 0 else { return false }
+      return Double(subjects.intersection(other.subjects).count) / Double(smaller) >= 0.8
+    }
+
+    static func words(in text: String) -> String {
+      text.folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: nil)
+        .split(whereSeparator: { !$0.isLetter && !$0.isNumber })
+        .joined(separator: " ")
+    }
+
+    private static let functionWords: Set<String> = [
+      "a", "an", "the", "and", "or", "of", "in", "on", "at", "to", "for", "from", "by", "with", "as", "into", "about",
+      "which", "what", "who", "whom", "whose", "when", "where", "why", "how", "many", "much",
+      "is", "are", "was", "were", "be", "been", "do", "does", "did", "has", "have", "had", "can",
+      "it", "its", "this", "that", "these", "those", "there", "their", "his", "her", "s", "name", "called", "known",
+    ]
   }
 }
 

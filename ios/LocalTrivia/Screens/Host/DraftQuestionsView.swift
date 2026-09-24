@@ -5,6 +5,8 @@ import SwiftUI
 /// each shown with its right answer marked, all in until the host takes one
 /// out. Nothing is added until they say so.
 struct DraftQuestionsView: View {
+  /// The questions already in the round: drafts that repeat one are left out.
+  let round: [HostQuestion]
   let onAdd: ([HostQuestion]) -> Void
 
   @Environment(\.dismiss) private var dismiss
@@ -87,7 +89,7 @@ struct DraftQuestionsView: View {
     Task {
       defer { isDrafting = false }
       do throws(QuestionDrafter.Failure) {
-        let result = try await QuestionDrafter.draft(topic: topic, count: count)
+        let result = try await QuestionDrafter.draft(topic: topic, count: count, avoiding: round)
         Motion.settle.perform {
           drafts = result
           left = []

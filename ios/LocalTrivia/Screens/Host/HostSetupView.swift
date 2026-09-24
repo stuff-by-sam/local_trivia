@@ -102,7 +102,7 @@ struct HostSetupView: View {
         Alert(title: Text(report.title), message: Text(report.detail), dismissButton: .default(Text("OK")))
       }
       .sheet(isPresented: $isDrafting) {
-        DraftQuestionsView { host.library.questions.append(contentsOf: $0) }
+        DraftQuestionsView(round: host.library.questions) { host.library.questions.append(contentsOf: $0) }
       }
       .task { canDraft = QuestionDrafter.isAvailable }
       .onDisappear { host.library.flush() }
