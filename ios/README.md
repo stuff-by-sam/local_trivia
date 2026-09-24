@@ -331,6 +331,13 @@ question, start hosting, play it as the host, standings, podium, stop hosting.
 It needs nothing but the simulator, so it runs with everything else.
 Screenshots of every phase are attached to the test result.
 
+`GlassContrastUITests` measures, from the pixels on screen, the text on the
+glass a player needs most — each answer chosen, the primary action, the undo
+toast — against the glass behind it, in all ten themes, and fails below
+4.5:1. Glass also answers to the phone's Liquid Glass slider, Reduce
+Transparency and Increase Contrast, which a test can't set, so it measures
+under whatever the simulator is set to: run it once per setting.
+
 `AccessibilityUITests` walks every screen one phone can reach three times —
 at AX5, with Increase Contrast, and right-to-left — attaching a screenshot
 and the element tree VoiceOver reads for each, and fails on any clipped

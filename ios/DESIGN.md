@@ -141,7 +141,7 @@ are ≥ 60 pt tall (`Size.answer`).
 | `Glass.regular` | toolbar, buttons, fields, dimmed answers | system frosted | system |
 | `.regular.interactive()` | custom touchable glass (answers, PIN, picker) | system | system |
 | `.regular.tint(answer, 9 %)` | an open answer | system | 18 % + answer-colour stroke |
-| `.regular.tint(answer, 80 %)` | the chosen answer | system | 90 % |
+| `.glassProminent` in the answer's colour at 80 % | the chosen answer — the system's lit glass, which sets its label on the glass; custom tinted glass tints the label inside it too, and took the lit answer's ink to 3:1 | system | 90 % |
 | `.glassProminent` + `accent` | primary action | system | system |
 | Panel (drawn) | readouts, join code card | `ink` mixed 8 % white, opaque | `panel`/`panelStroke` IC values |
 | Backdrop (drawn) | behind every screen | glow only: no texture, no tilt | glow only: no texture, no vignette |

@@ -71,7 +71,7 @@ public struct AnswerButton: View {
 
   public var body: some View {
     let shape = RoundedRectangle(cornerRadius: Radius.control)
-    Button(action: action) {
+    let button = Button(action: action) {
       HStack(spacing: Space.m) {
         AnswerKey(style: style, isInverted: state == .chosen)
         // Host-authored: verbatim, never a localization key or Markdown.
@@ -87,13 +87,29 @@ public struct AnswerButton: View {
       }
       // The lit colours are bright; white on them fails contrast, ink doesn't.
       .foregroundStyle(state == .chosen ? AnyShapeStyle(.onAccent) : AnyShapeStyle(.primary))
-      .padding(.horizontal, AnswerKey.inset)
-      .padding(.vertical, Space.m)
-      .frame(minHeight: Size.answer)
+      // The chosen answer's button style pads its label itself; giving that
+      // back keeps the lit answer exactly where the open one was.
+      .padding(.horizontal, AnswerKey.inset - (state == .chosen ? Self.styleInsets.width : 0))
+      .padding(.vertical, Space.m - (state == .chosen ? Self.styleInsets.height : 0))
+      .frame(minHeight: Size.answer - (state == .chosen ? 2 * Self.styleInsets.height : 0))
       .contentShape(shape)
     }
-    .buttonStyle(.plain)
-    .glassEffect(glass, in: shape)
+
+    Group {
+      if state == .chosen {
+        // The system's lit glass: its label sits on the glass. Custom glass
+        // draws its tint over what's inside it, which took the dark ink on a
+        // lit answer to teal, at 3:1.
+        button
+          .buttonStyle(.glassProminent)
+          .buttonBorderShape(.roundedRectangle(radius: Radius.control))
+          .tint(palette.tint(for: style, isLit: true))
+      } else {
+        button
+          .buttonStyle(.plain)
+          .glassEffect(glass, in: shape)
+      }
+    }
     .overlay {
       // Under Increase Contrast an open answer gets an edge in its colour, so
       // four answers never read as one glass column.
@@ -102,19 +118,25 @@ public struct AnswerButton: View {
       }
     }
     .opacity(state == .dimmed ? 0.35 : 1)
-    .disabled(state != .open)
+    // A chosen answer isn't disabled — the system would grey its lit glass —
+    // it just takes no more taps.
+    .disabled(state == .dimmed)
+    .allowsHitTesting(state == .open)
     .motion(.snap, value: state)
     .accessibilityLabel(Text("\(style.letter), \(style.shapeName): \(text)"))
     .accessibilityAddTraits(state == .chosen ? .isSelected : [])
   }
+
+  /// What `.glassProminent` pads a label by at the default control size.
+  private static let styleInsets = CGSize(width: 12, height: 7)
 
   private var glass: Glass {
     switch state {
     // Just a breath of the answer's colour: enough to find "the cyan one" at a
     // glance, as on the TV, without four slabs of colour competing.
     case .open: .regular.tint(palette.tint(for: style, isLit: false)).interactive()
-    case .chosen: .regular.tint(palette.tint(for: style, isLit: true))
-    case .dimmed: .regular
+    // A chosen answer's glass is the button style's; this is never drawn.
+    case .chosen, .dimmed: .regular
     }
   }
 }

@@ -63,17 +63,20 @@ struct ScreenPreview: View {
   @State private var models: PreviewModels
   @Namespace private var glass
 
-  init(_ state: ScreenState, theme: Theme = .phosphor) {
+  /// `chosen` is the answer a chosen question has picked, 0–3.
+  init(_ state: ScreenState, theme: Theme = .phosphor, chosen: Int = 1) {
     self.state = state
     self.theme = theme
-    _models = State(initialValue: PreviewModels(state))
+    _models = State(initialValue: PreviewModels(state, chosen: chosen))
   }
 
-  /// `-screen question.chosen -theme amber`: that screen, for a UI test.
+  /// `-screen question.chosen -theme amber -chosen 3`: that screen, for a UI test.
   static func fromLaunchArguments() -> ScreenPreview? {
-    guard let name = UserDefaults.standard.string(forKey: "screen"), let state = ScreenState(rawValue: name) else { return nil }
-    let theme = UserDefaults.standard.string(forKey: "theme").flatMap(Theme.init(rawValue:)) ?? .phosphor
-    return ScreenPreview(state, theme: theme)
+    let defaults = UserDefaults.standard
+    guard let name = defaults.string(forKey: "screen"), let state = ScreenState(rawValue: name) else { return nil }
+    let theme = defaults.string(forKey: "theme").flatMap(Theme.init(rawValue:)) ?? .phosphor
+    let chosen = defaults.object(forKey: "chosen") == nil ? 1 : defaults.integer(forKey: "chosen")
+    return ScreenPreview(state, theme: theme, chosen: chosen)
   }
 
   var body: some View {
@@ -185,17 +188,17 @@ final class PreviewModels {
   let bigScreen = BigScreen()
   let shop: Shop
 
-  init(_ state: ScreenState) {
+  init(_ state: ScreenState, chosen: Int = 1) {
     let defaults = UserDefaults(suiteName: "previews") ?? .standard
     defaults.removePersistentDomain(forName: "previews")
     store = GameStore(defaults: defaults, tokens: PreviewTokens(), makeTransport: { _ in nil })
     store.nickname = Sample.player
     host = HostController(library: HostLibrary(fileURL: nil), advertises: false)
     shop = Shop.preview(defaults: defaults)
-    put(in: state)
+    put(in: state, chosen: chosen)
   }
 
-  private func put(in state: ScreenState) {
+  private func put(in state: ScreenState, chosen: Int) {
     let question = Sample.question(elapsed: 6)
     let reveal = Reveal(correctIndex: 1, distribution: [1, 3, 1, 1])
     switch state {
@@ -234,7 +237,7 @@ final class PreviewModels {
       online()
       joined()
       store.apply(.questionStart(question))
-      store.choose(1)
+      store.choose(chosen)
       store.apply(.answerAck(questionId: question.questionId))
       store.apply(.answeredCount(AnsweredCount(answered: 3, total: 6)))
     case .questionTimeUp:
