@@ -154,18 +154,13 @@ private struct QuestionClock: View {
   }
 }
 
-/// Leaving drops your place in the game, so it asks first.
+/// Leaves at once. The join screen offers Undo for a few seconds, which takes
+/// the seat back, score and all — so there's nothing to ask first.
 struct LeaveButton: View {
   @Environment(GameStore.self) private var store
-  @State private var isConfirming = false
 
   var body: some View {
-    Button("Leave Game", systemImage: "xmark") { isConfirming = true }
-      .confirmationDialog("Leave this game?", isPresented: $isConfirming, titleVisibility: .visible) {
-        Button("Leave Game", role: .destructive) { store.leave() }
-      } message: {
-        Text("You'll need the PIN to join again.")
-      }
+    Button("Leave Game", systemImage: "xmark") { store.leave() }
   }
 }
 

@@ -8,6 +8,7 @@ import SwiftUI
 /// the fourth PIN digit joins on its own — no button to find.
 struct JoinView: View {
   @Environment(GameStore.self) private var store
+  @Environment(GameBrowser.self) private var browser
 
   @State private var pin = ""
   @State private var isScanning = false
@@ -15,6 +16,9 @@ struct JoinView: View {
   @State private var rejectedNicknames = 0
   @State private var isSettingUpHost = false
   @State private var isShopping = false
+  @State private var undo: UndoItem?
+  /// A few seconds without finding a game: time to say why, and offer the QR code.
+  @State private var isStillLooking = false
   @FocusState private var focus: JoinField?
 
   var body: some View {
@@ -28,7 +32,14 @@ struct JoinView: View {
           .padding(.top, Space.l)
 
           LabeledField("Game") {
-            GamePicker(isScanning: $isScanning)
+            VStack(alignment: .leading, spacing: Space.s) {
+              GamePicker(isScanning: $isScanning)
+              if store.server == nil, isStillLooking || browser.hasFailed {
+                DiscoveryHelp(isScanning: $isScanning, hasFailed: browser.hasFailed)
+                  .transition(.opacity)
+              }
+            }
+            .motion(.settle, value: isStillLooking)
           }
 
           if store.isRejoining {
@@ -89,7 +100,20 @@ struct JoinView: View {
       guard !Task.isCancelled, focus == nil else { return }
       focus = store.nicknameIsValid ? .pin : .nickname
     }
+    .task(id: store.server == nil) {
+      isStillLooking = false
+      guard store.server == nil else { return }
+      try? await Task.sleep(for: .seconds(6))
+      guard !Task.isCancelled else { return }
+      isStillLooking = true
+    }
+    // Just left a game: offer to take the seat back.
+    .onChange(of: store.leftGame, initial: true) { _, game in
+      undo = game.map { name in UndoItem(String(localized: "Left \(name)")) { store.undoLeave() } }
+    }
     .onChange(of: store.joinError) { _, error in
+      // Said aloud, not just shown: the shake and the haptic don't say why.
+      if let error { AccessibilityNotification.Announcement(error.message).post() }
       // Only what was wrong gets cleared: a taken name, or a host that didn't
       // answer, is no reason to make anyone type the PIN again.
       switch error?.field {
@@ -151,6 +175,7 @@ struct JoinView: View {
   /// where the thumb is; above the keyboard while it's up.
   private var actions: some View {
     ActionBar {
+      UndoBanner(item: $undo, seconds: GameStore.undoWindow / .seconds(1) - 2)
       if store.isRejoining {
         ActionButton("Start Over", prominence: .secondary) { store.leave() }
       } else {
@@ -240,6 +265,34 @@ private struct PINField: View {
     }
     .contentShape(.rect)
     .onTapGesture { focus.wrappedValue = .pin }
+  }
+}
+
+/// No game found: why that usually is, and the two ways out — the host's QR
+/// code, and the Local Network switch in Settings.
+private struct DiscoveryHelp: View {
+  @Binding var isScanning: Bool
+  let hasFailed: Bool
+
+  @Environment(\.openURL) private var openURL
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: Space.xs) {
+      if hasFailed {
+        FieldMessage(Text("Can't look for games. Local Network may be off for Trivia."), kind: .notice)
+      } else {
+        FieldMessage(Text("No games yet. The host's phone has to be on this Wi-Fi."), kind: .hint)
+      }
+      HStack(spacing: Space.l) {
+        if QRScanner.isAvailable {
+          QuietButton("Scan QR Code", systemImage: "qrcode.viewfinder") { isScanning = true }
+        }
+        QuietButton("Local Network Settings", systemImage: "gearshape") {
+          if let settings = URL(string: UIApplication.openSettingsURLString) { openURL(settings) }
+        }
+      }
+      .padding(.leading, Space.xs)
+    }
   }
 }
 

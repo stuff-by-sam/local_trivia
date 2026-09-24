@@ -118,6 +118,8 @@ final class GameStore {
   /// A PIN waiting to be used as soon as the link is up and there's a
   /// nickname: from a join link, or the host joining their own game.
   private(set) var pendingPIN: String?
+  /// The game just left, while leaving can still be undone (`undoLeave`).
+  private(set) var leftGame: String?
 
   /// The nickname draft, remembered across launches.
   var nickname: String {
@@ -181,6 +183,14 @@ final class GameStore {
   private var lastQuestion: Question?
   @ObservationIgnored private var lastReveal: (questionId: Int, reveal: Reveal)?
   @ObservationIgnored private var podium: [Placing] = []
+  /// The seat just given up. The host keeps a dropped player's seat, so for
+  /// a few seconds the token can take it back — undo, instead of "are you
+  /// sure?". Memory only: it's a credential, and it's short-lived.
+  @ObservationIgnored private var leftSeat: (server: GameServer, token: String)?
+  @ObservationIgnored private var leftSeatExpiry: Task<Void, Never>?
+
+  /// How long leaving can be undone.
+  nonisolated static let undoWindow: Duration = .seconds(8)
 
   @ObservationIgnored private var transport: (any GameTransport)?
   @ObservationIgnored private var outbox: AsyncStream<ClientEvent>.Continuation?
@@ -283,6 +293,7 @@ final class GameStore {
 
   func join(pin: String) {
     guard canJoin else { return }
+    forgetLeftSeat()
     isJoining = true
     joinError = nil
     notice = nil
@@ -322,6 +333,7 @@ final class GameStore {
   /// Drops the game entirely — the host closed it — so discovery starts over.
   /// `endedAt` is the address other phones knew it by, if it differs from ours.
   func forgetGame(endedAt address: URL? = nil) {
+    forgetLeftSeat()
     if let url = server?.url { endedGames.insert(url) }
     if let address { endedGames.insert(address) }
     close()
@@ -343,6 +355,16 @@ final class GameStore {
   /// drop the session and re-dial fresh, which stops this phone counting as a
   /// connected player without costing the next join a handshake.
   func leave() {
+    if let server, let token, !server.isLoopback {
+      leftSeat = (server, token)
+      leftGame = server.name
+      leftSeatExpiry?.cancel()
+      leftSeatExpiry = Task { [weak self] in
+        try? await Task.sleep(for: Self.undoWindow)
+        guard !Task.isCancelled else { return }
+        self?.forgetLeftSeat()
+      }
+    }
     token = nil
     // Or the re-dial below would join straight back in.
     pendingPIN = nil
@@ -354,6 +376,28 @@ final class GameStore {
     answered = nil
     broadcast = nil
     if let server { open(server) }
+  }
+
+  /// Takes back the seat just left, score and all: re-dials with its token,
+  /// and the server resumes it.
+  func undoLeave() {
+    guard let seat = leftSeat, phase == .join else { return }
+    forgetLeftSeat()
+    notice = nil
+    joinError = nil
+    if seat.server != server {
+      server = seat.server
+      remember(seat.server)
+    }
+    token = seat.token
+    open(seat.server)
+  }
+
+  private func forgetLeftSeat() {
+    leftSeatExpiry?.cancel()
+    leftSeatExpiry = nil
+    leftSeat = nil
+    leftGame = nil
   }
 
   /// Back in the foreground: iOS may have frozen the socket while we were away.

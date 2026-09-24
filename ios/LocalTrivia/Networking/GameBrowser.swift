@@ -11,6 +11,10 @@ final class GameBrowser {
   nonisolated static let serviceType = "_trivia-phone._tcp"
 
   private(set) var games: [GameServer] = []
+  /// Set when browsing stopped working — often because Local Network access
+  /// is off for the app — so the join screen can say so instead of looking
+  /// forever.
+  private(set) var hasFailed = false
   @ObservationIgnored private var browsing: Task<Void, Never>?
 
   private static let log = Logger(subsystem: "com.stuffbysam.localtrivia", category: "discovery")
@@ -25,6 +29,7 @@ final class GameBrowser {
         }
       } catch {
         Self.log.error("browse failed: \(error.localizedDescription, privacy: .public)")
+        self?.hasFailed = true
       }
     }
   }
