@@ -10,6 +10,7 @@ struct ResultView: View {
   @State private var shownPoints = 0
   @State private var appeared = false
   @Environment(\.palette) private var palette
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
   enum Verdict {
     case correct, wrong, missed
@@ -102,8 +103,9 @@ struct ResultView: View {
     .gameToolbar(.player, status: .progress)
     .task(id: result) {
       shownPoints = 0
-      // The badge lands first, then the points count up.
-      try? await Task.sleep(for: .milliseconds(220))
+      // The verdict lands first, then the points count up. Nothing flies in
+      // under Reduce Motion, so there's nothing to wait for.
+      if !reduceMotion { try? await Task.sleep(for: Motion.pointsDelay) }
       guard !Task.isCancelled else { return }
       appeared = true
       Motion.count.perform { shownPoints = result.points }

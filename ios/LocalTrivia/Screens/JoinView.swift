@@ -86,19 +86,17 @@ struct JoinView: View {
       // A PIN typed while the link was still coming up joins the moment it's up.
       if pin.count == GameStore.pinLength, store.nicknameIsValid {
         submit()
-      } else if focus == nil {
+      } else {
         // Otherwise put the cursor where the next keystroke goes.
-        focus = store.nicknameIsValid ? .pin : .nickname
+        placeCursor()
       }
     }
     .task {
-      // Arriving here already online — after leaving, or being removed — no
-      // connection change will fire, so put the cursor in place now, once the
-      // screen has settled.
+      // Arriving here already online — after being removed from a game — no
+      // connection change will fire, so put the cursor in place now. The
+      // keyboard comes up with the screen, as it does anywhere in iOS.
       guard store.connection == .online, !store.isRejoining else { return }
-      try? await Task.sleep(for: .milliseconds(450))
-      guard !Task.isCancelled, focus == nil else { return }
-      focus = store.nicknameIsValid ? .pin : .nickname
+      placeCursor()
     }
     .task(id: store.server == nil) {
       isStillLooking = false
@@ -240,6 +238,13 @@ struct JoinView: View {
     focus = nil
     store.join(pin: pin)
   }
+
+  /// The cursor goes where the next keystroke will — unless a sheet is up,
+  /// where it would raise a keyboard over the shop or the round.
+  private func placeCursor() {
+    guard focus == nil, !isScanning, !isSettingUpHost, !isShopping else { return }
+    focus = store.nicknameIsValid ? .pin : .nickname
+  }
 }
 
 private enum JoinField { case pin, nickname }
@@ -368,4 +373,5 @@ private struct GamePicker: View {
 #Preview("Wrong PIN") { ScreenPreview(.joinWrongPIN) }
 #Preview("Just left: undo") { ScreenPreview(.joinLeft) }
 #Preview("Host ended the game") { ScreenPreview(.joinHostEnded) }
+#Preview("Removed by the host") { ScreenPreview(.joinRemoved) }
 #endif

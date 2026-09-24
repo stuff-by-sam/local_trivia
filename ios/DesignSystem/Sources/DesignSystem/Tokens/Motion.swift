@@ -30,6 +30,12 @@ public enum Motion: Sendable {
 
   public static let reduced: Animation = .smooth(duration: 0.2)
 
+  /// The one wait in the app: at the reveal, the points start counting this
+  /// long after the verdict starts to land — about two-thirds of the way
+  /// through `screen` — so the verdict is read before the number moves. None
+  /// under Reduce Motion, where nothing flies in.
+  public static let pointsDelay: Duration = .milliseconds(220)
+
   public func animation(reduceMotion: Bool) -> Animation {
     reduceMotion ? Self.reduced : animation
   }

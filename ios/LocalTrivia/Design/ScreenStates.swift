@@ -20,6 +20,7 @@ enum ScreenState: String, CaseIterable {
   case joinWrongPIN = "join.wrongPIN"
   case joinLeft = "join.left"
   case joinHostEnded = "join.hostEnded"
+  case joinRemoved = "join.removed"
   case lobby
   case spectating
   case question
@@ -88,7 +89,7 @@ struct ScreenPreview: View {
   @ViewBuilder
   private var content: some View {
     switch state {
-    case .joinSearching, .joinFound, .joinWrongPIN, .joinLeft, .joinHostEnded:
+    case .joinSearching, .joinFound, .joinWrongPIN, .joinLeft, .joinHostEnded, .joinRemoved:
       game(glassContainer: false)
     case .roundEmpty, .round:
       over(HostSetupView())
@@ -214,6 +215,10 @@ final class PreviewModels {
       online()
       joined()
       store.apply(.kicked(Notice(code: "HOST_ENDED", message: "THE HOST ENDED THE GAME")))
+    case .joinRemoved:
+      online()
+      joined()
+      store.apply(.kicked(Notice(code: nil, message: "REMOVED BY THE HOST")))
     case .lobby:
       online()
       joined()
@@ -271,7 +276,8 @@ final class PreviewModels {
     case .round, .editorNew, .editorEdit, .drafting, .drafts:
       host.library.questions = Sample.round
     case .scannerOff, .scannerRestricted, .shop:
-      // Over a join screen still looking for games.
+      // Over a join screen still looking: the join screen's own sheets keep
+      // its keyboard down, but these are presented from outside it.
       break
     }
   }

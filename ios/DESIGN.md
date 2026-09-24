@@ -156,9 +156,11 @@ in a `safeAreaBar` inside a container don't receive taps.
 ## Motion
 
 Physics only: every curve is a spring token, every animation is
-interruptible, nothing waits for decoration. Under Reduce Motion every token
-becomes `reduced` (a 0.2 s smooth cross-fade), shakes stop, and blur
-transitions become opacity.
+interruptible, and nothing waits for decoration but one beat: at the reveal
+the points start counting `Motion.pointsDelay` (0.22 s) after the verdict
+starts to land, so the verdict is read first. Under Reduce Motion every token
+becomes `reduced` (a 0.2 s smooth cross-fade), shakes stop, blur
+transitions become opacity, and the points don't wait.
 
 | Token | Spring | Use |
 |---|---|---|
@@ -167,7 +169,7 @@ transitions become opacity.
 | `Motion.screen` | `.smooth(duration: 0.5)` | phase-to-phase screen change (blurReplace) |
 | `Motion.mood` | `.smooth(duration: 0.9)` | backdrop glow changing hue |
 | `Motion.pop` | `.spring(duration: 0.35, bounce: 0.45)` | verdict badge, rank on the podium |
-| `Motion.count` | `.snappy(duration: 0.6)` | points counting up |
+| `Motion.count` | `.snappy(duration: 0.6)` | points counting up, `pointsDelay` (0.22 s) after the verdict |
 | `Motion.reject` | keyframes −14 → 12 → −8 → 0 over 0.3 s | wrong PIN / taken name (off under Reduce Motion) |
 
 Signature motion: the chosen answer's glass flows into the verdict badge
