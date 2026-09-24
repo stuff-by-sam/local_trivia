@@ -167,8 +167,22 @@ final class HostLibrary {
     }
   }
 
-  func delete(at offsets: IndexSet) {
+  /// Removes the questions at `offsets` and returns them with where they were,
+  /// so they can be put back (`reinsert`).
+  @discardableResult
+  func delete(at offsets: IndexSet) -> [(offset: Int, element: HostQuestion)] {
+    let removed = questions.enumerated().filter { offsets.contains($0.offset) }.map { (offset: $0.offset, element: $0.element) }
     questions = questions.enumerated().filter { !offsets.contains($0.offset) }.map(\.element)
+    return removed
+  }
+
+  /// Puts deleted questions back where they were, as near as the list now allows.
+  func reinsert(_ removed: [(offset: Int, element: HostQuestion)]) {
+    var restored = questions
+    for (offset, question) in removed.sorted(by: { $0.offset < $1.offset }) where !restored.contains(where: { $0.id == question.id }) {
+      restored.insert(question, at: min(offset, restored.count))
+    }
+    questions = restored
   }
 
   /// List reordering semantics: `destination` is an index in the list as it

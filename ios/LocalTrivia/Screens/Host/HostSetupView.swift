@@ -89,7 +89,10 @@ struct HostSetupView: View {
           question: question,
           isNew: !library.questions.contains { $0.id == question.id },
           onSave: { library.upsert($0) },
-          onDelete: { deleted in library.questions.removeAll { $0.id == deleted.id } }
+          onDelete: { deleted in
+            guard let index = library.questions.firstIndex(where: { $0.id == deleted.id }) else { return }
+            delete(IndexSet(integer: index))
+          }
         )
       }
       .fileImporter(isPresented: $isImporting, allowedContentTypes: [.commaSeparatedText, .plainText]) { result in
@@ -125,7 +128,7 @@ struct HostSetupView: View {
           editing = question
         }
       }
-      .onDelete { host.library.delete(at: $0) }
+      .onDelete { delete($0) }
       .onMove { host.library.move(from: $0, to: $1) }
 
       Button {
@@ -147,9 +150,9 @@ struct HostSetupView: View {
       }
       if !host.library.questions.isEmpty {
         Button(role: .destructive) {
-          isConfirmingClear = true
+          delete(IndexSet(host.library.questions.indices))
         } label: {
-          Label("Delete All…", systemImage: "trash")
+          Label("Delete All", systemImage: "trash")
         }
       }
     } header: {
@@ -157,6 +160,15 @@ struct HostSetupView: View {
     } footer: {
       Text("Tap a question to edit it, or the circle to leave it out of this round. Swipe to delete; Edit to reorder.")
     }
+  }
+
+  /// Deletes, and offers to put them back.
+  private func delete(_ offsets: IndexSet) {
+    let library = host.library
+    let removed = library.delete(at: offsets)
+    guard !removed.isEmpty else { return }
+    let message = Self.inflected(AttributedString(localized: "Deleted ^[\(removed.count) question](inflect: true)"))
+    undo = UndoItem(message) { library.reinsert(removed) }
   }
 
   private func toggleIncluded(_ question: HostQuestion) {
@@ -169,6 +181,7 @@ struct HostSetupView: View {
 
   private var startBar: some View {
     ActionBar {
+      UndoBanner(item: $undo)
       if case .failed(let reason) = host.status {
         FieldMessage(Text(reason), kind: .error)
       } else {

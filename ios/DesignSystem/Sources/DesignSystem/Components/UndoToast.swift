@@ -13,38 +13,47 @@ public struct UndoItem: Identifiable {
   }
 }
 
-extension View {
-  /// Shows `item` as a toast at the bottom with an Undo button, for
-  /// `seconds`, then lets it go. VoiceOver hears the message.
-  public func undoToast(_ item: Binding<UndoItem?>, seconds: Double = 6) -> some View {
-    modifier(UndoToastModifier(item: item, seconds: seconds))
-  }
-}
-
-private struct UndoToastModifier: ViewModifier {
+/// The undo offer, in place: a message and an Undo button that go away by
+/// themselves. Put it where the screen's actions are — inside an `ActionBar`
+/// — so it never covers them. VoiceOver hears the message.
+public struct UndoBanner: View {
   @Binding var item: UndoItem?
   let seconds: Double
 
-  func body(content: Content) -> some View {
-    content
-      .overlay(alignment: .bottom) {
-        if let current = item {
-          UndoToast(item: current) {
-            current.undo()
-            item = nil
-          }
-          .padding(.horizontal, Space.screen)
-          .padding(.bottom, Space.s)
-          .transition(.move(edge: .bottom).combined(with: .opacity))
-          .task(id: current.id) {
-            AccessibilityNotification.Announcement(current.message).post()
-            try? await Task.sleep(for: .seconds(seconds))
-            guard !Task.isCancelled, item?.id == current.id else { return }
-            Motion.settle.perform { item = nil }
-          }
+  public init(item: Binding<UndoItem?>, seconds: Double = 6) {
+    _item = item
+    self.seconds = seconds
+  }
+
+  public var body: some View {
+    Group {
+      if let current = item {
+        UndoToast(item: current) {
+          current.undo()
+          item = nil
+        }
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .task(id: current.id) {
+          AccessibilityNotification.Announcement(current.message).post()
+          try? await Task.sleep(for: .seconds(seconds))
+          guard !Task.isCancelled, item?.id == current.id else { return }
+          Motion.settle.perform { item = nil }
         }
       }
-      .motion(.settle, value: item?.id)
+    }
+    .motion(.settle, value: item?.id)
+  }
+}
+
+extension View {
+  /// Shows `item` as a toast along the bottom, for screens with no action bar
+  /// to put an `UndoBanner` in.
+  public func undoToast(_ item: Binding<UndoItem?>, seconds: Double = 6) -> some View {
+    overlay(alignment: .bottom) {
+      UndoBanner(item: item, seconds: seconds)
+        .padding(.horizontal, Space.screen)
+        .padding(.bottom, Space.s)
+    }
   }
 }
 
