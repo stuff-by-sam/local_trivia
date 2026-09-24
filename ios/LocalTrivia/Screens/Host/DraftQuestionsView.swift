@@ -15,6 +15,8 @@ struct DraftQuestionsView: View {
   @State private var drafts: [HostQuestion] = []
   @State private var left: Set<HostQuestion.ID> = []
   @State private var isDrafting = false
+  /// Drafts asked for but not shown: unusable, possibly wrong, or repeats.
+  @State private var leftOut = 0
   @State private var failure: QuestionDrafter.Failure?
   @FocusState private var isTopicFocused: Bool
 
@@ -51,7 +53,12 @@ struct DraftQuestionsView: View {
           } header: {
             SectionHeader("Drafts · \(chosen.count) in")
           } footer: {
-            Text("Drafted on this iPhone by Apple Intelligence. Check every answer before you play — it can be wrong.")
+            VStack(alignment: .leading, spacing: Space.xs) {
+              if leftOut > 0 {
+                Text("Left out ^[\(leftOut) draft](inflect: true) that could be wrong or repeat the round.")
+              }
+              Text("Drafted on this iPhone by Apple Intelligence. Check every answer before you play — it can be wrong.")
+            }
           }
         }
       }
@@ -93,6 +100,7 @@ struct DraftQuestionsView: View {
         Motion.settle.perform {
           drafts = result
           left = []
+          leftOut = max(0, count - result.count)
         }
         if result.isEmpty { failure = .failed }
       } catch {

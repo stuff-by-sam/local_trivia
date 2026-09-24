@@ -97,7 +97,9 @@ the server, and its owner plays too.
 - **Set up the round** — name the game, write questions (four answers, tap a
   key to mark the right one — there's no default — optional category and time
   limit; Return moves to the next field, and it saves as you go), draft them
-  with Apple Intelligence on phones that have it, or import a CSV in the web
+  with Apple Intelligence on phones that have it (each draft is checked again
+  on its own, and one with a second right answer, a wrong key or a question
+  already in the round is left out), or import a CSV in the web
   console's format; reorder and include/exclude, and set the
   scoring: top points, time per question, a floor for slow correct answers,
   points for wrong answers, shuffle and auto-advance — with a live preview of

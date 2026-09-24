@@ -29,6 +29,18 @@ struct QuestionDrafterTests {
     #expect(QuestionDrafter.question(from: draft, category: "SPACE", correctAt: 4) == nil)
   }
 
+  /// From testing: Venus has no moons either, so a player who picks it is
+  /// right, and would be marked wrong.
+  @Test func keepsADraftOnlyIfTheCheckFindsJustItsAnswer() {
+    let moons = HostQuestion(text: "Which planet has no moons?", options: ["Venus", "Mars", "Mercury", "Saturn"], correct: 2)
+    #expect(QuestionDrafter.isOnlyRightOption(["Mercury"], of: moons))
+    #expect(QuestionDrafter.isOnlyRightOption(["mercury."], of: moons))
+    #expect(QuestionDrafter.isOnlyRightOption(["C. Mercury"], of: moons), "copied with its letter")
+    #expect(!QuestionDrafter.isOnlyRightOption(["Mercury", "Venus"], of: moons), "two right answers")
+    #expect(!QuestionDrafter.isOnlyRightOption(["Venus"], of: moons), "the wrong one marked")
+    #expect(!QuestionDrafter.isOnlyRightOption([], of: moons), "none right")
+  }
+
   @Test func namesTheCategoryAfterTheTopic() {
     #expect(QuestionDrafter.category(for: "  90s films ") == "90S FILMS")
     #expect(QuestionDrafter.category(for: "") == "GENERAL")

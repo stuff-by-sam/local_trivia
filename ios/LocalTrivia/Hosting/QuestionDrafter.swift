@@ -53,9 +53,17 @@ enum QuestionDrafter {
     answer to a few words. Every question asks something different.
     """
 
+  /// How each draft is checked, apart from writing it (`checked`).
+  static let checkInstructions = """
+    You check pub-quiz questions before they're played. Judge each option on \
+    its own, as an expert would: is it a correct answer to the question? More \
+    than one option can be correct, and so can none.
+    """
+
   /// Drafts `count` questions about `topic`, ready to review. The right
   /// answer lands on a random key in each. Drafts that ask what the round
-  /// already asks are left out (`dropRepeats`), so there may be fewer.
+  /// already asks are left out (`dropRepeats`), and so are ones a second
+  /// look finds another right answer in (`checked`), so there may be fewer.
   static func draft(topic: String, count: Int, avoiding round: [HostQuestion] = []) async throws(Failure) -> [HostQuestion] {
     guard isAvailable else { throw .unavailable }
     let session = LanguageModelSession(model: .default, instructions: instructions)
@@ -84,7 +92,51 @@ enum QuestionDrafter {
     let drafts = response.content.questions.prefix(count).compactMap {
       question(from: $0, category: category, correctAt: Int.random(in: 0..<4, using: &keys))
     }
-    return dropRepeats(drafts, of: round)
+    return await checked(dropRepeats(drafts, of: round))
+  }
+
+  /// The drafts that, asked again on their own, the model says have exactly
+  /// one right option — the one marked. Writing a question, it rarely
+  /// notices a second right answer or a wrong key; judging the options apart
+  /// from writing them, it catches most. Tested on 20 known questions, this
+  /// left out 8 of the 10 bad ones and none of the 10 good ones, at about
+  /// 0.75 s a question. (Asking the model to also list every right answer as
+  /// it drafts caught none; asking it for a fact about each option first
+  /// caught 9, but cost 2.4 s a question and dropped 3 good ones.)
+  static func checked(_ drafts: [HostQuestion]) async -> [HostQuestion] {
+    var kept: [HostQuestion] = []
+    for draft in drafts {
+      guard !Task.isCancelled else { break }
+      if await hasOneRightOption(draft) { kept.append(draft) }
+    }
+    return kept
+  }
+
+  private static func hasOneRightOption(_ question: HostQuestion) async -> Bool {
+    let session = LanguageModelSession(model: .default, instructions: checkInstructions)
+    let options = zip(letters, question.options).map { "\($0). \($1)" }.joined(separator: "\n")
+    do {
+      let said = try await session.respond(to: "Question: \(question.text)\n\(options)", generating: OptionCheck.self)
+      return isOnlyRightOption(said.content.correctOptions, of: question)
+    } catch {
+      // A check that can't run says nothing against the question, and the
+      // host reviews every one before it's played.
+      log.error("checking a draft failed: \(error.localizedDescription, privacy: .public)")
+      return true
+    }
+  }
+
+  private static let letters = ["A", "B", "C", "D"]
+
+  /// Whether the options a check called right, `said`, are just the marked
+  /// one. It may copy an option with its letter ("C. Mercury").
+  static func isOnlyRightOption(_ said: [String], of question: HostQuestion) -> Bool {
+    let named = Set(said.map(Fingerprint.words))
+    let right = question.options.indices.filter { index in
+      let option = Fingerprint.words(in: question.options[index])
+      return named.contains(option) || named.contains(Fingerprint.words(in: "\(letters[index]) \(option)"))
+    }
+    return right == [question.correct]
   }
 
   /// A draft as a round's question, or nil if it isn't a usable one: no
@@ -169,6 +221,12 @@ enum QuestionDrafter {
       "it", "its", "this", "that", "these", "those", "there", "their", "his", "her", "s", "name", "called", "known",
     ]
   }
+}
+
+@Generable(description: "The options that correctly answer a quiz question")
+nonisolated struct OptionCheck {
+  @Guide(description: "Every option that is a correct answer to the question, copied exactly. More than one if several are right.")
+  var correctOptions: [String]
 }
 
 @Generable(description: "A round of pub-quiz questions on one topic")

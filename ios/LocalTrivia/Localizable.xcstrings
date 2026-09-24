@@ -364,6 +364,9 @@
     "Left %@" : {
 
     },
+    "Left out ^[%lld draft](inflect: true) that could be wrong or repeat the round." : {
+
+    },
     "Left out of this round" : {
 
     },
