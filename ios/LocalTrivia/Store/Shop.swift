@@ -98,8 +98,9 @@ final class Shop {
   // MARK: - StoreKit
 
   /// Listens for transactions made outside the app — Ask to Buy approvals,
-  /// refunds, purchases on another device — then checks what's owned and
-  /// what's for sale.
+  /// refunds, purchases on another device — and checks what's owned. What's
+  /// for sale is asked only when the shop opens (`loadProductsIfNeeded`):
+  /// most launches never go near it.
   func start() {
     guard updates == nil else { return }
     icon = AppIcon(alternateName: icons.alternateIconName)
@@ -110,10 +111,13 @@ final class Shop {
         await refreshEntitlements()
       }
     }
-    Task {
-      await refreshEntitlements()
-      await loadProducts()
-    }
+    Task { await refreshEntitlements() }
+  }
+
+  /// Asks the App Store what's for sale, unless it already answered.
+  func loadProductsIfNeeded() async {
+    guard products.isEmpty, availability != .ready else { return }
+    await loadProducts()
   }
 
   func loadProducts() async {

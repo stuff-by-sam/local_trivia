@@ -72,6 +72,7 @@ struct ShopView: View {
     }
     .theme(shown)
     .motion(.settle, value: shown)
+    .task { await shop.loadProductsIfNeeded() }
     .onChange(of: shop.notice) { _, notice in
       guard let notice else { return }
       alert = notice

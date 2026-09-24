@@ -34,7 +34,6 @@ struct RootView: View {
     .haptic(trigger: store.phase.screen) { _, _ in haptic }
     .task {
       store.start()
-      browser.start()
       shop.start()
     }
     .onChange(of: browser.games) { _, games in store.discovered(games) }
@@ -58,6 +57,9 @@ struct RootView: View {
     .onChange(of: store.isInGame, initial: true) { _, inGame in
       // A phone that auto-locks between questions misses the next one.
       UIApplication.shared.isIdleTimerDisabled = inGame
+      // Nothing in a game uses the list of games, so stop looking for them
+      // until the player's back at the join screen.
+      if inGame { browser.stop() } else { browser.start() }
     }
   }
 
