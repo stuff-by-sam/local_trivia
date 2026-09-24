@@ -21,6 +21,7 @@ final class GameBrowser {
 
   func start() {
     guard browsing == nil else { return }
+    hasFailed = false
     browsing = Task { [weak self] in
       let browser = NetworkBrowser(for: .bonjour(Self.serviceType, includeTxtRecord: true))
       do {
@@ -28,6 +29,8 @@ final class GameBrowser {
           self?.games = Self.games(from: endpoints)
         }
       } catch {
+        // Stopped on purpose — a game started — isn't a failure to report.
+        guard !Task.isCancelled else { return }
         Self.log.error("browse failed: \(error.localizedDescription, privacy: .public)")
         self?.hasFailed = true
       }
