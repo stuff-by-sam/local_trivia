@@ -14,6 +14,12 @@ On one phone, tap **Host a Game**, write or import a round, and start hosting.
 On the others, the game shows up on the join screen by itself. Type the PIN
 from the host's phone; the fourth digit joins.
 
+Strings live in `LocalTrivia/Localizable.xcstrings`. Xcode adds new ones when
+it builds; command-line builds don't, so run `scripts/sync-strings.sh`, which
+extracts them from the app and the DesignSystem package the same way. Plurals
+use automatic grammar agreement (`^[3 question](inflect: true)`), not plural
+variants.
+
 ## What makes it fast
 
 - **No typing an address.** A hosting phone advertises `_trivia-phone._tcp`
@@ -300,6 +306,10 @@ everything and a refund of it keeps what was bought separately, Ask to Buy
 unlocks nothing until it's approved, a cancelled purchase says nothing and a
 failed one says why, the cached list gives way to StoreKit's, and every
 alternate icon is built into the app under the name the shop asks for.
+
+`StringCatalogTests` resolves every plural written with grammar agreement
+through the app's bundle, as the screens do, and fails if one no longer
+agrees with its number.
 
 `DesignSystemLintTests` fails on any colour, size, radius, curve, haptic or
 shadow written into the app instead of taken from the `DesignSystem` package.

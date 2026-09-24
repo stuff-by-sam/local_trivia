@@ -27,7 +27,7 @@ struct DraftQuestionsView: View {
             .submitLabel(.go)
             .onSubmit(draft)
           Picker("Questions", selection: $count) {
-            ForEach(QuestionDrafter.counts, id: \.self) { Text("\($0)").tag($0) }
+            ForEach(QuestionDrafter.counts, id: \.self) { Text($0, format: .number).tag($0) }
           }
           .pickerStyle(.segmented)
         } header: {

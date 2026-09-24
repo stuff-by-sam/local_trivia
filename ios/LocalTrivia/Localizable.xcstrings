@@ -4,6 +4,12 @@
     "" : {
 
     },
+    "%@ icon" : {
+
+    },
+    "%@ pts" : {
+
+    },
     "%@ · CONNECTING" : {
 
     },
@@ -11,12 +17,6 @@
 
     },
     "%@ · UNREACHABLE" : {
-
-    },
-    "%@ icon" : {
-
-    },
-    "%@ pts" : {
 
     },
     "%@, %@: %@" : {
@@ -52,15 +52,6 @@
     "%lld seconds" : {
 
     },
-    "^[%lld player](inflect: true)" : {
-
-    },
-    "^[%lld question](inflect: true) ready" : {
-
-    },
-    "^[%lld question](inflect: true) to go" : {
-
-    },
     "1st" : {
 
     },
@@ -68,6 +59,9 @@
 
     },
     "3rd" : {
+
+    },
+    "90s films, the solar system…" : {
 
     },
     "A correct answer earns at least" : {
@@ -82,10 +76,16 @@
     "A wrong answer earns" : {
 
     },
+    "Add ^[%lld Question](inflect: true)" : {
+
+    },
     "Add a question to the round first." : {
 
     },
     "Add at least one question" : {
+
+    },
+    "Adds or leaves out this question." : {
 
     },
     "All ^[%lld theme](inflect: true) and ^[%lld app icon](inflect: true)" : {
@@ -101,9 +101,6 @@
     "Amber" : {
 
     },
-    "and %lld more" : {
-
-    },
     "Answer" : {
 
     },
@@ -117,6 +114,9 @@
 
     },
     "App Icons" : {
+
+    },
+    "Apple Intelligence isn't available on this iPhone right now." : {
 
     },
     "Away" : {
@@ -140,6 +140,9 @@
           }
         }
       }
+    },
+    "Can't look for games. Local Network may be off for Trivia." : {
+
     },
     "Can't reach the App Store. What you own still works offline." : {
 
@@ -165,9 +168,6 @@
     "Choose your Apple TV, or a TV with AirPlay." : {
 
     },
-    "circle" : {
-
-    },
     "Classic" : {
 
     },
@@ -186,19 +186,22 @@
     "Correct! Plus %lld points." : {
 
     },
+    "Couldn't Import" : {
+
+    },
+    "Couldn't Open File" : {
+
+    },
     "Couldn't change the icon. Try again in a moment." : {
+
+    },
+    "Couldn't draft questions. Try again." : {
 
     },
     "Couldn't find a free port to host on." : {
 
     },
-    "Couldn't Import" : {
-
-    },
     "Couldn't join that game." : {
-
-    },
-    "Couldn't Open File" : {
 
     },
     "Couldn't reach the App Store. Check your internet connection and try again." : {
@@ -207,25 +210,37 @@
     "Couldn't start hosting: %@" : {
 
     },
-    "Delete All Questions" : {
-
-    },
-    "Delete All…" : {
-
-    },
-    "Delete every question?" : {
+    "Delete All" : {
 
     },
     "Delete Question" : {
 
     },
+    "Deleted ^[%lld question](inflect: true)" : {
+
+    },
     "Details" : {
 
     },
-    "diamond" : {
+    "Done" : {
 
     },
-    "Done" : {
+    "Draft Again" : {
+
+    },
+    "Draft Questions" : {
+
+    },
+    "Draft with Apple Intelligence" : {
+
+    },
+    "Drafted on this iPhone by Apple Intelligence. Check every answer before you play — it can be wrong." : {
+
+    },
+    "Drafting isn't available in this language yet." : {
+
+    },
+    "Drafts · %lld in" : {
 
     },
     "Edit Question" : {
@@ -267,13 +282,13 @@
     "Game" : {
 
     },
+    "Game PIN" : {
+
+    },
     "Game name" : {
 
     },
     "Game over" : {
-
-    },
-    "Game PIN" : {
 
     },
     "Game: %@. %@" : {
@@ -322,6 +337,9 @@
     "Imported ^[%lld question](inflect: true)" : {
 
     },
+    "In the game · %lld" : {
+
+    },
     "In this round" : {
 
     },
@@ -331,25 +349,28 @@
     "Iridescent foil that catches the light as you tilt it" : {
 
     },
-    "Join code" : {
+    "JOIN THE HOST'S WI-FI" : {
 
     },
     "Join Game" : {
 
     },
-    "JOIN THE HOST'S WI-FI" : {
+    "Join code" : {
 
     },
     "Leave Game" : {
 
     },
-    "Leave this game?" : {
+    "Left %@" : {
 
     },
     "Left out of this round" : {
 
     },
     "Liquid colour under clear glass, pooling as you tilt" : {
+
+    },
+    "Local Network Settings" : {
 
     },
     "Locked in · %lld of %lld answered" : {
@@ -401,6 +422,9 @@
     "Nickname" : {
 
     },
+    "No TV yet" : {
+
+    },
     "No answer" : {
 
     },
@@ -410,16 +434,16 @@
     "No games on this network yet" : {
 
     },
+    "No games yet. The host's phone has to be on this Wi-Fi." : {
+
+    },
     "No questions yet. Write one, or import a CSV — the same format the web admin console takes." : {
 
     },
-    "No TV yet" : {
+    "Nobody Yet" : {
 
     },
     "Nobody answered" : {
-
-    },
-    "Nobody Yet" : {
 
     },
     "Nobody's in the game yet." : {
@@ -437,23 +461,13 @@
     "Not quite. Plus %lld points." : {
 
     },
-    "of %lld · %@ pts" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "of %1$lld · %2$@ pts"
-          }
-        }
-      }
-    },
     "OK" : {
 
     },
-    "On the TV" : {
+    "On This Network" : {
 
     },
-    "On This Network" : {
+    "On the TV" : {
 
     },
     "Open Control Center and tap Screen Mirroring." : {
@@ -465,25 +479,22 @@
     "Open Trivia on this Wi-Fi and type the code, or scan it with the Camera." : {
 
     },
-    "or" : {
-
-    },
     "Or connect the phone to a TV with an HDMI adapter." : {
 
     },
     "Owned" : {
 
     },
-    "Phosphor" : {
-
-    },
-    "Pick a CSV file to import." : {
-
-    },
     "PIN" : {
 
     },
     "PIN %@" : {
+
+    },
+    "Phosphor" : {
+
+    },
+    "Pick a CSV file to import." : {
 
     },
     "Play Again" : {
@@ -513,9 +524,6 @@
     "Point at the QR code on the host's phone" : {
 
     },
-    "pts" : {
-
-    },
     "QR code to join this game" : {
 
     },
@@ -531,6 +539,9 @@
           }
         }
       }
+    },
+    "Questions" : {
+
     },
     "Questions · %lld in play" : {
 
@@ -556,20 +567,17 @@
     "Restore Purchases" : {
 
     },
-    "Right in %llds: %@ pts · right at the buzzer: %@ · wrong: %@. Answers score more the faster they come in.%@" : {
+    "Right in %llds: %@ pts · right at the buzzer: %@ · wrong: %@. Answers score more the faster they come in. The standings follow each reveal after 5 seconds; %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Right in %1$llds: %2$@ pts · right at the buzzer: %3$@ · wrong: %4$@. Answers score more the faster they come in.%5$@"
+            "value" : "Right in %1$llds: %2$@ pts · right at the buzzer: %3$@ · wrong: %4$@. Answers score more the faster they come in. The standings follow each reveal after 5 seconds; %5$@"
           }
         }
       }
     },
     "Round's default" : {
-
-    },
-    "Save" : {
 
     },
     "Scan QR Code" : {
@@ -596,9 +604,6 @@
     "Show on a TV…" : {
 
     },
-    "Show Standings" : {
-
-    },
     "Shuffle the questions" : {
 
     },
@@ -606,9 +611,6 @@
 
     },
     "Skipped ^[%lld row](inflect: true):" : {
-
-    },
-    "square" : {
 
     },
     "Standings" : {
@@ -647,10 +649,19 @@
     "That file couldn't be read, or it's too large." : {
 
     },
+    "That topic can't be drafted. Try another." : {
+
+    },
     "The App Store couldn't complete that. Try again in a moment." : {
 
     },
     "The App Store couldn't confirm that purchase, so it hasn't been unlocked." : {
+
+    },
+    "The PIN is on the host's phone" : {
+
+    },
+    "The TV shows the join code, each question with its clock and answers, the reveal and the standings. Your phone keeps the controls, and your own answers." : {
 
     },
     "The broadcast terminal: green on black" : {
@@ -665,12 +676,6 @@
     "The game is on the TV" : {
 
     },
-    "The PIN is on the host's phone" : {
-
-    },
-    "The TV shows the join code, each question with its clock and answers, the reveal and the standings. Your phone keeps the controls, and your own answers." : {
-
-    },
     "Themes" : {
 
     },
@@ -678,9 +683,6 @@
 
     },
     "This Apple Account hasn't bought any themes or icons yet." : {
-
-    },
-    "This can't be undone." : {
 
     },
     "Time limit" : {
@@ -707,16 +709,13 @@
     "Top score per question" : {
 
     },
+    "Topic" : {
+
+    },
     "Total" : {
 
     },
-    "triangle" : {
-
-    },
     "Tries this theme on." : {
-
-    },
-    "Trivia" : {
 
     },
     "Trivia Night" : {
@@ -739,6 +738,9 @@
       }
     },
     "Turn on Wi-Fi or Personal Hotspot so others can join" : {
+
+    },
+    "Undo" : {
 
     },
     "Unranked" : {
@@ -793,13 +795,7 @@
     "You'll jump in on the next question." : {
 
     },
-    "You'll need the PIN to join again." : {
-
-    },
     "You're in" : {
-
-    },
-    "your name" : {
 
     },
     "Your name" : {
@@ -809,6 +805,46 @@
 
     },
     "Your themes and icons are restored." : {
+
+    },
+    "^[%lld player](inflect: true)" : {
+
+    },
+    "^[%lld question](inflect: true) ready" : {
+
+    },
+    "^[%lld question](inflect: true) to go" : {
+
+    },
+    "and %lld more" : {
+
+    },
+    "circle" : {
+
+    },
+    "diamond" : {
+
+    },
+    "of %lld · %@ pts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "of %1$lld · %2$@ pts"
+          }
+        }
+      }
+    },
+    "pts" : {
+
+    },
+    "square" : {
+
+    },
+    "triangle" : {
+
+    },
+    "your name" : {
 
     }
   },
