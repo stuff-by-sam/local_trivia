@@ -8,11 +8,7 @@ struct LocalTriviaApp: App {
   var body: some Scene {
     WindowGroup {
       #if DEBUG
-      if MotionTuner.isRequested {
-        MotionTuner()
-      } else if let exploration = ExplorationScreen.fromLaunchArguments() {
-        exploration
-      } else if let fixture = ScreenPreview.fromLaunchArguments() {
+      if let fixture = ScreenPreview.fromLaunchArguments() {
         fixture
       } else {
         game

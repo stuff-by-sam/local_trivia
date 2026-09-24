@@ -23,14 +23,12 @@ struct DesignSystemLintTests {
     (#"\.foregroundStyle\(\.tertiary\)"#, ".secondary — tertiary text fails contrast on ink"),
   ]
 
-  /// Prototypes, kept for comparison, not built on.
-  private static let exempt: Set<String> = ["Explorations.swift"]
 
   @Test func appSourcesUseOnlyDesignTokens() throws {
     let root = URL(filePath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appending(path: "LocalTrivia")
     let files = try #require(FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil))
       .compactMap { $0 as? URL }
-      .filter { $0.pathExtension == "swift" && !Self.exempt.contains($0.lastPathComponent) }
+      .filter { $0.pathExtension == "swift" }
     #expect(!files.isEmpty, "found no sources at \(root.path)")
 
     let rules = try Self.rules.map { (try Regex($0.pattern), $0.use) }

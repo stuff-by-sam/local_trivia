@@ -16,8 +16,8 @@ one appears outside the package.
 
 ## Why this direction
 
-Three directions were prototyped as named previews in
-`LocalTrivia/Design/Explorations.swift` (launch with `-explore a.join` etc.):
+Three directions were prototyped before settling on A (the prototypes were
+removed once Broadcast was final):
 
 | | A · Broadcast | B · Studio | C · Game Show |
 |---|---|---|---|
