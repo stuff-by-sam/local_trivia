@@ -463,7 +463,87 @@ private struct GameShowLobby: View {
   }
 }
 
+// MARK: - Motion tuning
+
+/// A temporary panel for tuning the signature motion — the chosen answer's
+/// glass flowing into the verdict — on a device, by feel. Launch with
+/// `-explore tune.motion`; copy the values it prints into `Motion`.
+struct MotionTuner: View {
+  static var isRequested: Bool { UserDefaults.standard.string(forKey: "explore") == "tune.motion" }
+
+  @Namespace private var glass
+  @State private var isRevealed = false
+  @State private var morphDuration = 0.5
+  @State private var morphBounce = 0.0
+  @State private var popDuration = 0.35
+  @State private var popBounce = 0.45
+
+  var body: some View {
+    NavigationStack {
+      VStack(spacing: Space.xl) {
+        GlassEffectContainer(spacing: Space.xs) {
+          ZStack {
+            if isRevealed {
+              Badge(symbol: "checkmark", color: Palette.success, isGlass: true)
+                .glassEffectID("answer", in: glass)
+                .transition(.scale(scale: 0.6).combined(with: .opacity).animation(.spring(duration: popDuration, bounce: popBounce)))
+            } else {
+              AnswerButton(style: .b, text: "Jupiter", longestOption: 7, state: .chosen) {}
+                .glassEffectID("answer", in: glass)
+            }
+          }
+          .frame(maxWidth: .infinity, minHeight: Size.qrFull)
+        }
+
+        VStack(spacing: Space.m) {
+          tuning("Morph duration", value: $morphDuration, in: 0.2...1.2)
+          tuning("Morph bounce", value: $morphBounce, in: 0...0.6)
+          tuning("Pop duration", value: $popDuration, in: 0.15...0.8)
+          tuning("Pop bounce", value: $popBounce, in: 0...0.7)
+        }
+        .panel()
+
+        VStack(alignment: .leading, spacing: Space.xs) {
+          Text(verbatim: "Motion.screen = .spring(duration: \(morphDuration.formatted(.number.precision(.fractionLength(2)))), bounce: \(morphBounce.formatted(.number.precision(.fractionLength(2)))))")
+          Text(verbatim: "Motion.pop = .spring(duration: \(popDuration.formatted(.number.precision(.fractionLength(2)))), bounce: \(popBounce.formatted(.number.precision(.fractionLength(2)))))")
+        }
+        .textRole(.figureSmall)
+        .textSelection(.enabled)
+        .frame(maxWidth: .infinity, alignment: .leading)
+
+        Spacer()
+      }
+      .padding(Space.l)
+      .safeAreaBar(edge: .bottom) {
+        ActionBar {
+          ActionButton(isRevealed ? "Back to the Answer" : "Reveal", systemImage: "play.fill") {
+            withAnimation(.spring(duration: morphDuration, bounce: morphBounce)) { isRevealed.toggle() }
+          }
+        }
+      }
+      .navigationTitle("Tune Motion")
+      .navigationBarTitleDisplayMode(.inline)
+      .containerBackground(for: .navigation) { Backdrop(mood: isRevealed ? .correct : .question) }
+    }
+  }
+
+  private func tuning(_ name: String, value: Binding<Double>, in range: ClosedRange<Double>) -> some View {
+    VStack(alignment: .leading, spacing: Space.xs) {
+      HStack {
+        Text(verbatim: name).textRole(.label).foregroundStyle(.secondary)
+        Spacer()
+        Text(verbatim: value.wrappedValue.formatted(.number.precision(.fractionLength(2)))).textRole(.figure)
+      }
+      Slider(value: value, in: range)
+    }
+    .padding(.horizontal, Space.l)
+    .padding(.vertical, Space.s)
+  }
+}
+
 // MARK: - Previews
+
+#Preview("Motion tuner") { MotionTuner() }
 
 #Preview("A · Broadcast — Join") { ExplorationScreen(direction: .broadcast, screen: .join) }
 #Preview("A · Broadcast — Question") { ExplorationScreen(direction: .broadcast, screen: .question) }
