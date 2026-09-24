@@ -105,6 +105,7 @@ struct HostSetupView: View {
         DraftQuestionsView { host.library.questions.append(contentsOf: $0) }
       }
       .task { canDraft = QuestionDrafter.isAvailable }
+      .onDisappear { host.library.flush() }
       // Deleting asks nothing first; it can be taken back for a few seconds —
       // offered in the start bar when there is one, so it covers nothing.
       .undoToast(isLive ? $undo : .constant(nil))

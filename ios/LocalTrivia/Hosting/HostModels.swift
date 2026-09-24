@@ -125,7 +125,18 @@ final class HostLibrary {
 
   @ObservationIgnored private let fileURL: URL?
   @ObservationIgnored private var isLoading = false
+  /// Edits since the last write.
+  @ObservationIgnored private var isDirty = false
+  @ObservationIgnored private var pendingSave: Task<Void, Never>?
+  @ObservationIgnored private let write: @Sendable (Data, URL) throws -> Void
   private static let log = Logger(subsystem: "com.stuffbysam.localtrivia", category: "hosting")
+
+  /// How long edits settle before they're written: typing a name or
+  /// dragging a slider is one write, not one per keystroke or step.
+  static let saveDelay: Duration = .milliseconds(500)
+
+  /// Writes happen off the main thread, one at a time, in order.
+  private static let writes = DispatchQueue(label: "com.stuffbysam.localtrivia.round", qos: .utility)
 
   private struct Stored: Codable {
     var gameName: String
@@ -134,8 +145,9 @@ final class HostLibrary {
   }
 
   /// `fileURL: nil` keeps everything in memory (tests, previews).
-  init(fileURL: URL? = HostLibrary.defaultFileURL) {
+  init(fileURL: URL? = HostLibrary.defaultFileURL, write: @escaping @Sendable (Data, URL) throws -> Void = HostLibrary.writeFile) {
     self.fileURL = fileURL
+    self.write = write
     let stored = fileURL.flatMap { try? Data(contentsOf: $0) }.flatMap { try? JSONDecoder().decode(Stored.self, from: $0) }
     isLoading = true
     gameName = stored?.gameName ?? Self.defaultName
@@ -202,14 +214,45 @@ final class HostLibrary {
     return result
   }
 
+  /// Schedules a write once the edits settle.
   private func save() {
-    guard !isLoading, let fileURL else { return }
-    do {
-      try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-      let data = try JSONEncoder().encode(Stored(gameName: gameName, questions: questions, rules: rules))
-      try data.write(to: fileURL, options: [.atomic, .completeFileProtection])
-    } catch {
-      Self.log.error("couldn't save the round: \(error.localizedDescription, privacy: .public)")
+    guard !isLoading, fileURL != nil else { return }
+    isDirty = true
+    pendingSave?.cancel()
+    pendingSave = Task { [weak self] in
+      try? await Task.sleep(for: Self.saveDelay)
+      guard !Task.isCancelled else { return }
+      self?.flush()
     }
+  }
+
+  /// Writes pending edits now — when the setup screen closes, or the app
+  /// goes to the background, where a delayed write might never run.
+  func flush() {
+    pendingSave?.cancel()
+    pendingSave = nil
+    guard isDirty, let fileURL else { return }
+    isDirty = false
+    let data: Data
+    do {
+      data = try JSONEncoder().encode(Stored(gameName: gameName, questions: questions, rules: rules))
+    } catch {
+      Self.log.error("couldn't encode the round: \(error.localizedDescription, privacy: .public)")
+      return
+    }
+    let write = write
+    Self.writes.async {
+      do {
+        try write(data, fileURL)
+      } catch {
+        Self.log.error("couldn't save the round: \(error.localizedDescription, privacy: .public)")
+      }
+    }
+  }
+
+  /// The round holds the answer key, so it's encrypted whenever the phone is locked.
+  nonisolated static let writeFile: @Sendable (Data, URL) throws -> Void = { data, url in
+    try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try data.write(to: url, options: [.atomic, .completeFileProtection])
   }
 }

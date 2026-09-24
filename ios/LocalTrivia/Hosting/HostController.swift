@@ -33,7 +33,14 @@ final class HostController {
     var id: String { rawValue }
   }
 
-  let library: HostLibrary
+  /// The round, read from disk the first time it's needed — opening Host a
+  /// Game — rather than on the launch path.
+  var library: HostLibrary {
+    if let storedLibrary { return storedLibrary }
+    let library = HostLibrary()
+    storedLibrary = library
+    return library
+  }
   private(set) var status: Status = .idle
   private(set) var game: HostedGame?
   /// What the game is advertised as. Fixed when hosting starts: it's the name
@@ -56,6 +63,7 @@ final class HostController {
     }
   }
 
+  @ObservationIgnored private var storedLibrary: HostLibrary?
   @ObservationIgnored private var server: HostServer?
   @ObservationIgnored private var outbox: AsyncStream<(String, Recipients)>.Continuation?
   @ObservationIgnored private var pump: Task<Void, Never>?
@@ -76,8 +84,8 @@ final class HostController {
   /// `advertises: false` keeps the game off Bonjour (tests).
   @ObservationIgnored private let advertises: Bool
 
-  init(library: HostLibrary = HostLibrary(), advertises: Bool = true) {
-    self.library = library
+  init(library: HostLibrary? = nil, advertises: Bool = true) {
+    storedLibrary = library
     self.advertises = advertises
   }
 
@@ -206,6 +214,7 @@ final class HostController {
   /// stops. Ask for time on the way out so a quick app switch doesn't end it,
   /// and re-open the listener on the way back if it was torn down.
   func appDidEnterBackground() {
+    storedLibrary?.flush()
     guard isHosting, backgroundTask == .invalid else { return }
     backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "Hosting a game") { [weak self] in
       self?.endBackgroundTask()
