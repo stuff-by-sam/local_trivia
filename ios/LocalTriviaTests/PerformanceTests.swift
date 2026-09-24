@@ -62,7 +62,8 @@ struct PerformanceTests {
     var again: UIImage?
     let warm = clock.measure { again = QRCode.image(for: payload) }
 
-    #expect(try #require(first) === again, "the second view gets the same image")
+    #expect(first != nil)
+    #expect(first === again, "the second view gets the same image")
     #expect(warm < before)
     Attachment.record("QR render — before, per call: \(before); now, first: \(cold); now, again: \(warm)", named: "qr-timings.txt")
   }

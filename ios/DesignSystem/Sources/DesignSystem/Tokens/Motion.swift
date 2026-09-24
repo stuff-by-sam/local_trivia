@@ -84,9 +84,11 @@ private struct RejectionShake: ViewModifier {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
   func body(content: Content) -> some View {
-    content
+    // Read here: the animator's closure runs off the main actor.
+    let isStill = reduceMotion
+    return content
       .keyframeAnimator(initialValue: 0.0, trigger: trigger) { view, offset in
-        view.offset(x: reduceMotion ? 0 : offset)
+        view.offset(x: isStill ? 0 : offset)
       } keyframes: { _ in
         KeyframeTrack {
           CubicKeyframe(-14, duration: 0.07)

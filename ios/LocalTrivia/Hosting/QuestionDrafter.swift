@@ -56,14 +56,16 @@ enum QuestionDrafter {
         to: "Write \(count) trivia questions about \(topic).",
         generating: DraftedRound.self
       )
-    } catch let error as LanguageModelSession.GenerationError {
+    } catch let error as LanguageModelError {
       log.error("drafting failed: \(error.localizedDescription, privacy: .public)")
       switch error {
       case .guardrailViolation, .refusal: throw .declined
       case .unsupportedLanguageOrLocale: throw .unsupportedLanguage
-      case .assetsUnavailable: throw .unavailable
       default: throw .failed
       }
+    } catch let error as SystemLanguageModel.Error {
+      log.error("drafting failed: \(error.localizedDescription, privacy: .public)")
+      throw .unavailable
     } catch {
       log.error("drafting failed: \(error.localizedDescription, privacy: .public)")
       throw .failed

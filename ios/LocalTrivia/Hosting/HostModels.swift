@@ -129,7 +129,8 @@ final class HostLibrary {
   @ObservationIgnored private var isDirty = false
   @ObservationIgnored private var pendingSave: Task<Void, Never>?
   @ObservationIgnored private let write: @Sendable (Data, URL) throws -> Void
-  private static let log = Logger(subsystem: "com.stuffbysam.localtrivia", category: "hosting")
+  /// Nonisolated: the write queue logs its failures.
+  nonisolated private static let log = Logger(subsystem: "com.stuffbysam.localtrivia", category: "hosting")
 
   /// How long edits settle before they're written: typing a name or
   /// dragging a slider is one write, not one per keystroke or step.
