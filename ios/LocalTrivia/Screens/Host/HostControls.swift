@@ -317,7 +317,9 @@ struct LeaderboardTable: View {
 
   var body: some View {
     Readout {
-      ForEach(rows, id: \.self) { row in
+      // By name — unique in a game — so a row keeps its identity as its rank
+      // and score change.
+      ForEach(rows, id: \.nickname) { row in
         let isPlayer = row.nickname.localizedCaseInsensitiveCompare(playerName) == .orderedSame
         HStack(spacing: Space.m) {
           Text(verbatim: row.rank.twoDigits)

@@ -152,8 +152,22 @@ struct QuestionView: View {
     }
   }
 
-  @ViewBuilder
   private var status: some View {
+    QuestionStatus(round: round, isOver: isOver)
+  }
+}
+
+/// The line under the answers. Its own view, because it's the only part of
+/// the question that reads the room's answered count — which changes with
+/// every answer from every phone — so those updates redraw this line, not
+/// the four answers and the question above it.
+private struct QuestionStatus: View {
+  let round: GameStore.Round
+  let isOver: Bool
+
+  @Environment(GameStore.self) private var store
+
+  var body: some View {
     Group {
       if round.lockedIndex != nil {
         if round.acknowledged, let answered = store.answered {

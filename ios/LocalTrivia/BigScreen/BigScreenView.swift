@@ -313,7 +313,7 @@ private struct StandingsBoard: View {
         .foregroundStyle(.themeAccent)
 
       VStack(spacing: TVMetrics.rowGap) {
-        ForEach(board.standings.prefix(Self.shownRows), id: \.self) { row in
+        ForEach(board.standings.prefix(Self.shownRows), id: \.nickname) { row in
           StandingRow(row: row)
         }
       }
