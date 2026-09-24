@@ -48,9 +48,7 @@ struct ResultView: View {
 
   var body: some View {
     let color = verdict.color(in: palette)
-    VStack(spacing: 0) {
-      Spacer()
-
+    VStack(spacing: Space.m) {
       VStack(spacing: Space.xl) {
         VStack(spacing: Space.l) {
           Badge(symbol: verdict.symbol, color: color, isGlass: true)
@@ -75,6 +73,8 @@ struct ResultView: View {
             }
             .lineLimit(1)
             .foregroundStyle(result.points > 0 ? .primary : .secondary)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("Plus \(result.points) points"))
           }
         }
 
@@ -94,8 +94,7 @@ struct ResultView: View {
           ReadoutRow("Rank") { Text(verbatim: result.rank.map { "#\($0)" } ?? "—") }
         }
       }
-
-      Spacer()
+      .scrollsWhenCrowded()
 
       FooterStatus("Standings next")
     }

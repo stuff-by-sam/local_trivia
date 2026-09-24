@@ -45,6 +45,7 @@ public struct ActionButton: View {
       ActionLabel(title: title, systemImage: systemImage, prominence: prominence, isLoading: isLoading)
     }
     .controlSize(.large)
+    .accessibilityShowsLargeContentViewer()
     .haptic(trigger: taps) { [tapHaptic] _, _ in tapHaptic }
 
     switch prominence {
@@ -92,6 +93,10 @@ private struct ActionLabel: View {
 
 /// A screen's actions, pinned to the bottom where the thumb is. A bar, not an
 /// inset: content softens under it with the system's scroll-edge effect.
+///
+/// Like the system's own bars, its text stops growing at the first
+/// accessibility size (`Size.barTypeLimit`), where a pinned bar at AX5 would
+/// cover half the screen; a long press shows a label at full size.
 public struct ActionBar<Content: View>: View {
   @ViewBuilder var content: Content
 
@@ -103,6 +108,7 @@ public struct ActionBar<Content: View>: View {
     VStack(spacing: Space.s) {
       content
     }
+    .dynamicTypeSize(...Size.barTypeLimit)
     .padding(.horizontal, Space.screen)
     .padding(.top, Space.s)
     .padding(.bottom, Space.s)

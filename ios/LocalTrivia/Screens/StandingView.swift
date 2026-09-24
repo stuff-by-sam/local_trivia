@@ -8,31 +8,38 @@ struct StandingView: View {
   @Environment(GameStore.self) private var store
 
   var body: some View {
-    VStack(spacing: 0) {
-      Spacer()
-
+    VStack(spacing: Space.m) {
       VStack(spacing: Space.m) {
-        Text("Your position")
-          .textRole(.label)
-          .foregroundStyle(.secondary)
-        // With the whole table below it (a phone-hosted game), the big
-        // number steps down to make room.
-        RankFigure(rank: standing.rank, isCompact: store.leaderboard != nil)
-        Text("of \(store.playerCount) · \(standing.score.grouped) pts")
-          .textRole(.status)
-          .foregroundStyle(.secondary)
+        VStack(spacing: Space.m) {
+          Text("Your position")
+            .textRole(.label)
+            .foregroundStyle(.secondary)
+          // With the whole table below it (a phone-hosted game), the big
+          // number steps down to make room.
+          RankFigure(rank: standing.rank, isCompact: store.leaderboard != nil)
+          Text("of \(store.playerCount) · \(standing.score.grouped) pts")
+            .textRole(.status)
+            .foregroundStyle(.secondary)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(position)
         if let board = store.leaderboard {
           LeaderboardTable(board: board, playerName: store.playerName)
             .padding(.top, Space.l)
         }
       }
-
-      Spacer()
+      .scrollsWhenCrowded()
 
       FooterStatus("Next question soon")
     }
     .screenPadding()
     .gameToolbar(.player, status: .progress)
+  }
+
+  /// "Your position: 2 of 6, 1,450 points."
+  private var position: Text {
+    guard let rank = standing.rank else { return Text("Your position: unranked, \(standing.score) points") }
+    return Text("Your position: \(rank) of \(store.playerCount), \(standing.score) points")
   }
 }
 
@@ -43,25 +50,25 @@ struct FinalView: View {
   @Environment(GameStore.self) private var store
 
   var body: some View {
-    VStack(spacing: 0) {
-      Spacer(minLength: Space.l)
+    VStack(spacing: Space.m) {
+      VStack(spacing: 0) {
+        VStack(spacing: Space.m) {
+          Text("Game over")
+            .textRole(.label)
+            .foregroundStyle(.secondary)
+          RankFigure(rank: standing.rank)
+          Text("\(standing.score.grouped) pts")
+            .textRole(.status)
+            .foregroundStyle(.secondary)
+        }
 
-      VStack(spacing: Space.m) {
-        Text("Game over")
-          .textRole(.label)
-          .foregroundStyle(.secondary)
-        RankFigure(rank: standing.rank)
-        Text("\(standing.score.grouped) pts")
-          .textRole(.status)
-          .foregroundStyle(.secondary)
+        if !standing.podium.isEmpty {
+          Podium(placings: standing.podium, playerName: store.playerName)
+            .padding(.top, Space.xxl)
+        }
       }
-
-      if !standing.podium.isEmpty {
-        Podium(placings: standing.podium, playerName: store.playerName)
-          .padding(.top, Space.xxl)
-      }
-
-      Spacer(minLength: Space.l)
+      .padding(.vertical, Space.l)
+      .scrollsWhenCrowded()
 
       FooterStatus("Waiting for the next game")
     }

@@ -284,7 +284,7 @@ private struct DiscoveryHelp: View {
         FieldMessage(Text("No games yet. The host's phone has to be on this Wi-Fi."), kind: .hint)
       }
       HStack(spacing: Space.l) {
-        if QRScanner.isAvailable {
+        if QRScanner.isSupported {
           QuietButton("Scan QR Code", systemImage: "qrcode.viewfinder") { isScanning = true }
         }
         QuietButton("Local Network Settings", systemImage: "gearshape") {
@@ -318,7 +318,7 @@ private struct GamePicker: View {
           }
         }
       }
-      if QRScanner.isAvailable {
+      if QRScanner.isSupported {
         Section {
           Button("Scan QR Code", systemImage: "qrcode.viewfinder") { isScanning = true }
         }

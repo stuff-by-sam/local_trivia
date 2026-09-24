@@ -51,6 +51,7 @@ extension View {
   public func undoToast(_ item: Binding<UndoItem?>, seconds: Double = 6) -> some View {
     overlay(alignment: .bottom) {
       UndoBanner(item: item, seconds: seconds)
+        .dynamicTypeSize(...Size.barTypeLimit)
         .padding(.horizontal, Space.screen)
         .padding(.bottom, Space.s)
     }
@@ -60,6 +61,8 @@ extension View {
 struct UndoToast: View {
   let item: UndoItem
   let onUndo: () -> Void
+
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   var body: some View {
     HStack(spacing: Space.m) {
@@ -71,11 +74,14 @@ struct UndoToast: View {
         .textRole(.action)
         .buttonStyle(.glassProminent)
         .foregroundStyle(.onAccent)
+        .accessibilityShowsLargeContentViewer()
     }
     .padding(.leading, Space.l)
     .padding(.trailing, Space.xs)
     .frame(minHeight: Size.field)
-    .glassEffect(in: .capsule)
+    // A capsule on one line; at accessibility sizes the message wraps, and
+    // a capsule's ends would crowd it.
+    .glassEffect(in: typeSize.isAccessibilitySize ? AnyShape(.rect(cornerRadius: Radius.control)) : AnyShape(.capsule))
     .accessibilityElement(children: .contain)
   }
 }

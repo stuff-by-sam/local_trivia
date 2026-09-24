@@ -87,6 +87,8 @@ private struct IdleBoard: View {
         Text(verbatim: "TRIVIA")
         BlinkingCursor(glyph: "█")
       }
+      // A logo: the cursor follows the word in every language.
+      .environment(\.layoutDirection, .leftToRight)
       .tvRole(.wordmark)
       .foregroundStyle(.themeAccent)
       .glow(.tv)

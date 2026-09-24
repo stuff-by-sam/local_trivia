@@ -56,6 +56,9 @@ nonisolated public enum Size {
   public static let iconTile: CGFloat = 64
   /// The widest a column of game gets, on iPad.
   public static let column: CGFloat = 540
+  /// The largest text a pinned bar grows to: the first accessibility size.
+  /// Past it, a bar would cover the content it's for.
+  public static let barTypeLimit = DynamicTypeSize.accessibility1
   /// A podium step's height, by place.
   public static func podiumStep(_ medal: Medal) -> CGFloat {
     switch medal {

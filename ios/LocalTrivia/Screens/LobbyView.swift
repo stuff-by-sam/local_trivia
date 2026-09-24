@@ -23,9 +23,7 @@ private struct PlayerLobby: View {
   @Environment(GameStore.self) private var store
 
   var body: some View {
-    VStack(spacing: 0) {
-      Spacer()
-
+    VStack(spacing: Space.m) {
       VStack(spacing: Space.xl) {
         VStack(spacing: Space.s) {
           Text("You're in")
@@ -49,8 +47,7 @@ private struct PlayerLobby: View {
           }
         }
       }
-
-      Spacer()
+      .scrollsWhenCrowded()
 
       StatusLine("Waiting for host")
     }
@@ -89,9 +86,7 @@ struct SpectatingView: View {
   @Environment(GameStore.self) private var store
 
   var body: some View {
-    VStack(spacing: 0) {
-      Spacer()
-
+    VStack(spacing: Space.m) {
       VStack(spacing: Space.xl) {
         VStack(spacing: Space.l) {
           Badge(symbol: "hourglass", color: .secondary, isGlass: false)
@@ -115,8 +110,7 @@ struct SpectatingView: View {
           ReadoutRow("Players") { Text(store.playerCount, format: .number) }
         }
       }
-
-      Spacer()
+      .scrollsWhenCrowded()
 
       StatusLine("Scores start next question")
     }

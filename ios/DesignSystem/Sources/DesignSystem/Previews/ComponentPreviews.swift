@@ -195,6 +195,26 @@ private enum Sample {
   }
 }
 
+#Preview("NameChips") {
+  PreviewMatrix {
+    VStack(alignment: .leading, spacing: Space.m) {
+      NameChips(names: ["ROBIN", "Sam", "Alex", "Jordan", Sample.longName, "Mo"], highlighted: "Sam")
+      NameChips(names: ["Sam"], highlighted: "Sam")
+    }
+  }
+}
+
+#Preview("Scrolls when crowded") {
+  PreviewMatrix {
+    VStack(spacing: Space.m) {
+      RankFigure(rank: 2)
+      Text(verbatim: Sample.longAnswer).textRole(.body)
+    }
+    .scrollsWhenCrowded()
+    .frame(height: Size.qrFull)
+  }
+}
+
 #Preview("Backdrop moods") {
   ScrollView {
     VStack(spacing: Space.s) {

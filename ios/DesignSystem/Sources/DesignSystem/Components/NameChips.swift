@@ -19,8 +19,7 @@ public struct FlowLayout: Layout {
     var y = bounds.minY
     for row in arrange(subviews, in: bounds.width) {
       var x = bounds.minX
-      for index in row.indices {
-        let size = subviews[index].sizeThatFits(.unspecified)
+      for (index, size) in zip(row.indices, row.sizes) {
         subviews[index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
         x += size.width + spacing
       }
@@ -30,6 +29,7 @@ public struct FlowLayout: Layout {
 
   private struct Row {
     var indices: [Int] = []
+    var sizes: [CGSize] = []
     var width: CGFloat = 0
     var height: CGFloat = 0
   }
@@ -38,7 +38,7 @@ public struct FlowLayout: Layout {
     var rows: [Row] = []
     var row = Row()
     for index in subviews.indices {
-      let size = subviews[index].sizeThatFits(.unspecified)
+      let size = self.size(of: subviews[index], within: width)
       let needed = row.indices.isEmpty ? size.width : row.width + spacing + size.width
       if needed > width, !row.indices.isEmpty {
         rows.append(row)
@@ -47,9 +47,18 @@ public struct FlowLayout: Layout {
       row.width = row.indices.isEmpty ? size.width : row.width + spacing + size.width
       row.height = max(row.height, size.height)
       row.indices.append(index)
+      row.sizes.append(size)
     }
     if !row.indices.isEmpty { rows.append(row) }
     return rows
+  }
+
+  /// A subview at its natural size, or — wider than a whole row, as a long
+  /// name is at accessibility sizes — at the row's width, wrapping.
+  private func size(of subview: LayoutSubview, within width: CGFloat) -> CGSize {
+    let natural = subview.sizeThatFits(.unspecified)
+    guard width.isFinite, natural.width > width else { return natural }
+    return subview.sizeThatFits(ProposedViewSize(width: width, height: nil))
   }
 }
 
@@ -65,21 +74,33 @@ public struct NameChips: View {
   }
 
   public var body: some View {
+    // A capsule on one line; a rounded rectangle when a long name wraps.
+    let shape = RoundedRectangle(cornerRadius: Radius.control)
     FlowLayout(spacing: Space.s) {
       ForEach(names, id: \.self) { name in
-        let isMine = name.localizedCaseInsensitiveCompare(highlighted ?? "") == .orderedSame
         Text(verbatim: name)
-          .textRole(isMine ? .bodyEmphasis : .body)
-          .foregroundStyle(isMine ? AnyShapeStyle(.themeAccent) : AnyShapeStyle(.primary))
-          .lineLimit(1)
+          .textRole(isViewer(name) ? .bodyEmphasis : .body)
+          .foregroundStyle(isViewer(name) ? AnyShapeStyle(.themeAccent) : AnyShapeStyle(.primary))
+          .multilineTextAlignment(.leading)
           .padding(.horizontal, Space.m)
+          .padding(.vertical, Space.xs)
           .frame(minHeight: Size.target - Space.s)
-          .background(.panel, in: .capsule)
-          .overlay { Capsule().strokeBorder(.panelStroke, lineWidth: 1) }
+          .background(.panel, in: shape)
+          .overlay { shape.strokeBorder(.panelStroke, lineWidth: 1) }
           .transition(.scale.combined(with: .opacity))
       }
     }
     .motion(.pop, value: names)
-    .accessibilityElement(children: .combine)
+    // One element, read in the order they joined: "Ada, Sam, and Robin (you)".
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel(Text(spokenNames))
+  }
+
+  private func isViewer(_ name: String) -> Bool {
+    name.localizedCaseInsensitiveCompare(highlighted ?? "") == .orderedSame
+  }
+
+  private var spokenNames: String {
+    names.map { isViewer($0) ? String(localized: "\($0) (you)") : $0 }.formatted(.list(type: .and))
   }
 }

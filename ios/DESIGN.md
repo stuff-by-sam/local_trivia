@@ -105,6 +105,15 @@ Dynamic Type text style; display figures scale with `@ScaledMetric` and cap.
 The TV board has its own fixed ramp (`TVRole`, with `TVMetrics` for layout) on its 1920×1080 canvas —
 Dynamic Type doesn't reach a TV.
 
+**At accessibility sizes**, content grows and bars don't. A screen whose
+content no longer fits scrolls (`.scrollsWhenCrowded()`) rather than
+squeezing text until it's cut off; readouts, leaderboard rows, round rows and
+the join card stack instead of sharing a line. What's pinned — the action bar,
+the host's next move, the undo toast — stops at AX1 (`Size.barTypeLimit`),
+as the system's own bars do, since at AX5 it would cover the content it's for.
+Toolbar readouts stay at the bar's size. Both show the Large Content Viewer
+on a long press.
+
 ## Space, shape
 
 **Spacing** — 4-pt base. `Space.xxs 2 · xs 4 · s 8 · m 12 · l 16 · xl 24 ·
@@ -112,7 +121,8 @@ xxl 32 · xxxl 48`. Screen margin `Space.l` (16), matching system list insets.
 Stack gaps: related `s`, grouped `m`, sections `xl`.
 
 **Radius** — concentric. `Radius.control 20` (answers, fields, PIN cells),
-`Radius.panel 24` (readouts, cards), capsule for chips and buttons. A shape
+`Radius.panel 24` (readouts, cards), capsule for chips and buttons (a name
+chip or undo toast that wraps becomes a `Radius.control` rectangle). A shape
 inside another takes `Radius.concentric(in:inset:)` — its container's radius
 minus the inset, minimum 8 — so the answer key inside an answer button is
 `20 − 14 = 6 → 8`, and the QR code on a card is `24 − 16 = 8`. Computed, not
@@ -183,7 +193,8 @@ Only through `Haptic`; one per event, never on scroll or incidental change.
 SF Symbols only. Weight follows the adjacent text's weight; scale `.medium`,
 `.small` inside keys. Monochrome by default; the answer shapes (`circle.fill`,
 `triangle.fill`, `square.fill`, `diamond.fill`) are monochrome in their answer
-colour. Direction uses `.forward`/`.backward` variants so RTL mirrors. Effects:
+colour. Direction uses `.forward`/`.backward` variants so RTL mirrors; the
+wordmark and the answer keys (`▲ B`) are glyphs, and never mirror. Effects:
 `.bounce` for a verdict or first place, `.pulse` for waiting, `.appear` for a
 checkmark — all system, all quieted by Reduce Motion.
 
@@ -204,12 +215,14 @@ content (`DesignSystem/Sources/DesignSystem/Previews/ComponentPreviews.swift`).
 | `PickerRow` | searching, online, connecting, unreachable |
 | `LabeledField`, `SectionHeader`, `DividerLabel` | — |
 | `Readout` / `ReadoutRow`, `.panel()` | inline, stacked (long value or AX size), empty; IC; RT |
+| `.scrollsWhenCrowded()` | centred when it fits, scrolling when it doesn't |
 | `StatusLine` | waiting (cursor), steady |
 | `StatusDot` | online, connecting (pulse), failed (pulse), idle |
 | `Wordmark`, `AnswerSetMark` | screen, showcase |
 | `RankFigure` | medal 1/2/3, other, unranked; compact |
 | `PodiumStep` | 1st/2nd/3rd, the player's own |
 | `Badge` | glass (verdict), drawn (waiting) |
+| `NameChips` (`FlowLayout`) | names, the viewer's own, a long name wrapping; read as one list |
 | `UndoToast` (`.undoToast`) | shown, counting down, undone |
 | `ThemeSwatch`, `IconArtwork` | every theme and icon; shown |
 | `Backdrop` | moods idle/question/correct/wrong/missed/celebrate × 10 textures × RT/IC/RM |

@@ -91,6 +91,8 @@ public struct PickerRow<Mark: View>: View {
     HStack(spacing: Space.m) {
       mark
         .frame(width: Space.l)
+      // Wraps rather than cuts off: which game, and whether it's reachable,
+      // is what the player came here to read.
       VStack(alignment: .leading, spacing: Space.xxs) {
         Text(verbatim: title)
           .textRole(.headline)
@@ -99,7 +101,8 @@ public struct PickerRow<Mark: View>: View {
           .textRole(.figureSmall)
           .foregroundStyle(.secondary)
       }
-      .lineLimit(1)
+      .fixedSize(horizontal: false, vertical: true)
+      .padding(.vertical, Space.s)
       Spacer(minLength: 0)
       Image(systemName: "chevron.up.chevron.down")
         .font(.footnote.weight(.semibold))

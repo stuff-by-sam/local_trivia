@@ -46,21 +46,20 @@ struct GameToolbar: ViewModifier {
   func body(content: Content) -> some View {
     content.toolbar {
       ToolbarItem(placement: .topBarLeading) {
-        Group {
-          if store.connection == .online {
-            leadingItem
-          } else {
-            Label {
-              Text("Reconnecting")
-            } icon: {
-              StatusDot(.failed)
-            }
-            .labelStyle(.titleAndIcon)
-            .accessibilityAddTraits(.updatesFrequently)
+        if store.connection == .online {
+          leadingItem
+        } else {
+          Label {
+            Text("Reconnecting")
+          } icon: {
+            StatusDot(.failed)
           }
+          .labelStyle(.titleAndIcon)
+          .textRole(.status)
+          .fixedSize()
+          .accessibilityAddTraits(.updatesFrequently)
+          .accessibilityShowsLargeContentViewer()
         }
-        .textRole(.status)
-        .fixedSize()
       }
       if case .clock(let window, let isRunningLow) = status {
         ToolbarItem(placement: .topBarTrailing) {
@@ -108,8 +107,13 @@ private struct PlayerLabel: View {
       StatusDot(color: palette.accent)
     }
     .labelStyle(.titleAndIcon)
+    .textRole(.status)
+    .fixedSize()
+    .readoutTarget()
+    // Outside the upper-casing, so the name is read as it's written.
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(Text("Playing as \(store.playerName)"))
+    .accessibilityShowsLargeContentViewer()
   }
 }
 
@@ -126,8 +130,10 @@ struct QuestionNumber: View {
     }
     .textRole(.status)
     .fixedSize()
+    .readoutTarget()
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(Text("Question \(number) of \(total)"))
+    .accessibilityShowsLargeContentViewer()
   }
 }
 
@@ -148,9 +154,14 @@ private struct QuestionClock: View {
     .monospacedDigit()
     // A clock that wraps or truncates is worse than no clock.
     .fixedSize()
+    .readoutTarget()
     .foregroundStyle(isRunningLow ? AnyShapeStyle(.danger) : AnyShapeStyle(.primary))
-    .accessibilityElement(children: .combine)
+    // "Time remaining, 0:14": the label names it, the value is the time.
+    .accessibilityElement(children: .ignore)
     .accessibilityLabel("Time remaining")
+    .accessibilityValue(Text(timerInterval: window, countsDown: true, showsHours: false))
+    .accessibilityAddTraits(.updatesFrequently)
+    .accessibilityShowsLargeContentViewer()
   }
 }
 
@@ -161,6 +172,15 @@ struct LeaveButton: View {
 
   var body: some View {
     Button("Leave Game", systemImage: "xmark") { store.leave() }
+  }
+}
+
+extension View {
+  /// A toolbar readout is read, not tapped — but it's found by touch, and
+  /// held for the Large Content Viewer, so it's a full target tall.
+  fileprivate func readoutTarget() -> some View {
+    frame(minHeight: Size.target)
+      .contentShape(.rect)
   }
 }
 

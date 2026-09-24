@@ -254,6 +254,8 @@ private struct QuestionRow: View {
   let onToggle: () -> Void
   let onOpen: () -> Void
 
+  @Environment(\.dynamicTypeSize) private var typeSize
+
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: Space.xs) {
       Button(action: onToggle) {
@@ -269,26 +271,33 @@ private struct QuestionRow: View {
 
       Button(action: onOpen) {
         VStack(alignment: .leading, spacing: Space.xs) {
+          // Two lines are enough to tell questions apart — except at
+          // accessibility sizes, where two lines are a few words.
           Text(verbatim: question.text.isEmpty ? "—" : question.text)
             .textRole(.bodyEmphasis)
-            .lineLimit(2)
+            .lineLimit(typeSize.isAccessibilitySize ? nil : 2)
             .foregroundStyle(question.isIncluded ? .primary : .secondary)
           if let problem = question.problem {
             Label(problem.message, systemImage: "exclamationmark.triangle.fill")
               .textRole(.labelSmall)
               .foregroundStyle(.warning)
           } else if let style = AnswerStyle(rawValue: question.correct) {
-            HStack(spacing: Space.s) {
-              AnswerKey(style: style)
-              Text(verbatim: question.options[question.correct])
-                .textRole(.detail)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-              Spacer(minLength: Space.s)
+            let details = typeSize.isAccessibilitySize
+              ? AnyLayout(VStackLayout(alignment: .leading, spacing: Space.xs))
+              : AnyLayout(HStackLayout(spacing: Space.s))
+            details {
+              HStack(alignment: .firstTextBaseline, spacing: Space.s) {
+                AnswerKey(style: style)
+                Text(verbatim: question.options[question.correct])
+                  .textRole(.detail)
+                  .foregroundStyle(.secondary)
+                  .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+              }
+              if !typeSize.isAccessibilitySize { Spacer(minLength: Space.s) }
               Text(verbatim: "\(question.category)\(question.timeLimit.map { " · \($0)S" } ?? "")")
                 .textRole(.labelSmall)
                 .foregroundStyle(.secondary)
-                .lineLimit(1)
+                .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
             }
           }
         }

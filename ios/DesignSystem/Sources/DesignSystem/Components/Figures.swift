@@ -48,6 +48,8 @@ public struct Wordmark: View {
       .font(.system(size: scale.size, weight: .heavy, design: .monospaced))
       .foregroundStyle(.themeAccent)
       .glow(.hero)
+      // A logo: the cursor follows the word in every language.
+      .environment(\.layoutDirection, .leftToRight)
       .accessibilityElement(children: .ignore)
       .accessibilityLabel(Text(verbatim: "Trivia"))
       .accessibilityAddTraits(.isHeader)

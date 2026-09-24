@@ -14,6 +14,17 @@ extension View {
       }
   }
 
+  /// Centred in the space it's given when it fits; scrolling when it
+  /// doesn't — at accessibility text sizes, or on a short screen — rather
+  /// than squeezing its text until it's cut off.
+  public func scrollsWhenCrowded() -> some View {
+    ViewThatFits(in: .vertical) {
+      frame(maxHeight: .infinity)
+      ScrollView { self }
+        .scrollBounceBehavior(.basedOnSize)
+    }
+  }
+
   /// The margins every in-game screen shares.
   public func screenPadding() -> some View {
     padding(.horizontal, Space.screen)

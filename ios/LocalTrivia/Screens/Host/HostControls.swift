@@ -96,6 +96,8 @@ private struct HostActionBar: View {
         host.perform(action)
       }
     }
+    // Pinned to the bottom like any action bar, so it stops growing where one does.
+    .dynamicTypeSize(...Size.barTypeLimit)
   }
 
   private var title: LocalizedStringKey {
@@ -123,10 +125,16 @@ struct JoinCodeCard: View {
   var isHero = false
 
   @Environment(HostController.self) private var host
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   var body: some View {
     if let game = host.game {
-      HStack(alignment: .center, spacing: Space.l) {
+      // The QR code goes under the code at accessibility sizes, rather than
+      // squeezing it into a column beside.
+      let layout = typeSize.isAccessibilitySize
+        ? AnyLayout(VStackLayout(alignment: .leading, spacing: Space.l))
+        : AnyLayout(HStackLayout(alignment: .center, spacing: Space.l))
+      layout {
         VStack(alignment: .leading, spacing: Space.s) {
           Text("Join code")
             .textRole(.label)
@@ -164,6 +172,7 @@ private struct JoinCodeSheet: View {
       Text(verbatim: host.gameName)
         .textRole(.action)
         .foregroundStyle(.secondary)
+        .multilineTextAlignment(.center)
       if let link = host.joinLink {
         QRCodeView(payload: link.url.absoluteString)
           .frame(width: Size.qrFull, height: Size.qrFull)
@@ -183,7 +192,8 @@ private struct JoinCodeSheet: View {
         .multilineTextAlignment(.center)
     }
     .padding(Space.xxl)
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .frame(maxWidth: .infinity)
+    .scrollsWhenCrowded()
     .presentationDetents([.large])
     .presentationDragIndicator(.visible)
   }
@@ -313,6 +323,8 @@ struct LeaderboardTable: View {
   let board: Leaderboard
   let playerName: String
 
+  @Environment(\.dynamicTypeSize) private var typeSize
+
   private static let visibleRows = 5
 
   var body: some View {
@@ -321,26 +333,69 @@ struct LeaderboardTable: View {
       // and score change.
       ForEach(rows, id: \.nickname) { row in
         let isPlayer = row.nickname.localizedCaseInsensitiveCompare(playerName) == .orderedSame
-        HStack(spacing: Space.m) {
-          Text(verbatim: row.rank.twoDigits)
-            .textRole(.figure)
-            .foregroundStyle(Medal(rank: row.rank).map { AnyShapeStyle($0.color) } ?? AnyShapeStyle(.secondary))
-          Text(verbatim: row.nickname)
-            .textRole(isPlayer ? .bodyEmphasis : .body)
-            .foregroundStyle(isPlayer ? AnyShapeStyle(.themeAccent) : AnyShapeStyle(.primary))
-            .lineLimit(1)
-          if let delta = row.delta, delta != 0 {
-            Text(verbatim: delta > 0 ? "▲\(delta)" : "▼\(-delta)")
-              .textRole(.figureSmall)
-              .foregroundStyle(delta > 0 ? AnyShapeStyle(.success) : AnyShapeStyle(.danger))
+        Group {
+          if typeSize.isAccessibilitySize {
+            // No room for four things on a line: the name wraps, and the
+            // score goes under it.
+            VStack(alignment: .leading, spacing: Space.xs) {
+              HStack(alignment: .firstTextBaseline, spacing: Space.m) {
+                rank(row)
+                name(row, isPlayer: isPlayer)
+              }
+              HStack(spacing: Space.m) {
+                delta(row)
+                Spacer(minLength: Space.s)
+                score(row)
+              }
+            }
+          } else {
+            HStack(spacing: Space.m) {
+              rank(row)
+              name(row, isPlayer: isPlayer)
+                .lineLimit(1)
+              delta(row)
+              Spacer(minLength: Space.s)
+              score(row)
+            }
           }
-          Spacer(minLength: Space.s)
-          Text(verbatim: row.score.grouped)
-            .textRole(.figure)
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(spoken(row, isPlayer: isPlayer))
       }
     }
+  }
+
+  private func spoken(_ row: Leaderboard.Row, isPlayer: Bool) -> Text {
+    let name = isPlayer ? String(localized: "\(row.nickname) (you)") : row.nickname
+    let standing = String(localized: "\(row.rank), \(name), \(row.score) points")
+    guard let delta = row.delta, delta != 0 else { return Text(verbatim: standing) }
+    return Text(verbatim: standing + ", " + (delta > 0 ? String(localized: "up \(delta)") : String(localized: "down \(-delta)")))
+  }
+
+  private func rank(_ row: Leaderboard.Row) -> some View {
+    Text(verbatim: row.rank.twoDigits)
+      .textRole(.figure)
+      .foregroundStyle(Medal(rank: row.rank).map { AnyShapeStyle($0.color) } ?? AnyShapeStyle(.secondary))
+  }
+
+  private func name(_ row: Leaderboard.Row, isPlayer: Bool) -> some View {
+    Text(verbatim: row.nickname)
+      .textRole(isPlayer ? .bodyEmphasis : .body)
+      .foregroundStyle(isPlayer ? AnyShapeStyle(.themeAccent) : AnyShapeStyle(.primary))
+  }
+
+  @ViewBuilder
+  private func delta(_ row: Leaderboard.Row) -> some View {
+    if let delta = row.delta, delta != 0 {
+      Text(verbatim: delta > 0 ? "▲\(delta)" : "▼\(-delta)")
+        .textRole(.figureSmall)
+        .foregroundStyle(delta > 0 ? AnyShapeStyle(.success) : AnyShapeStyle(.danger))
+    }
+  }
+
+  private func score(_ row: Leaderboard.Row) -> some View {
+    Text(verbatim: row.score.grouped)
+      .textRole(.figure)
   }
 
   /// The top five, plus the player if they're further down.

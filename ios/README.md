@@ -78,9 +78,15 @@ and every screen is built from the `DesignSystem` package that codifies it.
   Readouts stack a long value under its label rather than truncate it, and
   messages sit under the field they concern, where the keyboard can't hide them.
 - **Accessible by construction.** At
-  accessibility text sizes the round becomes one scrolling column and readouts
-  stack their label above their value. The lit answer switches to dark ink for
-  contrast; results and join errors are announced to VoiceOver. Increase
+  accessibility text sizes the round becomes one scrolling column, readouts
+  stack their label above their value, and any screen that no longer fits
+  scrolls rather than cutting text off; pinned bars stop growing at AX1 and
+  offer the Large Content Viewer instead. The lit answer switches to dark ink
+  for contrast; results and join errors are announced to VoiceOver, which
+  hears names as they're written, the clock's time, and a standing as one
+  sentence. Right-to-left mirrors everything but the wordmark and the answer
+  keys. If the camera's off for Trivia, the QR scanner says so and how to
+  turn it on, rather than disappearing. Increase
   Contrast firms up every hairline and drops the backdrop's texture; Reduce
   Transparency makes panels opaque; Reduce Motion stops the cursor blinking,
   stills the shakes and swaps blur transitions for cross-fades.
@@ -324,6 +330,13 @@ for sale has an icon to match.
 question, start hosting, play it as the host, standings, podium, stop hosting.
 It needs nothing but the simulator, so it runs with everything else.
 Screenshots of every phase are attached to the test result.
+
+`AccessibilityUITests` walks every screen one phone can reach three times —
+at AX5, with Increase Contrast, and right-to-left — attaching a screenshot
+and the element tree VoiceOver reads for each, and fails on any clipped
+text, unlabelled element or undersized target the accessibility audit finds.
+UI tests can't open Settings, so `-increaseContrast YES` (debug builds) gives
+the app the trait Increase Contrast gives it.
 
 ## Protocol
 

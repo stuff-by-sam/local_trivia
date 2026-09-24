@@ -4,6 +4,9 @@
     "" : {
 
     },
+    "%@ (you)" : {
+
+    },
     "%@ icon" : {
 
     },
@@ -51,6 +54,16 @@
     },
     "%lld seconds" : {
 
+    },
+    "%lld, %@, %lld points" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld, %2$@, %3$lld points"
+          }
+        }
+      }
     },
     "1st" : {
 
@@ -140,6 +153,12 @@
           }
         }
       }
+    },
+    "Camera Is Off for Trivia" : {
+
+    },
+    "Camera Restricted" : {
+
     },
     "Can't look for games. Local Network may be off for Trivia." : {
 
@@ -476,6 +495,9 @@
     "Open Control Center and tap Screen Mirroring." : {
 
     },
+    "Open Settings" : {
+
+    },
     "Open Trivia on the same Wi-Fi, or scan with the Camera." : {
 
     },
@@ -519,6 +541,9 @@
 
     },
     "Playing as %@" : {
+
+    },
+    "Plus %lld points" : {
 
     },
     "Podium" : {
@@ -688,6 +713,9 @@
     "This Apple Account hasn't bought any themes or icons yet." : {
 
     },
+    "This iPhone doesn't allow the camera. Type the PIN from the host's phone instead." : {
+
+    },
     "Time limit" : {
 
     },
@@ -704,6 +732,9 @@
 
     },
     "Titanium" : {
+
+    },
+    "To scan the host's code, allow Camera for Trivia in Settings. Or type the PIN from the host's phone." : {
 
     },
     "Toggles whether this question plays." : {
@@ -807,6 +838,19 @@
     "Your position" : {
 
     },
+    "Your position: %lld of %lld, %lld points" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your position: %1$lld of %2$lld, %3$lld points"
+          }
+        }
+      }
+    },
+    "Your position: unranked, %lld points" : {
+
+    },
     "Your themes and icons are restored." : {
 
     },
@@ -828,6 +872,9 @@
     "diamond" : {
 
     },
+    "down %lld" : {
+
+    },
     "of %lld · %@ pts" : {
       "localizations" : {
         "en" : {
@@ -845,6 +892,9 @@
 
     },
     "triangle" : {
+
+    },
+    "up %lld" : {
 
     },
     "your name" : {

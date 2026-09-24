@@ -29,6 +29,8 @@ public struct AnswerKey: View {
     .padding(.vertical, Space.xs)
     .background(ink.opacity(0.14), in: .rect(cornerRadius: Self.radius))
     .fixedSize()
+    // One glyph, `▲ B`, as on the TV and the web: not mirrored.
+    .environment(\.layoutDirection, .leftToRight)
     .accessibilityHidden(true)
   }
 }
