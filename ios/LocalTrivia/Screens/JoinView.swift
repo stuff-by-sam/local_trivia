@@ -361,3 +361,11 @@ private struct GamePicker: View {
     }
   }
 }
+
+#if DEBUG
+#Preview("Looking for games") { ScreenPreview(.joinSearching) }
+#Preview("Game found") { ScreenPreview(.joinFound) }
+#Preview("Wrong PIN") { ScreenPreview(.joinWrongPIN) }
+#Preview("Just left: undo") { ScreenPreview(.joinLeft) }
+#Preview("Host ended the game") { ScreenPreview(.joinHostEnded) }
+#endif

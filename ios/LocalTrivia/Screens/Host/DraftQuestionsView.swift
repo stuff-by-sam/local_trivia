@@ -10,15 +10,28 @@ struct DraftQuestionsView: View {
   let onAdd: ([HostQuestion]) -> Void
 
   @Environment(\.dismiss) private var dismiss
-  @State private var topic = ""
+  @State private var topic: String
   @State private var count = QuestionDrafter.counts.last ?? 10
-  @State private var drafts: [HostQuestion] = []
+  @State private var drafts: [HostQuestion]
   @State private var left: Set<HostQuestion.ID> = []
-  @State private var isDrafting = false
+  @State private var isDrafting: Bool
   /// Drafts asked for but not shown: unusable, possibly wrong, or repeats.
-  @State private var leftOut = 0
+  @State private var leftOut: Int
   @State private var failure: QuestionDrafter.Failure?
   @FocusState private var isTopicFocused: Bool
+
+  /// The rest start where a preview wants them; the app passes a round alone.
+  init(
+    round: [HostQuestion], topic: String = "", drafts: [HostQuestion] = [], leftOut: Int = 0, isDrafting: Bool = false,
+    onAdd: @escaping ([HostQuestion]) -> Void
+  ) {
+    self.round = round
+    self.onAdd = onAdd
+    _topic = State(initialValue: topic)
+    _drafts = State(initialValue: drafts)
+    _leftOut = State(initialValue: leftOut)
+    _isDrafting = State(initialValue: isDrafting)
+  }
 
   private var chosen: [HostQuestion] { drafts.filter { !left.contains($0.id) } }
 
@@ -80,7 +93,7 @@ struct DraftQuestionsView: View {
         }
       }
       .scrollEdgeEffectStyle(.hard, for: .bottom)
-      .onAppear { isTopicFocused = true }
+      .onAppear { if drafts.isEmpty { isTopicFocused = true } }
     }
   }
 
@@ -150,3 +163,8 @@ private struct DraftRow: View {
     .accessibilityHint("Adds or leaves out this question.")
   }
 }
+
+#if DEBUG
+#Preview("Drafting") { ScreenPreview(.drafting) }
+#Preview("Drafts to review") { ScreenPreview(.drafts) }
+#endif

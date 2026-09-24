@@ -407,3 +407,9 @@ struct LeaderboardTable: View {
     return top + [mine]
   }
 }
+
+#if DEBUG
+#Preview("Players") { ScreenPreview(.players) }
+#Preview("Join code") { ScreenPreview(.joinCode) }
+#Preview("Show on a TV") { ScreenPreview(.tvGuide) }
+#endif

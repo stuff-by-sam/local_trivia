@@ -118,3 +118,9 @@ struct SpectatingView: View {
     .gameToolbar(.player, status: .progress)
   }
 }
+
+#if DEBUG
+#Preview("Lobby") { ScreenPreview(.lobby) }
+#Preview("Host's lobby") { ScreenPreview(.hostLobby) }
+#Preview("Spectating") { ScreenPreview(.spectating) }
+#endif

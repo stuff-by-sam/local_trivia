@@ -592,3 +592,12 @@ private struct AnswerTile: View {
     .opacity(state == .wrong ? 0.4 : 1)
   }
 }
+
+#if DEBUG
+#Preview("Idle", traits: .landscapeLeft) { ScreenPreview(.tvIdle) }
+#Preview("Lobby", traits: .landscapeLeft) { ScreenPreview(.tvLobby) }
+#Preview("Question", traits: .landscapeLeft) { ScreenPreview(.tvQuestion) }
+#Preview("Reveal", traits: .landscapeLeft) { ScreenPreview(.tvReveal) }
+#Preview("Standings", traits: .landscapeLeft) { ScreenPreview(.tvStandings) }
+#Preview("Final", traits: .landscapeLeft) { ScreenPreview(.tvFinal) }
+#endif

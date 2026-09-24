@@ -271,7 +271,7 @@ LocalTrivia/
   BigScreen/
     BigScreen.swift         A connected TV gets its own scene, not a mirror of the phone
     BigScreenView.swift     The game for the room: lobby, question, reveal, standings, podium
-  Design/                   The in-game toolbar; three prototype directions (debug builds)
+  Design/                   The in-game toolbar; screen states for previews; three prototype directions (debug builds)
   Store/
     Shop.swift              StoreKit 2: products, verified entitlements, buying, restoring
     ShopView.swift          Themes & Icons: try on, buy, wear
@@ -337,6 +337,13 @@ and the element tree VoiceOver reads for each, and fails on any clipped
 text, unlabelled element or undersized target the accessibility audit finds.
 UI tests can't open Settings, so `-increaseContrast YES` (debug builds) gives
 the app the trait Increase Contrast gives it.
+
+Every screen has previews of its main states — a chosen answer, a wrong
+PIN, the host's standings, a TV board — from in-memory models: a store fed
+the events a host sends, the engine talking straight to the host's own
+store, a round that's never saved (`Design/ScreenStates.swift`). A debug
+build opens any of them directly with `-screen <state>` (and `-theme
+<theme>`), for tests that need a screen a single phone can't hold still on.
 
 ## Protocol
 

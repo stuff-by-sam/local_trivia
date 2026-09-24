@@ -273,3 +273,57 @@ final class HostController {
     }
   }
 }
+
+#if DEBUG
+extension HostController {
+  enum PreviewStage { case lobby, standings, final }
+
+  /// Hosting in memory, for previews: the engine with `others` seated
+  /// beside the host, and the host's own store hearing it directly — no
+  /// server and no network. Past the lobby, everyone answers the first
+  /// question, a second or so apart, and the game stops at `stage`.
+  func startPreview(seating store: GameStore, others: [String], round: [HostQuestion], playing stage: PreviewStage = .lobby) {
+    library.questions = round
+    gameName = library.advertisedName
+    lanAddress = "192.168.1.20"
+    let clock = PreviewClock()
+    let game = HostedGame(pin: "4821", deliver: { [weak store] event, audience in
+      switch audience {
+      case .connection(let id) where id == 0: store?.apply(event)
+      case .players, .everyone: store?.apply(event)
+      case .connection: break
+      }
+    }, uptime: { clock.now })
+    self.game = game
+    status = .live(port: UInt16(GameServer.defaultPort))
+    seat = store
+    if let own = GameServer(address: "127.0.0.1:\(GameServer.defaultPort)", name: gameName) {
+      store.connect(to: own)
+      store.handle(.connected)
+    }
+    for (connection, name) in ([store.nickname] + others).enumerated() {
+      game.attach(connection, from: "192.168.1.\(connection + 30)")
+      game.receive(.join(pin: game.pin, nickname: name), from: connection)
+    }
+    guard stage != .lobby, let first = library.playable.first else { return }
+    var rules = library.rules
+    rules.shuffle = false
+    try? game.start(questions: library.playable, rules: rules)
+    for connection in 0...others.count {
+      clock.now += .milliseconds(1_300)
+      let pick = connection == 3 ? (first.correct + 1) % 4 : first.correct
+      game.receive(.submitAnswer(questionId: HostedGame.questionID(for: 0), optionIndex: pick), from: connection)
+    }
+    switch stage {
+    case .lobby: break
+    case .standings: game.showLeaderboard()
+    case .final: game.endGame()
+    }
+  }
+}
+
+/// The engine's clock in a preview: it moves when told to.
+private final class PreviewClock {
+  var now: Duration = .zero
+}
+#endif

@@ -129,3 +129,9 @@ struct ResultView: View {
     }
   }
 }
+
+#if DEBUG
+#Preview("Correct") { ScreenPreview(.resultCorrect) }
+#Preview("Wrong") { ScreenPreview(.resultWrong) }
+#Preview("No answer") { ScreenPreview(.resultMissed) }
+#endif

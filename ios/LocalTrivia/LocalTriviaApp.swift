@@ -12,6 +12,8 @@ struct LocalTriviaApp: App {
         MotionTuner()
       } else if let exploration = ExplorationScreen.fromLaunchArguments() {
         exploration
+      } else if let fixture = ScreenPreview.fromLaunchArguments() {
+        fixture
       } else {
         game
       }

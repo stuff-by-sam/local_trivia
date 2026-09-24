@@ -203,6 +203,9 @@ checkmark — all system, all quieted by Reduce Motion.
 Every component has a preview per state, plus Dynamic Type xSmall and AX5,
 Increase Contrast, Reduce Transparency, Reduce Motion, RTL, long and empty
 content (`DesignSystem/Sources/DesignSystem/Previews/ComponentPreviews.swift`).
+Every screen has previews of its main states too, at the foot of its file,
+built from in-memory models (`Design/ScreenStates.swift`): nothing in them
+touches the network.
 
 | Component | States |
 |---|---|

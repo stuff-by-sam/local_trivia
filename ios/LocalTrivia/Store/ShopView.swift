@@ -389,3 +389,7 @@ private struct StoreUnavailable: View {
     .padding(.vertical, Space.xs)
   }
 }
+
+#if DEBUG
+#Preview("Shop") { ScreenPreview(.shop) }
+#endif

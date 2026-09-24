@@ -166,3 +166,8 @@ struct QRScanner: UIViewControllerRepresentable {
     }
   }
 }
+
+#if DEBUG
+#Preview("Camera off") { ScreenPreview(.scannerOff) }
+#Preview("Camera restricted") { ScreenPreview(.scannerRestricted) }
+#endif

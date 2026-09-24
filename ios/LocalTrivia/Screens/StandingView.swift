@@ -111,3 +111,10 @@ extension Array {
     indices.contains(index) ? self[index] : nil
   }
 }
+
+#if DEBUG
+#Preview("Standings") { ScreenPreview(.standings) }
+#Preview("Host's standings") { ScreenPreview(.hostStandings) }
+#Preview("Final") { ScreenPreview(.final) }
+#Preview("Host's final") { ScreenPreview(.hostFinal) }
+#endif

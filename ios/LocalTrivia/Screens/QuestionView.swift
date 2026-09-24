@@ -189,3 +189,9 @@ private struct QuestionStatus: View {
     .motion(.settle, value: round.acknowledged)
   }
 }
+
+#if DEBUG
+#Preview("Open") { ScreenPreview(.question) }
+#Preview("Chosen") { ScreenPreview(.questionChosen) }
+#Preview("Time's up") { ScreenPreview(.questionTimeUp) }
+#endif

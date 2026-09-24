@@ -150,3 +150,8 @@ struct QuestionEditorView: View {
     }
   }
 }
+
+#if DEBUG
+#Preview("New question") { ScreenPreview(.editorNew) }
+#Preview("Needs an answer") { ScreenPreview(.editorEdit) }
+#endif

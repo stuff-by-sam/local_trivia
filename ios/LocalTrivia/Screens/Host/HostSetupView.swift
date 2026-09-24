@@ -373,3 +373,8 @@ extension HostQuestion.Problem {
     }
   }
 }
+
+#if DEBUG
+#Preview("New round") { ScreenPreview(.roundEmpty) }
+#Preview("Round") { ScreenPreview(.round) }
+#endif

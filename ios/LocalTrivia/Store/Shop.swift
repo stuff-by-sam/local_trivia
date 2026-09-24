@@ -258,3 +258,21 @@ struct HomeScreen: IconSwitcher {
     try await UIApplication.shared.setAlternateIconName(name)
   }
 }
+
+#if DEBUG
+extension Shop {
+  /// A shop that never asks the App Store — it answers that it's ready, with
+  /// nothing priced — for previews.
+  static func preview(defaults: UserDefaults) -> Shop {
+    let shop = Shop(defaults: defaults, icons: PreviewIcons())
+    shop.availability = .ready
+    return shop
+  }
+}
+
+private struct PreviewIcons: IconSwitcher {
+  var supportsAlternateIcons: Bool { true }
+  var alternateIconName: String? { nil }
+  func setAlternateIconName(_ name: String?) async throws {}
+}
+#endif
