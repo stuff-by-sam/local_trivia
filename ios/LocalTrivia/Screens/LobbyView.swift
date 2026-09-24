@@ -1,10 +1,26 @@
 import DesignSystem
 import SwiftUI
 
-/// Joined, waiting for the host to start.
+/// Joined, waiting for the host to start. The host's own lobby is about
+/// getting everyone in: the join code first, and who's arrived.
 struct LobbyView: View {
-  @Environment(GameStore.self) private var store
   @Environment(HostController.self) private var host
+
+  var body: some View {
+    Group {
+      if host.isHosting {
+        HostLobby()
+      } else {
+        PlayerLobby()
+      }
+    }
+    .screenPadding()
+    .gameToolbar(.player, controls: .always)
+  }
+}
+
+private struct PlayerLobby: View {
+  @Environment(GameStore.self) private var store
 
   var body: some View {
     VStack(spacing: 0) {
@@ -22,12 +38,8 @@ struct LobbyView: View {
             .accessibilityAddTraits(.isHeader)
         }
 
-        if host.isHosting {
-          JoinCodeCard()
-        }
-
         Readout {
-          if let server = store.server, !host.isHosting {
+          if let server = store.server {
             ReadoutRow("Host") { Text(verbatim: server.name) }
           }
           ReadoutRow("Players") {
@@ -40,10 +52,35 @@ struct LobbyView: View {
 
       Spacer()
 
+      StatusLine("Waiting for host")
+    }
+  }
+}
+
+private struct HostLobby: View {
+  @Environment(GameStore.self) private var store
+  @Environment(HostController.self) private var host
+
+  var body: some View {
+    let names = host.game?.connectedPlayers.map(\.nickname) ?? []
+    VStack(spacing: Space.m) {
+      ScrollView {
+        VStack(alignment: .leading, spacing: Space.xl) {
+          JoinCodeCard(isHero: true)
+          VStack(alignment: .leading, spacing: Space.s) {
+            Text("In the game · \(names.count)")
+              .textRole(.label)
+              .foregroundStyle(.secondary)
+              .accessibilityAddTraits(.isHeader)
+            NameChips(names: names, highlighted: store.playerName)
+          }
+        }
+        .padding(.top, Space.l)
+      }
+      .scrollBounceBehavior(.basedOnSize)
+
       FooterStatus("Waiting for host")
     }
-    .screenPadding()
-    .gameToolbar(.player, controls: .always)
   }
 }
 

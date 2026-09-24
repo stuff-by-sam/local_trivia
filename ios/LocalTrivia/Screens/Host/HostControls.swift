@@ -119,6 +119,9 @@ private struct HostActionBar: View {
 
 /// PIN and QR code, for the host's lobby — where everyone else is looking.
 struct JoinCodeCard: View {
+  /// The lobby's lead: the code at its largest.
+  var isHero = false
+
   @Environment(HostController.self) private var host
 
   var body: some View {
@@ -129,9 +132,11 @@ struct JoinCodeCard: View {
             .textRole(.label)
             .foregroundStyle(.secondary)
           Text(verbatim: game.pin)
-            .textRole(.display(.pin))
+            .textRole(.display(isHero ? .pinLarge : .pin))
             .foregroundStyle(.themeAccent)
-            .glow(.figure)
+            .glow(isHero ? .hero : .figure)
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
             .accessibilityLabel(Text("PIN \(game.pin.map(String.init).joined(separator: " "))"))
           Text(host.lanAddress == nil ? "Turn on Wi-Fi or Personal Hotspot so others can join" : "Scan, or find \(host.gameName) in the app")
             .textRole(.labelSmall)

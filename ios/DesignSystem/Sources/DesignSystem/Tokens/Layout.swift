@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The spacing scale: a 4-pt base. Related things sit `s` apart, a group
 /// `m`, sections `xl`.
-public enum Space {
+nonisolated public enum Space {
   public static let xxs: CGFloat = 2
   public static let xs: CGFloat = 4
   public static let s: CGFloat = 8
@@ -18,7 +18,7 @@ public enum Space {
 
 /// Corner radii. Nested shapes are concentric: an inner radius is its
 /// container's minus the inset between them, never below `minimum`.
-public enum Radius {
+nonisolated public enum Radius {
   /// Answers, fields, PIN cells.
   public static let control: CGFloat = 20
   /// Readouts, cards.
@@ -32,7 +32,7 @@ public enum Radius {
 }
 
 /// Fixed dimensions. Anything touchable is at least `target` in both directions.
-public enum Size {
+nonisolated public enum Size {
   /// The smallest touch target: 44 × 44 pt.
   public static let target: CGFloat = 44
   /// An answer button's minimum height.
@@ -67,7 +67,7 @@ public enum Size {
 }
 
 /// The TV board's layout, in points on its 1920×1080 canvas.
-public enum TVMetrics {
+nonisolated public enum TVMetrics {
   public static let canvas = CGSize(width: 1920, height: 1080)
   /// TVs crop their edges: everything stays inside the title-safe area.
   public static let safeInsets = EdgeInsets(top: 64, leading: 110, bottom: 64, trailing: 110)
