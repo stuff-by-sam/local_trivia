@@ -75,14 +75,26 @@ nonisolated enum LocalAddress {
 }
 
 /// Renders a QR code: black modules on white, crisp at any size.
+///
+/// Rendered once per payload and kept: a view asking again — the lobby, the
+/// join code sheet, the TV — gets the same image instead of a fresh render,
+/// and one Core Image context serves them all.
 enum QRCode {
+  private static let context = CIContext(options: [.cacheIntermediates: false])
+  private static var rendered: [String: UIImage] = [:]
+
   static func image(for text: String) -> UIImage? {
+    if let image = rendered[text] { return image }
     let filter = CIFilter.qrCodeGenerator()
     filter.message = Data(text.utf8)
     filter.correctionLevel = "M"
     guard let output = filter.outputImage,
-      let cgImage = CIContext().createCGImage(output, from: output.extent)
+      let cgImage = context.createCGImage(output, from: output.extent)
     else { return nil }
-    return UIImage(cgImage: cgImage)
+    let image = UIImage(cgImage: cgImage)
+    // A game has one join link; a handful covers a host who restarts.
+    if rendered.count >= 4 { rendered.removeAll() }
+    rendered[text] = image
+    return image
   }
 }
