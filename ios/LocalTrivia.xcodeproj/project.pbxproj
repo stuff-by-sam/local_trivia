@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		A1D5E5C0000000000000A004 /* DesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = A1D5E5C0000000000000A002 /* DesignSystem */; };
-		A1D5E5C0000000000000A005 /* DesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = A1D5E5C0000000000000A003 /* DesignSystem */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,7 +79,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A1D5E5C0000000000000A005 /* DesignSystem in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -159,7 +157,6 @@
 			);
 			name = LocalTriviaTests;
 			packageProductDependencies = (
-				A1D5E5C0000000000000A003 /* DesignSystem */,
 			);
 			productName = LocalTriviaTests;
 			productReference = D89BA1FCB93A58DEE4EE1850 /* LocalTriviaTests.xctest */;
@@ -604,10 +601,6 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		A1D5E5C0000000000000A002 /* DesignSystem */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = DesignSystem;
-		};
-		A1D5E5C0000000000000A003 /* DesignSystem */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = DesignSystem;
 		};
