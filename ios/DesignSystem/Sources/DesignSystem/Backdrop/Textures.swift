@@ -1,4 +1,5 @@
 import CoreMotion
+import Observation
 import SwiftUI
 
 // The themes' textures (`Backdrop.Texture`), apart from Phosphor's scanlines.
@@ -286,10 +287,11 @@ struct BrushedMetal: View {
 
 /// Draws `content` from the phone's tilt, for the textures that follow it.
 ///
-/// Only `content` redraws, and only while it's following the phone: never
-/// under Reduce Motion, while a question is up, on a TV (the backdrop decides
-/// those, through `followsTilt`), or with the app in the background. Otherwise
-/// it rests where a level phone would put it.
+/// Only `content` redraws, and only when the phone actually moves (`Tilt`
+/// publishes changes past sensor noise): a phone lying on a table draws
+/// nothing. Never under Reduce Motion, while a question is up, on a TV (the
+/// backdrop decides those, through `followsTilt`), or with the app in the
+/// background. Otherwise it rests where a level phone would put it.
 struct TiltFollowing<Content: View>: View {
   let followsTilt: Bool
   @ViewBuilder var content: (Tilt.Angles) -> Content
@@ -299,12 +301,10 @@ struct TiltFollowing<Content: View>: View {
 
   var body: some View {
     let isLive = followsTilt && scenePhase == .active && Tilt.shared.isAvailable
-    TimelineView(.animation(minimumInterval: 1.0 / 30, paused: !isLive)) { _ in
-      content(isLive ? Tilt.shared.angles : .level)
-    }
-    .onAppear { watch(isLive) }
-    .onChange(of: isLive) { _, live in watch(live) }
-    .onDisappear { watch(false) }
+    content(isLive ? Tilt.shared.angles : .level)
+      .onAppear { watch(isLive) }
+      .onChange(of: isLive) { _, live in watch(live) }
+      .onDisappear { watch(false) }
   }
 
   private func watch(_ live: Bool) {
@@ -318,9 +318,11 @@ struct TiltFollowing<Content: View>: View {
 ///
 /// One motion manager for the app, as Core Motion asks, and it runs only
 /// while a texture on screen is following the phone. Device motion needs no
-/// permission.
+/// permission. Readings arrive at 30 Hz but only a real movement is
+/// published, so a still phone costs no redraws.
+@Observable
 final class Tilt {
-  struct Angles {
+  struct Angles: Equatable {
     var roll: Double
     var pitch: Double
 
@@ -330,27 +332,36 @@ final class Tilt {
 
   static let shared = Tilt()
 
-  private let motion = CMMotionManager()
-  private var watchers = 0
+  /// Smaller changes than this — about 0.7° — are sensor noise, not a tilt.
+  static let threshold = 0.012
+
+  private(set) var angles = Angles.level
+
+  @ObservationIgnored private let motion = CMMotionManager()
+  @ObservationIgnored private var watchers = 0
 
   var isAvailable: Bool { motion.isDeviceMotionAvailable }
-
-  var angles: Angles {
-    guard let attitude = motion.deviceMotion?.attitude else { return .level }
-    return Angles(roll: attitude.roll, pitch: attitude.pitch)
-  }
 
   func watch() {
     watchers += 1
     guard watchers == 1, motion.isDeviceMotionAvailable else { return }
     motion.deviceMotionUpdateInterval = 1.0 / 30
-    motion.startDeviceMotionUpdates()
+    motion.startDeviceMotionUpdates(to: .main) { [weak self] data, _ in
+      guard let attitude = data?.attitude else { return }
+      let next = Angles(roll: attitude.roll, pitch: attitude.pitch)
+      MainActor.assumeIsolated { self?.update(next) }
+    }
   }
 
   func unwatch() {
     guard watchers > 0 else { return }
     watchers -= 1
     if watchers == 0 { motion.stopDeviceMotionUpdates() }
+  }
+
+  private func update(_ next: Angles) {
+    guard abs(next.roll - angles.roll) > Self.threshold || abs(next.pitch - angles.pitch) > Self.threshold else { return }
+    angles = next
   }
 }
 
