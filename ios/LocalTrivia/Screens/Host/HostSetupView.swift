@@ -17,7 +17,11 @@ struct HostSetupView: View {
   @State private var editing: HostQuestion?
   @State private var isImporting = false
   @State private var importReport: ImportReport?
-  @State private var isConfirmingClear = false
+  @State private var undo: UndoItem?
+  @State private var isDrafting = false
+  /// Whether this phone's on-device model can draft questions. Checked once:
+  /// a button that can't work isn't shown.
+  @State private var canDraft = false
 
   private struct ImportReport: Identifiable {
     let id = UUID()
@@ -94,11 +98,13 @@ struct HostSetupView: View {
       .alert(item: $importReport) { report in
         Alert(title: Text(report.title), message: Text(report.detail), dismissButton: .default(Text("OK")))
       }
-      .confirmationDialog("Delete every question?", isPresented: $isConfirmingClear, titleVisibility: .visible) {
-        Button("Delete All Questions", role: .destructive) { library.questions = [] }
-      } message: {
-        Text("This can't be undone.")
+      .sheet(isPresented: $isDrafting) {
+        DraftQuestionsView { host.library.questions.append(contentsOf: $0) }
       }
+      .task { canDraft = QuestionDrafter.isAvailable }
+      // Deleting asks nothing first; it can be taken back for a few seconds —
+      // offered in the start bar when there is one, so it covers nothing.
+      .undoToast(isLive ? $undo : .constant(nil))
     }
   }
 
@@ -126,6 +132,13 @@ struct HostSetupView: View {
         editing = .blank()
       } label: {
         Label("Write a Question", systemImage: "plus")
+      }
+      if canDraft {
+        Button {
+          isDrafting = true
+        } label: {
+          Label("Draft with Apple Intelligence", systemImage: "sparkles")
+        }
       }
       Button {
         isImporting = true
