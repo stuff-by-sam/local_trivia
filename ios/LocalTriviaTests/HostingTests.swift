@@ -423,4 +423,54 @@ import Testing
     #expect(hostPlayer.server == nil)
     #expect(!host.isHosting)
   }
+
+  /// Leaving asks nothing first, because it can be undone: the host keeps a
+  /// dropped player's seat, and the guest's phone keeps its token long
+  /// enough to take it back — points and all.
+  @Test func aGuestWhoLeavesCanUndoItAndKeepTheirScore() async throws {
+    let library = HostLibrary(fileURL: nil)
+    library.questions = [
+      HostQuestion(text: "Which planet has the most moons?", options: ["Jupiter", "Saturn", "Uranus", "Neptune"], correct: 1),
+      HostQuestion(text: "What does LAN stand for?", options: ["Large", "Local Area Network", "Linked", "Long"], correct: 1),
+    ]
+    library.rules.shuffle = false
+    let host = HostController(library: library, advertises: false)
+    let hostPlayer = player("Host")
+    await host.start(joining: hostPlayer)
+    guard case .live(let port) = host.status else {
+      Issue.record("didn't start: \(host.status)")
+      return
+    }
+    try await eventually("the host to take a seat") { hostPlayer.phase == .lobby }
+    let guest = player("Guest")
+    guest.join(try #require(GameServer(address: "127.0.0.1:\(port)")), pin: try #require(host.game?.pin))
+    try await eventually("the guest to join") { guest.phase == .lobby }
+
+    host.perform(.start)
+    try await eventually("the first question") { guest.phase.screen == .question(1) && hostPlayer.phase.screen == .question(1) }
+    guest.choose(1)
+    hostPlayer.choose(0)
+    try await eventually("the reveal") { guest.phase.screen == .result }
+    let earned = guest.score
+    #expect(earned > 0, "the guest answered right")
+
+    guest.leave()
+    #expect(guest.phase == .join)
+    #expect(guest.leftGame != nil, "offers to undo")
+    try await eventually("the host to see the guest go") { host.game?.connectedPlayers.map(\.nickname) == ["Host"] }
+
+    guest.undoLeave()
+    try await eventually("the guest to be back in the game") { guest.isInGame }
+    #expect(guest.playerName == "Guest")
+    #expect(guest.score == earned)
+    #expect(host.game?.connectedPlayers.map(\.nickname) == ["Host", "Guest"])
+    #expect(host.game?.players.count == 2, "the same seat, not a new one")
+
+    // And the room's standings still count what the guest earned.
+    try await eventually("standings for everyone", within: HostedGame.revealHold + .seconds(3)) {
+      guest.leaderboard?.standings.contains { $0.nickname == "Guest" && $0.score == earned } == true
+    }
+
+    await host.stop(leaving: hostPlayer)
+  }
 }

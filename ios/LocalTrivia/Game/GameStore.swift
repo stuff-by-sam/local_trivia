@@ -353,9 +353,10 @@ final class GameStore {
 
   /// The server has no "leave" event — a player leaves by disconnecting. So
   /// drop the session and re-dial fresh, which stops this phone counting as a
-  /// connected player without costing the next join a handshake.
+  /// connected player without costing the next join a handshake. The seat's
+  /// token is kept a few seconds, for `undoLeave`.
   func leave() {
-    if let server, let token, !server.isLoopback {
+    if let server, let token {
       leftSeat = (server, token)
       leftGame = server.name
       leftSeatExpiry?.cancel()
