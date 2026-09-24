@@ -3,12 +3,17 @@ import SwiftUI
 
 /// Writing or editing one question: the question, four answers (tap a key to
 /// mark the right one), and optionally a category and its own time limit.
+///
+/// It saves as it goes — leaving, by Back or a swipe, keeps what was typed —
+/// and Return moves on to the next field, so a question is typed straight
+/// through. A question left incomplete stays in the list, flagged, out of play.
 struct QuestionEditorView: View {
   let isNew: Bool
   let onSave: (HostQuestion) -> Void
   let onDelete: (HostQuestion) -> Void
 
   @State private var draft: HostQuestion
+  @State private var isDeleted = false
   @Environment(\.dismiss) private var dismiss
   @FocusState private var focus: Field?
 
@@ -31,6 +36,7 @@ struct QuestionEditorView: View {
           .lineLimit(2...6)
           .focused($focus, equals: .question)
           .submitLabel(.next)
+          .onChange(of: draft.text) { _, text in advance(ifReturnIn: text, from: .question) }
       } header: {
         SectionHeader("Question")
       }
@@ -42,7 +48,12 @@ struct QuestionEditorView: View {
       } header: {
         SectionHeader("Answers")
       } footer: {
-        Text("Tap a key to mark the right answer.")
+        if draft.problem == .noCorrectAnswer {
+          Label("Tap a key to mark the right answer.", systemImage: "exclamationmark.triangle.fill")
+            .foregroundStyle(.warning)
+        } else {
+          Text("Tap a key to mark the right answer.")
+        }
       }
 
       Section {
@@ -52,6 +63,8 @@ struct QuestionEditorView: View {
             .textInputAutocapitalization(.characters)
             .autocorrectionDisabled()
             .focused($focus, equals: .category)
+            .submitLabel(.done)
+            .onSubmit { focus = nil }
         }
         Picker("Time limit", selection: $draft.timeLimit) {
           Text("Round's default").tag(Int?.none)
@@ -67,6 +80,7 @@ struct QuestionEditorView: View {
       if !isNew {
         Section {
           Button("Delete Question", role: .destructive) {
+            isDeleted = true
             onDelete(draft)
             dismiss()
           }
@@ -75,17 +89,14 @@ struct QuestionEditorView: View {
     }
     .navigationTitle(isNew ? "New Question" : "Edit Question")
     .navigationBarTitleDisplayMode(.inline)
-    .toolbar {
-      ToolbarItem(placement: .confirmationAction) {
-        Button("Save") {
-          onSave(draft)
-          dismiss()
-        }
-        .disabled(draft.problem != nil)
-      }
-    }
     .onAppear {
       if isNew { focus = .question }
+    }
+    // Saved on the way out, however the host leaves. A new question nobody
+    // started isn't worth a row.
+    .onDisappear {
+      guard !isDeleted, !(isNew && draft.isUntouched) else { return }
+      onSave(draft)
     }
   }
 
@@ -109,6 +120,8 @@ struct QuestionEditorView: View {
       }
       .lineLimit(1...3)
       .focused($focus, equals: .answer(style.rawValue))
+      .submitLabel(.next)
+      .onChange(of: draft.options[style.rawValue]) { _, text in advance(ifReturnIn: text, from: .answer(style.rawValue)) }
 
       if isCorrect {
         Image(systemName: "checkmark")
@@ -118,5 +131,22 @@ struct QuestionEditorView: View {
       }
     }
     .motion(.snap, value: draft.correct)
+  }
+
+  /// Multi-line fields take Return as a new line; questions and answers are
+  /// one line each, so Return here means "next field" — as the key says.
+  private func advance(ifReturnIn text: String, from field: Field) {
+    guard text.contains("\n") else { return }
+    let cleaned = text.replacingOccurrences(of: "\n", with: "")
+    switch field {
+    case .question:
+      draft.text = cleaned
+      focus = .answer(0)
+    case .answer(let index):
+      draft.options[index] = cleaned
+      focus = index < AnswerStyle.allCases.count - 1 ? .answer(index + 1) : nil
+    case .category:
+      break
+    }
   }
 }

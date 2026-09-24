@@ -22,8 +22,17 @@ nonisolated struct HostQuestion: Codable, Identifiable, Hashable, Sendable {
     case missingText, missingOption, noCorrectAnswer, timeOutOfRange
   }
 
+  /// A new question has no right answer until the host picks one: a
+  /// default of A would be wrong three times in four, in front of the room.
   static func blank() -> HostQuestion {
-    HostQuestion(text: "", options: ["", "", "", ""], correct: 0)
+    HostQuestion(text: "", options: ["", "", "", ""], correct: -1)
+  }
+
+  /// Nothing typed and no answer picked: a new question that was never started.
+  var isUntouched: Bool {
+    text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      && options.allSatisfy { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+      && !(0...3).contains(correct)
   }
 
   var problem: Problem? {
