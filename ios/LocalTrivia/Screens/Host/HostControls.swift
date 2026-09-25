@@ -1,6 +1,7 @@
+import DesignSystem
 import SwiftUI
 
-/// The host's menu, in the top bar of every in-game screen: players, the join
+/// The host's menu, in the toolbar of every in-game screen: players, the join
 /// code, the round, and the controls that don't belong on the action bar.
 /// Draws nothing for players. Its sheets open from the root (`HostSheetView`).
 struct HostMenu: View {
@@ -33,12 +34,10 @@ struct HostMenu: View {
           Button("Stop Hosting", systemImage: "xmark.circle", role: .destructive) { isConfirmingStop = true }
         }
       } label: {
-        Image(systemName: "slider.horizontal.3")
-          .font(.subheadline.weight(.bold))
-          .frame(width: 44, height: 44)
-          .glassEffect(.regular.interactive(), in: .circle)
-          .accessibilityLabel("Host controls")
+        Label("Host controls", systemImage: "slider.horizontal.3")
       }
+      // The one confirmation left in the app: stopping ends the game on every
+      // phone, and there's no taking that back.
       .confirmationDialog("Stop hosting?", isPresented: $isConfirmingStop, titleVisibility: .visible) {
         Button("End the Game for Everyone", role: .destructive) {
           Task { await host.stop(leaving: store) }
@@ -51,9 +50,8 @@ struct HostMenu: View {
 }
 
 /// What each sheet from the host's menu shows. They open from the root view,
-/// not the menu: the menu sits in the top bar, which holds text to one line
-/// and caps Dynamic Type — limits a sheet would otherwise inherit. And the
-/// root outlives every screen, so a sheet stays open as the game moves on.
+/// not the menu, which lives in the toolbar; and the root outlives every
+/// screen, so a sheet stays open as the game moves on.
 struct HostSheetView: View {
   let sheet: HostController.Sheet
 
@@ -88,37 +86,23 @@ private struct HostActionBar: View {
   let action: HostController.Action
 
   @Environment(HostController.self) private var host
-  @Environment(\.accent) private var accent
 
   var body: some View {
-    VStack(spacing: 10) {
+    VStack(spacing: Space.s) {
       if let error = host.actionError {
-        Label(error, systemImage: "exclamationmark.triangle.fill")
-          .terminalStyle(.caption)
-          .foregroundStyle(Color.broadcastRed)
+        FieldMessage(Text(error), kind: .error)
       }
-      Button {
+      ActionButton(title, systemImage: symbol, tapHaptic: .action) {
         host.perform(action)
-      } label: {
-        HStack(spacing: 10) {
-          Text(title)
-          Image(systemName: symbol)
-        }
-        .terminalStyle(.headline, weight: .bold)
-        .foregroundStyle(Color.broadcastInk)
-        .frame(maxWidth: .infinity, minHeight: 32)
       }
-      .buttonStyle(.glassProminent)
-      .tint(accent)
-      .controlSize(.large)
-      .sensoryFeedback(.impact(weight: .medium), trigger: action)
     }
+    // Pinned to the bottom like any action bar, so it stops growing where one does.
+    .dynamicTypeSize(...Size.barTypeLimit)
   }
 
   private var title: LocalizedStringKey {
     switch action {
     case .start: "Start Game"
-    case .showStandings: "Show Standings"
     case .nextQuestion: "Next Question"
     case .finish: "Final Results"
     case .newGame: "Play Again"
@@ -128,8 +112,7 @@ private struct HostActionBar: View {
   private var symbol: String {
     switch action {
     case .start: "play.fill"
-    case .showStandings: "list.number"
-    case .nextQuestion: "arrow.right"
+    case .nextQuestion: "arrow.forward"
     case .finish: "flag.checkered"
     case .newGame: "arrow.counterclockwise"
     }
@@ -138,38 +121,44 @@ private struct HostActionBar: View {
 
 /// PIN and QR code, for the host's lobby — where everyone else is looking.
 struct JoinCodeCard: View {
+  /// The lobby's lead: the code at its largest.
+  var isHero = false
+
   @Environment(HostController.self) private var host
-  @Environment(\.accent) private var accent
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   var body: some View {
     if let game = host.game {
-      HStack(alignment: .center, spacing: 18) {
-        VStack(alignment: .leading, spacing: 8) {
+      // The QR code goes under the code at accessibility sizes, rather than
+      // squeezing it into a column beside.
+      let layout = typeSize.isAccessibilitySize
+        ? AnyLayout(VStackLayout(alignment: .leading, spacing: Space.l))
+        : AnyLayout(HStackLayout(alignment: .center, spacing: Space.l))
+      layout {
+        VStack(alignment: .leading, spacing: Space.s) {
           Text("Join code")
-            .terminalStyle(.caption)
+            .textRole(.label)
             .foregroundStyle(.secondary)
           Text(verbatim: game.pin)
-            .font(.mono(size: 44, weight: .heavy))
-            .tracking(6)
-            .foregroundStyle(accent)
-            .shadow(color: accent.opacity(0.4), radius: 10)
+            .textRole(.display(isHero ? .pinLarge : .pin))
+            .foregroundStyle(.themeAccent)
+            .glow(isHero ? .hero : .figure)
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
             .accessibilityLabel(Text("PIN \(game.pin.map(String.init).joined(separator: " "))"))
           Text(host.lanAddress == nil ? "Turn on Wi-Fi or Personal Hotspot so others can join" : "Scan, or find \(host.gameName) in the app")
-            .terminalStyle(.caption2)
-            .foregroundStyle(host.lanAddress == nil ? Color.broadcastGold : .secondary)
+            .textRole(.labelSmall)
+            .foregroundStyle(host.lanAddress == nil ? AnyShapeStyle(.warning) : AnyShapeStyle(.secondary))
             .fixedSize(horizontal: false, vertical: true)
         }
         Spacer(minLength: 0)
         if let link = host.joinLink {
           QRCodeView(payload: link.url.absoluteString)
-            .frame(width: 104, height: 104)
+            .frame(width: Size.qrCard, height: Size.qrCard)
         }
       }
-      .padding(18)
-      .background(.white.opacity(0.035), in: .rect(cornerRadius: 16))
-      .overlay {
-        RoundedRectangle(cornerRadius: 16).strokeBorder(.white.opacity(0.1), lineWidth: 1)
-      }
+      .padding(Space.l)
+      .panel()
     }
   }
 }
@@ -177,38 +166,36 @@ struct JoinCodeCard: View {
 /// The join code at full size, for holding the phone up to the room.
 private struct JoinCodeSheet: View {
   @Environment(HostController.self) private var host
-  @Environment(\.accent) private var accent
 
   var body: some View {
-    VStack(spacing: 24) {
+    VStack(spacing: Space.xl) {
       Text(verbatim: host.gameName)
-        .terminalStyle(.headline, weight: .bold)
+        .textRole(.action)
         .foregroundStyle(.secondary)
+        .multilineTextAlignment(.center)
       if let link = host.joinLink {
         QRCodeView(payload: link.url.absoluteString)
-          .frame(width: 240, height: 240)
+          .frame(width: Size.qrFull, height: Size.qrFull)
       }
-      VStack(spacing: 6) {
+      VStack(spacing: Space.xs) {
         Text("PIN")
-          .terminalStyle(.caption)
+          .textRole(.label)
           .foregroundStyle(.secondary)
         Text(verbatim: host.game?.pin ?? "")
-          .font(.mono(size: 64, weight: .heavy))
-          .tracking(10)
-          .foregroundStyle(accent)
-          .shadow(color: accent.opacity(0.4), radius: 14)
+          .textRole(.display(.pinLarge))
+          .foregroundStyle(.themeAccent)
+          .glow(.hero)
       }
       Text("Open Trivia on the same Wi-Fi, or scan with the Camera.")
-        .font(.subheadline)
+        .textRole(.detail)
         .foregroundStyle(.secondary)
         .multilineTextAlignment(.center)
     }
-    .padding(28)
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background { Backdrop(mood: .idle, accent: accent) }
+    .padding(Space.xxl)
+    .frame(maxWidth: .infinity)
+    .scrollsWhenCrowded()
     .presentationDetents([.large])
     .presentationDragIndicator(.visible)
-    .preferredColorScheme(.dark)
   }
 }
 
@@ -217,23 +204,22 @@ private struct JoinCodeSheet: View {
 /// the way rather than doing it.
 private struct BigScreenGuide: View {
   @Environment(BigScreen.self) private var bigScreen
-  @Environment(\.accent) private var accent
   @Environment(\.dismiss) private var dismiss
 
   var body: some View {
     NavigationStack {
       List {
         Section {
-          HStack(spacing: 12) {
-            StatusDot(color: bigScreen.isConnected ? accent : .secondary, isPulsing: !bigScreen.isConnected)
+          Label {
             Text(bigScreen.isConnected ? "The game is on the TV" : "No TV yet")
-              .font(.body.weight(.semibold))
+              .textRole(.bodyEmphasis)
+          } icon: {
+            StatusDot(bigScreen.isConnected ? .online : .connecting)
           }
-          .animation(.smooth, value: bigScreen.isConnected)
+          .motion(.settle, value: bigScreen.isConnected)
         } footer: {
           Text("The TV shows the join code, each question with its clock and answers, the reveal and the standings. Your phone keeps the controls, and your own answers.")
         }
-        .listRowBackground(RowBackground())
 
         Section {
           Label("Open Control Center and tap Screen Mirroring.", systemImage: "rectangle.on.rectangle")
@@ -242,10 +228,7 @@ private struct BigScreenGuide: View {
         } header: {
           SectionHeader("Connect a TV")
         }
-        .listRowBackground(RowBackground())
       }
-      .scrollContentBackground(.hidden)
-      .background { Backdrop(mood: .idle, accent: accent) }
       .navigationTitle("Show on a TV")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -253,14 +236,12 @@ private struct BigScreenGuide: View {
       }
     }
     .presentationDetents([.medium, .large])
-    .preferredColorScheme(.dark)
   }
 }
 
 /// Everyone in the game, with the host's power to remove them.
 private struct PlayersSheet: View {
   @Environment(HostController.self) private var host
-  @Environment(\.accent) private var accent
   @Environment(\.dismiss) private var dismiss
 
   var body: some View {
@@ -268,38 +249,15 @@ private struct PlayersSheet: View {
       List {
         if let game = host.game {
           ForEach(game.players) { player in
-            let isHost = host.isHost(player)
-            HStack(spacing: 12) {
-              StatusDot(color: player.isConnected ? accent : .secondary)
-              Text(verbatim: player.nickname)
-                .font(.body.weight(isHost ? .bold : .regular))
-              if isHost {
-                Text("You")
-                  .terminalStyle(.caption2, weight: .bold)
-                  .foregroundStyle(accent)
+            PlayerRow(player: player, isHost: host.isHost(player))
+              .swipeActions {
+                if !host.isHost(player) {
+                  Button("Remove", systemImage: "person.fill.xmark", role: .destructive) { host.kick(player) }
+                }
               }
-              if !player.isConnected {
-                Text("Away")
-                  .terminalStyle(.caption2)
-                  .foregroundStyle(.tertiary)
-              }
-              Spacer()
-              Text(verbatim: "\(player.score.grouped)")
-                .font(.mono(.body, weight: .semibold))
-                .foregroundStyle(.secondary)
-            }
-            .listRowBackground(RowBackground())
-            .swipeActions {
-              if !isHost {
-                Button("Remove", systemImage: "person.fill.xmark", role: .destructive) { host.kick(player) }
-                  .tint(Color.broadcastRed)  // not the accent: this is destructive
-              }
-            }
           }
         }
       }
-      .scrollContentBackground(.hidden)
-      .background { Backdrop(mood: .idle, accent: accent) }
       .overlay {
         if host.game?.players.isEmpty ?? true {
           ContentUnavailableView("Nobody Yet", systemImage: "person.2", description: Text("Players appear here as they join."))
@@ -311,7 +269,35 @@ private struct PlayersSheet: View {
         ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
       }
     }
-    .preferredColorScheme(.dark)
+  }
+}
+
+/// A player in a list: who, whether they're here, and their score.
+struct PlayerRow: View {
+  let player: HostedGame.Player
+  let isHost: Bool
+
+  var body: some View {
+    HStack(spacing: Space.m) {
+      StatusDot(player.isConnected ? .online : .idle)
+      Text(verbatim: player.nickname)
+        .textRole(isHost ? .bodyEmphasis : .body)
+      if isHost {
+        Text("You")
+          .textRole(.labelSmall)
+          .foregroundStyle(.themeAccent)
+      }
+      if !player.isConnected {
+        Text("Away")
+          .textRole(.labelSmall)
+          .foregroundStyle(.secondary)
+      }
+      Spacer()
+      Text(verbatim: player.score.grouped)
+        .textRole(.figure)
+        .foregroundStyle(.secondary)
+    }
+    .accessibilityElement(children: .combine)
   }
 }
 
@@ -325,8 +311,8 @@ struct QRCodeView: View {
         .interpolation(.none)
         .resizable()
         .scaledToFit()
-        .padding(8)
-        .background(.white, in: .rect(cornerRadius: 12))
+        .padding(Space.s)
+        .background(.white, in: .rect(cornerRadius: Radius.concentric(in: Radius.panel, inset: Space.l)))
         .accessibilityLabel("QR code to join this game")
     }
   }
@@ -337,34 +323,79 @@ struct LeaderboardTable: View {
   let board: Leaderboard
   let playerName: String
 
-  @Environment(\.accent) private var accent
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   private static let visibleRows = 5
 
   var body: some View {
     Readout {
-      ForEach(rows, id: \.self) { row in
+      // By name — unique in a game — so a row keeps its identity as its rank
+      // and score change.
+      ForEach(rows, id: \.nickname) { row in
         let isPlayer = row.nickname.localizedCaseInsensitiveCompare(playerName) == .orderedSame
-        HStack(spacing: 12) {
-          Text(verbatim: row.rank.twoDigits)
-            .font(.mono(.subheadline, weight: .bold))
-            .foregroundStyle(Self.medal(row.rank) ?? .secondary)
-          Text(verbatim: row.nickname)
-            .font(.body.weight(isPlayer ? .bold : .regular))
-            .foregroundStyle(isPlayer ? accent : .primary)
-            .lineLimit(1)
-          if let delta = row.delta, delta != 0 {
-            Text(verbatim: delta > 0 ? "▲\(delta)" : "▼\(-delta)")
-              .font(.mono(.caption, weight: .bold))
-              .foregroundStyle(delta > 0 ? Color.broadcastGreen : Color.broadcastRed)
+        Group {
+          if typeSize.isAccessibilitySize {
+            // No room for four things on a line: the name wraps, and the
+            // score goes under it.
+            VStack(alignment: .leading, spacing: Space.xs) {
+              HStack(alignment: .firstTextBaseline, spacing: Space.m) {
+                rank(row)
+                name(row, isPlayer: isPlayer)
+              }
+              HStack(spacing: Space.m) {
+                delta(row)
+                Spacer(minLength: Space.s)
+                score(row)
+              }
+            }
+          } else {
+            HStack(spacing: Space.m) {
+              rank(row)
+              name(row, isPlayer: isPlayer)
+                .lineLimit(1)
+              delta(row)
+              Spacer(minLength: Space.s)
+              score(row)
+            }
           }
-          Spacer(minLength: 8)
-          Text(verbatim: row.score.grouped)
-            .font(.mono(.body, weight: .semibold))
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(spoken(row, isPlayer: isPlayer))
       }
     }
+  }
+
+  private func spoken(_ row: Leaderboard.Row, isPlayer: Bool) -> Text {
+    let name = isPlayer ? String(localized: "\(row.nickname) (you)") : row.nickname
+    let standing = String(localized: "\(row.rank), \(name), \(row.score) points")
+    guard let delta = row.delta, delta != 0 else { return Text(verbatim: standing) }
+    return Text(verbatim: standing + ", " + (delta > 0 ? String(localized: "up \(delta)") : String(localized: "down \(-delta)")))
+  }
+
+  private func rank(_ row: Leaderboard.Row) -> some View {
+    Text(verbatim: row.rank.twoDigits)
+      .textRole(.figure)
+      .foregroundStyle(Medal(rank: row.rank).map { AnyShapeStyle($0.color) } ?? AnyShapeStyle(.secondary))
+  }
+
+  private func name(_ row: Leaderboard.Row, isPlayer: Bool) -> some View {
+    Text(verbatim: row.nickname)
+      .textRole(isPlayer ? .bodyEmphasis : .body)
+      .foregroundStyle(isPlayer ? AnyShapeStyle(.themeAccent) : AnyShapeStyle(.primary))
+  }
+
+  @ViewBuilder
+  private func delta(_ row: Leaderboard.Row) -> some View {
+    if let delta = row.delta, delta != 0 {
+      Text(verbatim: delta > 0 ? "▲\(delta)" : "▼\(-delta)")
+        .textRole(.figureSmall)
+        .foregroundStyle(delta > 0 ? AnyShapeStyle(.success) : AnyShapeStyle(.danger))
+    }
+  }
+
+  private func score(_ row: Leaderboard.Row) -> some View {
+    Text(verbatim: row.score.grouped)
+      .textRole(.figure)
   }
 
   /// The top five, plus the player if they're further down.
@@ -375,13 +406,10 @@ struct LeaderboardTable: View {
     else { return top }
     return top + [mine]
   }
-
-  static func medal(_ rank: Int) -> Color? {
-    switch rank {
-    case 1: .broadcastGold
-    case 2: .broadcastGreen
-    case 3: AnswerStyle.b.color
-    default: nil
-    }
-  }
 }
+
+#if DEBUG
+#Preview("Players") { ScreenPreview(.players) }
+#Preview("Join code") { ScreenPreview(.joinCode) }
+#Preview("Show on a TV") { ScreenPreview(.tvGuide) }
+#endif

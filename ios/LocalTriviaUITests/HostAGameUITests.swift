@@ -24,22 +24,23 @@ final class HostAGameUITests: XCTestCase {
     XCTAssertTrue(app.buttons["Start Hosting"].waitForExistence(timeout: 10))
 
     // The round is kept between launches: start from an empty one.
-    let deleteAll = app.buttons["Delete All…"]
-    if deleteAll.exists {
-      deleteAll.tap()
-      app.buttons["Delete All Questions"].tap()
-    }
+    let deleteAll = app.buttons["Delete All"]
+    if deleteAll.exists { deleteAll.tap() }
 
     app.buttons["Write a Question"].tap()
     app.field("What's the question?").typeIn("Which planet has the most moons?")
     for (letter, answer) in zip(["A", "B", "C", "D"], ["Saturn", "Jupiter", "Uranus", "Neptune"]) {
       app.field("Answer \(letter)").typeIn(answer)
     }
-    app.buttons["Save"].tap()
+    // No answer is right until the host says so.
+    app.buttons["Mark A as the right answer"].tap()
+    // It saves on the way out: no Save button.
+    app.navigationBars["New Question"].buttons.firstMatch.tap()
     capture(app, "2 Round")
 
     app.buttons["Start Hosting"].tap()
-    XCTAssertTrue(app.element(containing: "You're in").waitForExistence(timeout: 15), "never took a seat in its own game")
+    // The host's lobby lists who's in; the host's own seat makes one.
+    XCTAssertTrue(app.element(containing: "In the game · 1").waitForExistence(timeout: 15), "never took a seat in its own game")
     capture(app, "3 Lobby")
 
     // The TV guide: how to put the game on one, and that none is connected yet.
@@ -59,8 +60,8 @@ final class HostAGameUITests: XCTestCase {
     XCTAssertTrue(verdict.waitForExistence(timeout: 10), "no result, or not the right one")
     capture(app, "5 Result")
 
-    app.button(beginningWith: "Show Standings").tap()
-    XCTAssertTrue(app.element(containing: "Your position").waitForExistence(timeout: 10))
+    // The reveal moves to the standings by itself.
+    XCTAssertTrue(app.element(containing: "Your position").waitForExistence(timeout: 15))
     capture(app, "6 Standings")
 
     app.button(beginningWith: "Final Results").tap()

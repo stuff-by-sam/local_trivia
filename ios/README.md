@@ -14,6 +14,12 @@ On one phone, tap **Host a Game**, write or import a round, and start hosting.
 On the others, the game shows up on the join screen by itself. Type the PIN
 from the host's phone; the fourth digit joins.
 
+Strings live in `LocalTrivia/Localizable.xcstrings`. Xcode adds new ones when
+it builds; command-line builds don't, so run `scripts/sync-strings.sh`, which
+extracts them from the app and the DesignSystem package the same way. Plurals
+use automatic grammar agreement (`^[3 question](inflect: true)`), not plural
+variants.
+
 ## What makes it fast
 
 - **No typing an address.** A hosting phone advertises `_trivia-phone._tcp`
@@ -38,22 +44,21 @@ from the host's phone; the fourth digit joins.
 
 ## Design
 
-A broadcast terminal, built from native parts.
+A broadcast terminal, built from native parts. The full language — colour
+roles, type, space, motion, haptics, components — is in [DESIGN.md](DESIGN.md),
+and every screen is built from the `DesignSystem` package that codifies it.
 
 - **Two typefaces, with separate jobs.** SF Pro carries content: questions,
   answers, names. SF Mono is the game's own voice: labels, figures, the clock,
-  status lines (`Typography.swift`). That split makes it read as a terminal
+  status lines (`TextRole`). That split makes it read as a terminal
   without asking anyone to read a paragraph in mono.
-- **Glass is for the control layer.** Answers, inputs, buttons, and one top bar
-  whose chips keep their glass identity from screen to screen, so the leading
-  chip morphs from `● ROBIN` to `Q 01/12 · TECH` and back. Content goes in
-  hairline readout boxes rather than glass, which is Apple's guidance and what
-  keeps the glass meaningful.
-- **It opens in the dark.** The launch screen is plain black (the app is
-  dark-only, so it never flashes white), and the answer set dots on in the
-  middle — circle, triangle, square, diamond — before the game fades up.
-  That's an overlay, not a gate: the app is already finding games under it,
-  and it takes no touches.
+- **Glass is for the control layer.** Answers, inputs, buttons, and the
+  system toolbar: `● ROBIN` or `Q 01/12` on one side, the clock and the host's
+  menu on the other. Content goes in hairline readout boxes rather than
+  glass, which is Apple's guidance and what keeps the glass meaningful.
+- **It opens in the dark, and straight into the game.** The launch screen is
+  plain black (the app is dark-only, so it never flashes white), and the join
+  screen comes up under it with nothing in between.
 - **One light source.** The backdrop is near-black with a single phosphor glow
   and faint scanlines for the glass to refract. Its hue follows the game:
   the accent while playing, green or red at the reveal, gold on the podium.
@@ -74,10 +79,21 @@ A broadcast terminal, built from native parts.
   messages sit under the field they concern, where the keyboard can't hide them.
 - **Accessible by construction.** At
   accessibility text sizes the round becomes one scrolling column, readouts
-  stack their label above their value, and chrome stops growing at a sensible
-  cap. The lit answer switches to dark ink for contrast, results are announced
-  to VoiceOver, leaving asks for confirmation, and Reduce Motion stops the
-  cursor blinking and swaps blur transitions for cross-fades.
+  stack their label above their value, and any screen that no longer fits
+  scrolls rather than cutting text off; pinned bars stop growing at AX1 and
+  offer the Large Content Viewer instead. The lit answer switches to dark ink
+  for contrast; results and join errors are announced to VoiceOver, which
+  hears names as they're written, the clock's time, and a standing as one
+  sentence. Right-to-left mirrors everything but the wordmark and the answer
+  keys. If the camera's off for Trivia, the QR scanner says so and how to
+  turn it on, rather than disappearing. Increase
+  Contrast firms up every hairline and drops the backdrop's texture; Reduce
+  Transparency makes panels opaque; Reduce Motion stops the cursor blinking,
+  stills the shakes and swaps blur transitions for cross-fades.
+- **Undo, not "are you sure?"** Leaving a game, or deleting questions, happens
+  at once and offers Undo for a few seconds — leaving can be undone because
+  the host keeps a dropped player's seat. The one confirmation left is Stop
+  Hosting, which ends the game on every phone.
 
 ## Hosting from a phone
 
@@ -85,14 +101,20 @@ The only way to host: **Host a Game** on the join screen turns the phone into
 the server, and its owner plays too.
 
 - **Set up the round** — name the game, write questions (four answers, tap a
-  key to mark the right one, optional category and time limit) or import a CSV
-  in the web console's format, reorder and include/exclude, and set the
+  key to mark the right one — there's no default — optional category and time
+  limit; Return moves to the next field, and it saves as you go), draft them
+  with Apple Intelligence on phones that have it (each draft is checked again
+  on its own, and one with a second right answer, a wrong key or a question
+  already in the round is left out), or import a CSV in the web
+  console's format; reorder and include/exclude, and set the
   scoring: top points, time per question, a floor for slow correct answers,
   points for wrong answers, shuffle and auto-advance — with a live preview of
   what an answer earns. The round is kept on the phone between games.
-- **Run it** — the lobby shows the join code and a QR code; the action bar
-  offers the next move (Start Game, Show Standings, Next Question, Final
-  Results, Play Again); the menu has players (swipe to remove), the join code
+- **Run it** — the host's lobby leads with the join code and QR code, and
+  shows who's in; the action bar offers the next move (Start Game, Next
+  Question, Final Results, Play Again). The standings follow each reveal by
+  themselves after five seconds, so a round asks the host for one tap per
+  question. The menu has players (swipe to remove), the join code
   at full size, End Round / Skip / End Game, Edit Round between games, and
   Stop Hosting, which tells every phone the game is over. The game's name and
   the host's own name are fixed once hosting starts.
@@ -133,8 +155,8 @@ leave button appears on every screen.
 
 ## Themes and icons
 
-Optional, and out of the way: a quiet **Themes & Icons** link under Host a
-Game on the join screen, and nowhere in a game. Everything is a one-time,
+Optional, and out of the way: a **Themes & Icons** button in the join
+screen's toolbar, and nowhere in a game. Everything is a one-time,
 non-consumable in-app purchase — each theme and icon on its own, or
 **Everything** in one go. Phosphor and the classic icon are free.
 
@@ -210,6 +232,10 @@ surface on the network: the host's controls act on the game in-process.
   discards the old token on its first launch.
 - **No analytics, accounts, entitlements or third-party code.** Log lines
   record error kinds and codes, never tokens, PINs, nicknames or addresses.
+- **Drafting stays on the phone.** Questions drafted with Apple Intelligence
+  use the on-device model only (`SystemLanguageModel`); the topic and the
+  drafts never leave the phone, and the host reviews every answer key before
+  a draft joins the round.
 - **Purchases go through StoreKit, and nothing else leaves.** The app learns
   which themes and icons the Apple Account owns, as signed transactions it
   verifies, and nothing about the player. The owned list cached in
@@ -223,6 +249,7 @@ surface on the network: the host's controls act on the game in-process.
 ## Layout
 
 ```
+DesignSystem/               The design language as a Swift package: tokens, backdrop, components, previews
 LocalTrivia/
   Networking/
     Wire.swift              Engine.IO v4 / Socket.IO v5 framing — pure, no I/O
@@ -238,12 +265,13 @@ LocalTrivia/
     HostServer.swift        Socket.IO over WebSocket (NWListener) + Bonjour
     HostController.swift    Hosting lifecycle, and the host's own seat
     HostModels.swift        The round: questions, rules, scoring, on-device storage
+    QuestionDrafter.swift   Questions drafted on a topic by the on-device model, for review
     CSVImport.swift         public/shared/csv.js, ported
     JoinLink.swift          localtrivia:// join links, QR codes, the LAN address
   BigScreen/
     BigScreen.swift         A connected TV gets its own scene, not a mirror of the phone
     BigScreenView.swift     The game for the room: lobby, question, reveal, standings, podium
-  Design/                   Typography, answer palette, themes and their textures, backdrop, shared components
+  Design/                   The in-game toolbar; screen states for previews; three prototype directions (debug builds)
   Store/
     Shop.swift              StoreKit 2: products, verified entitlements, buying, restoring
     ShopView.swift          Themes & Icons: try on, buy, wear
@@ -287,6 +315,13 @@ unlocks nothing until it's approved, a cancelled purchase says nothing and a
 failed one says why, the cached list gives way to StoreKit's, and every
 alternate icon is built into the app under the name the shop asks for.
 
+`StringCatalogTests` resolves every plural written with grammar agreement
+through the app's bundle, as the screens do, and fails if one no longer
+agrees with its number.
+
+`DesignSystemLintTests` fails on any colour, size, radius, curve, haptic or
+shadow written into the app instead of taken from the `DesignSystem` package.
+
 `ThemeTests` holds every theme to WCAG AAA contrast — its accent on its
 ink, and dark text on a control lit with the accent — and checks each theme
 for sale has an icon to match.
@@ -295,6 +330,27 @@ for sale has an icon to match.
 question, start hosting, play it as the host, standings, podium, stop hosting.
 It needs nothing but the simulator, so it runs with everything else.
 Screenshots of every phase are attached to the test result.
+
+`GlassContrastUITests` measures, from the pixels on screen, the text on the
+glass a player needs most — each answer chosen, the primary action, the undo
+toast — against the glass behind it, in all ten themes, and fails below
+4.5:1. Glass also answers to the phone's Liquid Glass slider, Reduce
+Transparency and Increase Contrast, which a test can't set, so it measures
+under whatever the simulator is set to: run it once per setting.
+
+`AccessibilityUITests` walks every screen one phone can reach three times —
+at AX5, with Increase Contrast, and right-to-left — attaching a screenshot
+and the element tree VoiceOver reads for each, and fails on any clipped
+text, unlabelled element or undersized target the accessibility audit finds.
+UI tests can't open Settings, so `-increaseContrast YES` (debug builds) gives
+the app the trait Increase Contrast gives it.
+
+Every screen has previews of its main states — a chosen answer, a wrong
+PIN, the host's standings, a TV board — from in-memory models: a store fed
+the events a host sends, the engine talking straight to the host's own
+store, a round that's never saved (`Design/ScreenStates.swift`). A debug
+build opens any of them directly with `-screen <state>` (and `-theme
+<theme>`), for tests that need a screen a single phone can't hold still on.
 
 ## Protocol
 

@@ -1,50 +1,39 @@
+import DesignSystem
 import SwiftUI
 
-/// Routes the game's phase to a screen, over one shared backdrop and one glass
-/// container, so elements tagged "hero" flow between screens as the game moves.
+/// Routes the game's phase to a screen, in one navigation stack over one
+/// shared backdrop and one glass container, so the answer you chose flows
+/// into its verdict as the game moves.
 struct RootView: View {
   @Environment(GameStore.self) private var store
   @Environment(GameBrowser.self) private var browser
   @Environment(HostController.self) private var host
   @Environment(Shop.self) private var shop
   @Environment(\.scenePhase) private var scenePhase
-  @Environment(\.accessibilityReduceMotion) private var reduceMotion
-  @Environment(\.accent) private var accent
   @Namespace private var glass
-  /// Only once: coming back to the app goes straight to the game.
-  @State private var isLaunching = true
 
   var body: some View {
     @Bindable var host = host
-    ZStack {
-      Backdrop(mood: mood, accent: accent)
-      // Tighter than any gap between controls: the four answers must read as
-      // four targets, not melt into one column.
-      GlassEffectContainer(spacing: 6) {
-        screen
-          .id(store.phase.screen)
-          .transition(reduceMotion ? AnyTransition.opacity : AnyTransition(.blurReplace))
-          // On iPad, keep the phone-sized column the game is designed for.
-          .frame(maxWidth: 540)
-          .frame(maxWidth: .infinity)
-      }
-    }
-    .overlay {
-      if isLaunching {
-        LaunchView {
-          withAnimation(.easeOut(duration: 0.4)) { isLaunching = false }
+    NavigationStack {
+      Group {
+        if store.phase == .join {
+          // Outside the glass container: on iOS 27.0, glass buttons in a
+          // safe-area bar inside one don't receive taps, and the join screen's
+          // actions live in one. Nothing on it morphs anyway.
+          column
+        } else {
+          // Tighter than any gap between controls: the four answers must read
+          // as four targets, not melt into one column.
+          GlassEffectContainer(spacing: Space.xs) { column }
         }
-        .transition(.opacity)
       }
+      .containerBackground(for: .navigation) { Backdrop(mood: mood) }
     }
     .sheet(item: $host.sheet) { HostSheetView(sheet: $0) }
-    .animation(reduceMotion ? .easeInOut(duration: 0.2) : .smooth(duration: 0.5), value: store.phase.screen)
-    .sensoryFeedback(trigger: store.phase.screen) { _, _ in feedback }
-    .tint(accent)
-    .preferredColorScheme(.dark)
+    .motion(.screen, value: store.phase.screen)
+    .haptic(trigger: store.phase.screen) { _, _ in haptic }
     .task {
       store.start()
-      browser.start()
       shop.start()
     }
     .onChange(of: browser.games) { _, games in store.discovered(games) }
@@ -68,19 +57,31 @@ struct RootView: View {
     .onChange(of: store.isInGame, initial: true) { _, inGame in
       // A phone that auto-locks between questions misses the next one.
       UIApplication.shared.isIdleTimerDisabled = inGame
+      // Nothing in a game uses the list of games, so stop looking for them
+      // until the player's back at the join screen.
+      if inGame { browser.stop() } else { browser.start() }
     }
+  }
+
+  private var column: some View {
+    screen
+      .id(store.phase.screen)
+      .screenTransition()
+      // On iPad, keep the phone-sized column the game is designed for.
+      .frame(maxWidth: Size.column)
+      .frame(maxWidth: .infinity)
   }
 
   @ViewBuilder
   private var screen: some View {
     switch store.phase {
     case .join: JoinView()
-    case .lobby: LobbyView(glass: glass)
-    case .spectating: SpectatingView(glass: glass)
+    case .lobby: LobbyView()
+    case .spectating: SpectatingView()
     case .question(let round): QuestionView(round: round, glass: glass)
     case .result(let outcome): ResultView(outcome: outcome, glass: glass)
-    case .standings(let standing): StandingView(standing: standing, glass: glass)
-    case .final(let standing): FinalView(standing: standing, glass: glass)
+    case .standings(let standing): StandingView(standing: standing)
+    case .final(let standing): FinalView(standing: standing)
     }
   }
 
@@ -98,17 +99,17 @@ struct RootView: View {
     }
   }
 
-  private var feedback: SensoryFeedback? {
+  private var haptic: Haptic? {
     switch store.phase {
-    case .lobby: .success
-    case .question: .start
+    case .lobby: .joined
+    case .question: .questionStart
     case .result(let outcome):
       switch ResultView.Verdict(outcome.result) {
-      case .correct: .success
-      case .wrong: .error
-      case .missed: .warning
+      case .correct: .correct
+      case .wrong: .wrong
+      case .missed: .missed
       }
-    case .final: .success
+    case .final: .correct
     case .join, .spectating, .standings: nil
     }
   }
@@ -117,9 +118,6 @@ struct RootView: View {
 /// Glass identities shared across screens: an element with the same identity
 /// on the outgoing and incoming screen morphs from one into the other.
 nonisolated enum GlassID: Hashable, Sendable {
-  /// The top bar's chips, which persist from screen to screen.
-  case leadingChip
-  case trailingChip
   case answer(Int)
   /// The verdict badge when there was no answer to flow from.
   case hero

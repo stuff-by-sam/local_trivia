@@ -59,6 +59,11 @@ final class HostedGame {
   static let wrongPINLimit = 5
   static let wrongPINLockout: Duration = .seconds(60)
   static let autoAdvanceDelay: Duration = .seconds(5)
+  /// How long a reveal holds before the standings come up on their own —
+  /// long enough to take in your result and how the room voted. Unlike the
+  /// web game, which waits for the operator, a phone host is also playing,
+  /// so this step never asks them for a tap.
+  static let revealHold: Duration = .seconds(5)
 
   let pin: String
   private(set) var state: ServerState = .lobby
@@ -352,7 +357,7 @@ final class HostedGame {
         deliver(.personalResult(result), .connection(connection))
       }
     }
-    scheduleAdvance { $0.showLeaderboard() }
+    scheduleAdvance(always: true, after: Self.revealHold) { $0.showLeaderboard() }
   }
 
   func showLeaderboard() {
@@ -389,10 +394,11 @@ final class HostedGame {
     }
   }
 
-  private func scheduleAdvance(_ step: @escaping (HostedGame) -> Void) {
-    guard rules.autoAdvance else { return }
+  /// Moves on after `delay` — only with auto-advance on, unless `always`.
+  private func scheduleAdvance(always: Bool = false, after delay: Duration = autoAdvanceDelay, _ step: @escaping (HostedGame) -> Void) {
+    guard always || rules.autoAdvance else { return }
     advanceTimer = Task { [weak self] in
-      try? await Task.sleep(for: Self.autoAdvanceDelay)
+      try? await Task.sleep(for: delay)
       guard !Task.isCancelled, let self else { return }
       step(self)
     }

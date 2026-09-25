@@ -280,6 +280,38 @@ import Testing
     #expect(store.phase == .join)
   }
 
+  @Test func undoingALeaveTakesTheSeatBack() async throws {
+    let (store, transport) = makeStore()
+    store.connect(to: lan)
+    store.handle(.connected)
+    joinedLobby(store, token: "tok-9")
+
+    store.leave()
+    #expect(store.phase == .join)
+    #expect(store.leftGame == lan.name)
+
+    store.undoLeave()
+    #expect(store.leftGame == nil)
+    #expect(store.isRejoining, "it has the seat's token again, waiting to resume")
+    store.handle(.connected)
+    #expect(try await sent(by: transport(), count: 1) == [.resume(token: "tok-9")])
+  }
+
+  @Test func joiningAgainForgetsTheSeatLeft() async throws {
+    let (store, transport) = makeStore()
+    store.nickname = "Robin"
+    store.connect(to: lan)
+    store.handle(.connected)
+    joinedLobby(store, token: "tok-9")
+
+    store.leave()
+    store.handle(.connected)
+    store.join(pin: "4821")
+    #expect(store.leftGame == nil)
+    store.undoLeave()
+    #expect(try await sent(by: transport(), count: 1) == [.join(pin: "4821", nickname: "Robin")])
+  }
+
   // MARK: - Playing
 
   @Test func playsAQuestionThroughToTheStandings() async throws {

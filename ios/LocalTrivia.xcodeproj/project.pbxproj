@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A1D5E5C0000000000000A004 /* DesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = A1D5E5C0000000000000A002 /* DesignSystem */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		551F0B0BB881C28D721A4C74 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +28,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A1D5E5C0000000000000A006 /* DesignSystem */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = DesignSystem; sourceTree = "<group>"; };
 		66FD7F39564190D02825756D /* LocalTrivia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LocalTrivia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D89BA1FCB93A58DEE4EE1850 /* LocalTriviaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LocalTriviaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		40F7949C97F91E799B4564CD /* LocalTriviaUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LocalTriviaUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -66,6 +71,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1D5E5C0000000000000A004 /* DesignSystem in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -89,6 +95,7 @@
 		806ED167427BF8626DD9B535 = {
 			isa = PBXGroup;
 			children = (
+				A1D5E5C0000000000000A006 /* DesignSystem */,
 				DFD11111692B7E97E3708955 /* LocalTrivia */,
 				BCBF6AF555B3D3434053E86C /* LocalTriviaTests */,
 				B6CF3F73DB7A593F54C0248E /* LocalTriviaUITests */,
@@ -126,6 +133,7 @@
 			);
 			name = LocalTrivia;
 			packageProductDependencies = (
+				A1D5E5C0000000000000A002 /* DesignSystem */,
 			);
 			productName = LocalTrivia;
 			productReference = 66FD7F39564190D02825756D /* LocalTrivia.app */;
@@ -209,6 +217,9 @@
 			);
 			mainGroup = 806ED167427BF8626DD9B535;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A1D5E5C0000000000000A001 /* XCLocalSwiftPackageReference "DesignSystem" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7BAC04F9FF4B47F5D138438B /* Products */;
 			projectDirPath = "";
@@ -580,6 +591,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		A1D5E5C0000000000000A001 /* XCLocalSwiftPackageReference "DesignSystem" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = DesignSystem;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1D5E5C0000000000000A002 /* DesignSystem */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DesignSystem;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = DB9B780F713968FD3FAF9C39 /* Project object */;
 }

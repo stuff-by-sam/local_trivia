@@ -24,7 +24,7 @@ final class HostController {
 
   /// The one thing to do next, for the host's action bar.
   enum Action: Equatable {
-    case start, showStandings, nextQuestion, finish, newGame
+    case start, nextQuestion, finish, newGame
   }
 
   /// A sheet opened from the host's menu (see `HostSheetView`).
@@ -33,7 +33,14 @@ final class HostController {
     var id: String { rawValue }
   }
 
-  let library: HostLibrary
+  /// The round, read from disk the first time it's needed — opening Host a
+  /// Game — rather than on the launch path.
+  var library: HostLibrary {
+    if let storedLibrary { return storedLibrary }
+    let library = HostLibrary()
+    storedLibrary = library
+    return library
+  }
   private(set) var status: Status = .idle
   private(set) var game: HostedGame?
   /// What the game is advertised as. Fixed when hosting starts: it's the name
@@ -56,6 +63,7 @@ final class HostController {
     }
   }
 
+  @ObservationIgnored private var storedLibrary: HostLibrary?
   @ObservationIgnored private var server: HostServer?
   @ObservationIgnored private var outbox: AsyncStream<(String, Recipients)>.Continuation?
   @ObservationIgnored private var pump: Task<Void, Never>?
@@ -76,8 +84,8 @@ final class HostController {
   /// `advertises: false` keeps the game off Bonjour (tests).
   @ObservationIgnored private let advertises: Bool
 
-  init(library: HostLibrary = HostLibrary(), advertises: Bool = true) {
-    self.library = library
+  init(library: HostLibrary? = nil, advertises: Bool = true) {
+    storedLibrary = library
     self.advertises = advertises
   }
 
@@ -164,8 +172,8 @@ final class HostController {
     guard let game else { return nil }
     switch game.state {
     case .lobby: return .start
-    case .questionActive: return nil
-    case .reveal: return .showStandings
+    // The reveal moves to the standings by itself (`HostedGame.revealHold`).
+    case .questionActive, .reveal: return nil
     case .leaderboard: return game.isLastQuestion ? .finish : .nextQuestion
     case .podium: return .newGame
     }
@@ -184,7 +192,6 @@ final class HostController {
         case .noPlayers: actionError = String(localized: "Nobody's in the game yet.")
         }
       }
-    case .showStandings: game.showLeaderboard()
     case .nextQuestion, .finish: game.next()
     case .newGame: game.newGame()
     }
@@ -207,6 +214,7 @@ final class HostController {
   /// stops. Ask for time on the way out so a quick app switch doesn't end it,
   /// and re-open the listener on the way back if it was torn down.
   func appDidEnterBackground() {
+    storedLibrary?.flush(waiting: true)
     guard isHosting, backgroundTask == .invalid else { return }
     backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "Hosting a game") { [weak self] in
       self?.endBackgroundTask()
@@ -265,3 +273,57 @@ final class HostController {
     }
   }
 }
+
+#if DEBUG
+extension HostController {
+  enum PreviewStage { case lobby, standings, final }
+
+  /// Hosting in memory, for previews: the engine with `others` seated
+  /// beside the host, and the host's own store hearing it directly — no
+  /// server and no network. Past the lobby, everyone answers the first
+  /// question, a second or so apart, and the game stops at `stage`.
+  func startPreview(seating store: GameStore, others: [String], round: [HostQuestion], playing stage: PreviewStage = .lobby) {
+    library.questions = round
+    gameName = library.advertisedName
+    lanAddress = "192.168.1.20"
+    let clock = PreviewClock()
+    let game = HostedGame(pin: "4821", deliver: { [weak store] event, audience in
+      switch audience {
+      case .connection(let id) where id == 0: store?.apply(event)
+      case .players, .everyone: store?.apply(event)
+      case .connection: break
+      }
+    }, uptime: { clock.now })
+    self.game = game
+    status = .live(port: UInt16(GameServer.defaultPort))
+    seat = store
+    if let own = GameServer(address: "127.0.0.1:\(GameServer.defaultPort)", name: gameName) {
+      store.connect(to: own)
+      store.handle(.connected)
+    }
+    for (connection, name) in ([store.nickname] + others).enumerated() {
+      game.attach(connection, from: "192.168.1.\(connection + 30)")
+      game.receive(.join(pin: game.pin, nickname: name), from: connection)
+    }
+    guard stage != .lobby, let first = library.playable.first else { return }
+    var rules = library.rules
+    rules.shuffle = false
+    try? game.start(questions: library.playable, rules: rules)
+    for connection in 0...others.count {
+      clock.now += .milliseconds(1_300)
+      let pick = connection == 3 ? (first.correct + 1) % 4 : first.correct
+      game.receive(.submitAnswer(questionId: HostedGame.questionID(for: 0), optionIndex: pick), from: connection)
+    }
+    switch stage {
+    case .lobby: break
+    case .standings: game.showLeaderboard()
+    case .final: game.endGame()
+    }
+  }
+}
+
+/// The engine's clock in a preview: it moves when told to.
+private final class PreviewClock {
+  var now: Duration = .zero
+}
+#endif
