@@ -123,7 +123,9 @@ public struct AnswerButton: View {
     .disabled(state == .dimmed)
     .allowsHitTesting(state == .open)
     .motion(.snap, value: state)
-    .accessibilityLabel(Text("\(style.letter), \(style.shapeName): \(text)"))
+    // Verbatim: its parts are localized already, and a key of only
+    // punctuation can't become a string catalog symbol.
+    .accessibilityLabel(Text(verbatim: "\(style.letter), \(String(localized: style.shapeName)): \(text)"))
     .accessibilityAddTraits(state == .chosen ? .isSelected : [])
   }
 

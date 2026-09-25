@@ -5,7 +5,7 @@
 
     },
     "%@ (you)" : {
-
+      "extractionState" : "manual"
     },
     "%@ icon" : {
 
@@ -21,16 +21,6 @@
     },
     "%@ · UNREACHABLE" : {
 
-    },
-    "%@, %@: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, %2$@: %3$@"
-          }
-        }
-      }
     },
     "%lld of %lld answered" : {
       "localizations" : {
@@ -66,13 +56,13 @@
       }
     },
     "1st" : {
-
+      "extractionState" : "manual"
     },
     "2nd" : {
-
+      "extractionState" : "manual"
     },
     "3rd" : {
-
+      "extractionState" : "manual"
     },
     "90s films, the solar system…" : {
 
@@ -81,7 +71,7 @@
 
     },
     "A monochrome tube, warm as an old terminal" : {
-
+      "extractionState" : "manual"
     },
     "A theme dresses this phone, and any TV it puts the game on. Answers keep their colours and shapes on every phone, so B is always the cyan triangle." : {
 
@@ -112,7 +102,7 @@
       }
     },
     "Amber" : {
-
+      "extractionState" : "manual"
     },
     "Answer" : {
 
@@ -139,10 +129,10 @@
 
     },
     "Brushed gold on black, for whoever keeps winning" : {
-
+      "extractionState" : "manual"
     },
     "Brushed titanium: tilt it and the light moves" : {
-
+      "extractionState" : "manual"
     },
     "Buy %@, %@" : {
       "localizations" : {
@@ -173,10 +163,10 @@
 
     },
     "Chalk on slate, still dusty from the last round" : {
-
+      "extractionState" : "manual"
     },
     "Chalkboard" : {
-
+      "extractionState" : "manual"
     },
     "Changes Trivia's icon on your Home Screen." : {
 
@@ -191,13 +181,13 @@
 
     },
     "Cobalt" : {
-
+      "extractionState" : "manual"
     },
     "Connect a TV" : {
 
     },
     "Cool blue on navy, over a vector display's grid" : {
-
+      "extractionState" : "manual"
     },
     "Correct" : {
 
@@ -324,16 +314,16 @@
 
     },
     "Glass" : {
-
+      "extractionState" : "manual"
     },
     "Gold" : {
-
+      "extractionState" : "manual"
     },
     "Hold tight" : {
 
     },
     "Holographic" : {
-
+      "extractionState" : "manual"
     },
     "Host" : {
 
@@ -366,7 +356,7 @@
 
     },
     "Iridescent foil that catches the light as you tilt it" : {
-
+      "extractionState" : "manual"
     },
     "JOIN THE HOST'S WI-FI" : {
 
@@ -390,7 +380,7 @@
 
     },
     "Liquid colour under clear glass, pooling as you tilt" : {
-
+      "extractionState" : "manual"
     },
     "Local Network Settings" : {
 
@@ -472,7 +462,7 @@
 
     },
     "Noir" : {
-
+      "extractionState" : "manual"
     },
     "Not available right now" : {
 
@@ -517,7 +507,7 @@
 
     },
     "Phosphor" : {
-
+      "extractionState" : "manual"
     },
     "Pick a CSV file to import." : {
 
@@ -578,7 +568,7 @@
 
     },
     "Rank %lld" : {
-
+      "extractionState" : "manual"
     },
     "Reconnecting" : {
 
@@ -663,7 +653,7 @@
 
     },
     "Synthwave" : {
-
+      "extractionState" : "manual"
     },
     "Tap a key to mark the right answer." : {
 
@@ -693,7 +683,7 @@
 
     },
     "The broadcast terminal: green on black" : {
-
+      "extractionState" : "manual"
     },
     "The four-digit PIN on the host's phone." : {
 
@@ -732,7 +722,7 @@
 
     },
     "Titanium" : {
-
+      "extractionState" : "manual"
     },
     "To scan the host's code, allow Camera for Trivia in Settings. Or type the PIN from the host's phone." : {
 
@@ -775,13 +765,13 @@
 
     },
     "Undo" : {
-
+      "extractionState" : "manual"
     },
     "Unranked" : {
-
+      "extractionState" : "manual"
     },
     "Violet on midnight, down to the horizon" : {
-
+      "extractionState" : "manual"
     },
     "Waiting for approval. It'll unlock here once it's approved." : {
 
@@ -815,7 +805,7 @@
 
     },
     "White on black, through a dot-matrix screen" : {
-
+      "extractionState" : "manual"
     },
     "Write a Question" : {
 
@@ -867,10 +857,10 @@
 
     },
     "circle" : {
-
+      "extractionState" : "manual"
     },
     "diamond" : {
-
+      "extractionState" : "manual"
     },
     "down %lld" : {
 
@@ -889,10 +879,10 @@
 
     },
     "square" : {
-
+      "extractionState" : "manual"
     },
     "triangle" : {
-
+      "extractionState" : "manual"
     },
     "up %lld" : {
 
