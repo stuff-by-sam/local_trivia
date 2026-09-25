@@ -228,8 +228,11 @@ final class HostLibrary {
   }
 
   /// Writes pending edits now — when the setup screen closes, or the app
-  /// goes to the background, where a delayed write might never run.
-  func flush() {
+  /// goes to the background, where a delayed write might never run. Going
+  /// to the background, `waiting` holds on until the write is done: the app
+  /// can be suspended the moment this returns.
+  func flush(waiting: Bool = false) {
+    defer { if waiting { Self.writes.sync {} } }
     pendingSave?.cancel()
     pendingSave = nil
     guard isDirty, let fileURL else { return }

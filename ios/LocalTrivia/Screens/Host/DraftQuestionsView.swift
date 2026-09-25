@@ -18,6 +18,8 @@ struct DraftQuestionsView: View {
   /// Drafts asked for but not shown: unusable, possibly wrong, or repeats.
   @State private var leftOut: Int
   @State private var failure: QuestionDrafter.Failure?
+  /// The drafting under way, stopped if the sheet closes first.
+  @State private var drafting: Task<Void, Never>?
   @FocusState private var isTopicFocused: Bool
 
   /// The rest start where a preview wants them; the app passes a round alone.
@@ -94,6 +96,7 @@ struct DraftQuestionsView: View {
       }
       .scrollEdgeEffectStyle(.hard, for: .bottom)
       .onAppear { if drafts.isEmpty { isTopicFocused = true } }
+      .onDisappear { drafting?.cancel() }
     }
   }
 
@@ -106,10 +109,11 @@ struct DraftQuestionsView: View {
     isTopicFocused = false
     isDrafting = true
     failure = nil
-    Task {
+    drafting = Task {
       defer { isDrafting = false }
       do throws(QuestionDrafter.Failure) {
         let result = try await QuestionDrafter.draft(topic: topic, count: count, avoiding: round)
+        guard !Task.isCancelled else { return }
         Motion.settle.perform {
           drafts = result
           left = []

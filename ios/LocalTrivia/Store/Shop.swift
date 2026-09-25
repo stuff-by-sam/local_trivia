@@ -116,7 +116,7 @@ final class Shop {
 
   /// Asks the App Store what's for sale, unless it already answered.
   func loadProductsIfNeeded() async {
-    guard products.isEmpty, availability != .ready else { return }
+    guard availability != .ready else { return }
     await loadProducts()
   }
 

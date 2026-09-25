@@ -129,12 +129,14 @@ enum QuestionDrafter {
   private static let letters = ["A", "B", "C", "D"]
 
   /// Whether the options a check called right, `said`, are just the marked
-  /// one. It may copy an option with its letter ("C. Mercury").
+  /// one. It may copy an option with its letter ("C. Mercury"), or give the
+  /// letter alone ("C").
   static func isOnlyRightOption(_ said: [String], of question: HostQuestion) -> Bool {
     let named = Set(said.map(Fingerprint.words))
     let right = question.options.indices.filter { index in
       let option = Fingerprint.words(in: question.options[index])
-      return named.contains(option) || named.contains(Fingerprint.words(in: "\(letters[index]) \(option)"))
+      let letter = Fingerprint.words(in: letters[index])
+      return named.contains(option) || named.contains(letter) || named.contains("\(letter) \(option)")
     }
     return right == [question.correct]
   }

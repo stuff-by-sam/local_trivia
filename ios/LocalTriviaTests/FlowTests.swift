@@ -36,6 +36,8 @@ struct QuestionDrafterTests {
     #expect(QuestionDrafter.isOnlyRightOption(["Mercury"], of: moons))
     #expect(QuestionDrafter.isOnlyRightOption(["mercury."], of: moons))
     #expect(QuestionDrafter.isOnlyRightOption(["C. Mercury"], of: moons), "copied with its letter")
+    #expect(QuestionDrafter.isOnlyRightOption(["C"], of: moons), "the letter alone")
+    #expect(!QuestionDrafter.isOnlyRightOption(["C", "B"], of: moons), "two letters")
     #expect(!QuestionDrafter.isOnlyRightOption(["Mercury", "Venus"], of: moons), "two right answers")
     #expect(!QuestionDrafter.isOnlyRightOption(["Venus"], of: moons), "the wrong one marked")
     #expect(!QuestionDrafter.isOnlyRightOption([], of: moons), "none right")

@@ -214,7 +214,7 @@ final class HostController {
   /// stops. Ask for time on the way out so a quick app switch doesn't end it,
   /// and re-open the listener on the way back if it was torn down.
   func appDidEnterBackground() {
-    storedLibrary?.flush()
+    storedLibrary?.flush(waiting: true)
     guard isHosting, backgroundTask == .invalid else { return }
     backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "Hosting a game") { [weak self] in
       self?.endBackgroundTask()
