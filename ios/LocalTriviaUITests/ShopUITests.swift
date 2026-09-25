@@ -11,7 +11,8 @@ final class ShopUITests: XCTestCase {
   @MainActor
   func testTriesOnATheme() throws {
     let app = XCUIApplication()
-    app.launchArguments += ["-nickname", "UITest"]
+    // Whatever an earlier run left on, the shop opens wearing the default.
+    app.launchArguments += ["-nickname", "UITest", "-theme", "phosphor"]
     app.launch()
     let allow = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.buttons["Allow"]
     if allow.waitForExistence(timeout: 3) { allow.tap() }
