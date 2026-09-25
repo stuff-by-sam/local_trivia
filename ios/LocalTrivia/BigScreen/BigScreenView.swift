@@ -423,8 +423,9 @@ private struct TVPodiumStep: View {
           UnevenRoundedRectangle(topLeadingRadius: TVMetrics.stepRadius, topTrailingRadius: TVMetrics.stepRadius)
             .fill(LinearGradient(colors: [medal.color.opacity(0.3), medal.color.opacity(0.03)], startPoint: .top, endPoint: .bottom))
         }
-        .overlay(alignment: .top) {
-          Rectangle().fill(medal.color.opacity(0.85)).frame(height: Space.xs)
+        .overlay {
+          StepRim(radius: TVMetrics.stepRadius)
+            .strokeBorder(medal.color.opacity(0.85), style: StrokeStyle(lineWidth: Space.xs, lineCap: .round))
         }
     }
     .frame(maxWidth: .infinity)

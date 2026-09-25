@@ -89,12 +89,43 @@ public struct RankFigure: View {
   }
 }
 
+/// The top edge of a step whose top corners are rounded by `radius`: along
+/// the top and down around each corner, so a lit edge follows the step's
+/// outline. Inset, it keeps a stroke inside the step.
+nonisolated public struct StepRim: InsettableShape {
+  let radius: CGFloat
+  var inset: CGFloat = 0
+
+  public init(radius: CGFloat) {
+    self.radius = radius
+  }
+
+  public func path(in rect: CGRect) -> Path {
+    let rect = rect.insetBy(dx: inset, dy: inset)
+    let radius = max(0, min(radius - inset, rect.width / 2, rect.height))
+    var path = Path()
+    path.move(to: CGPoint(x: rect.minX, y: rect.minY + radius))
+    path.addArc(tangent1End: CGPoint(x: rect.minX, y: rect.minY), tangent2End: CGPoint(x: rect.minX + radius, y: rect.minY), radius: radius)
+    path.addLine(to: CGPoint(x: rect.maxX - radius, y: rect.minY))
+    path.addArc(tangent1End: CGPoint(x: rect.maxX, y: rect.minY), tangent2End: CGPoint(x: rect.maxX, y: rect.minY + radius), radius: radius)
+    return path
+  }
+
+  public func inset(by amount: CGFloat) -> StepRim {
+    var rim = self
+    rim.inset += amount
+    return rim
+  }
+}
+
 /// One step of the podium: the name and score on top, the place below.
 public struct PodiumStep: View {
   let name: String
   let score: String
   let medal: Medal
   let isPlayer: Bool
+
+  private static let radius = Radius.minimum * 1.5
 
   public init(name: String, score: String, medal: Medal, isPlayer: Bool) {
     self.name = name
@@ -121,7 +152,7 @@ public struct PodiumStep: View {
         .frame(maxWidth: .infinity, minHeight: Size.podiumStep(medal), alignment: .top)
         .padding(.top, Space.m)
         .background {
-          UnevenRoundedRectangle(topLeadingRadius: Radius.minimum * 1.5, topTrailingRadius: Radius.minimum * 1.5)
+          UnevenRoundedRectangle(topLeadingRadius: Self.radius, topTrailingRadius: Self.radius)
             .fill(
               LinearGradient(
                 colors: [medal.color.opacity(isPlayer ? 0.32 : 0.2), medal.color.opacity(0.02)],
@@ -130,11 +161,10 @@ public struct PodiumStep: View {
               )
             )
         }
-        .overlay(alignment: .top) {
-          // A lit edge along the top of the step.
-          Capsule()
-            .fill(medal.color.opacity(0.8))
-            .frame(height: Space.xxs)
+        .overlay {
+          // A lit edge along the top of the step, round at the corners.
+          StepRim(radius: Self.radius)
+            .strokeBorder(medal.color.opacity(0.8), style: StrokeStyle(lineWidth: Space.xxs, lineCap: .round))
         }
     }
     .frame(maxWidth: .infinity)
