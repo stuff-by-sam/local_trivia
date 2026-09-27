@@ -6,14 +6,41 @@ import OSLog
 /// review — the one slow part of hosting, writing a round, done in one step.
 ///
 /// On-device only (`SystemLanguageModel`): the topic and the drafts never
-/// leave the phone, and it works with no internet. A model can state a wrong
-/// answer with confidence, so nothing it writes goes into a round until the
-/// host has seen each question with its answer marked.
+/// leave the phone, and it works with no internet. A model this size knows
+/// less than it sounds like it does, so every draft is written from a fact it
+/// states first, and checked twice on its own before it's shown; and it keeps
+/// drafting until the host has as many as they asked for. Even so, nothing it
+/// writes goes into a round until the host has seen each question with its
+/// answer marked.
 enum QuestionDrafter {
   /// Whether this phone can draft: Apple Intelligence on, and the model ready.
   static var isAvailable: Bool { SystemLanguageModel.default.isAvailable }
 
   static let counts = [5, 10]
+
+  /// Drafts written per request. The model writes a round one question
+  /// after another and checks nothing until it's done, so small batches get
+  /// the first questions in front of the host sooner: a few seconds each.
+  static let batchSize = 4
+  /// Drafts it may write per question asked for, before settling. About
+  /// half pass both checks, so this is room for a topic it knows less well.
+  static let draftsPerQuestion = 4
+  /// How long it keeps at it. A topic it knows well fills in well within
+  /// this; one it doesn't gets what it can manage, and the host sees each
+  /// draft as it comes, free to add them at any point.
+  static let timeLimit: Duration = .seconds(120)
+
+  /// A draft, and how sure the checks are of it.
+  struct Draft: Identifiable, Equatable {
+    let question: HostQuestion
+    /// Both checks agree its answer is the one right answer. The rest
+    /// passed the options check but not the cold answer (`Verdict.likely`):
+    /// kept only to make up the number asked for, and flagged for the host
+    /// to look at.
+    let isConfirmed: Bool
+
+    var id: HostQuestion.ID { question.id }
+  }
 
   enum Failure: Error, Equatable {
     /// Apple Intelligence is off, still downloading, or not on this phone.
@@ -37,42 +64,130 @@ enum QuestionDrafter {
 
   private static let log = Logger(subsystem: "com.stuffbysam.localtrivia", category: "drafting")
 
+  /// Fact first: a model this size writes a question it can't answer as
+  /// readily as one it can, but it's far more often right about a fact it
+  /// has to state before asking about it. Tested on 120 drafts over 12
+  /// topics, 73% were right with the fact first and 45% without. Keeping to
+  /// textbook facts steers it off records that change (the most populous
+  /// country) and trivia it half-knows.
+  ///
   /// One right answer, anywhere: "Which planet has no moons? → Mercury" is
   /// marked wrong for anyone who says Venus. Asking for superlatives, firsts,
   /// names, numbers and dates steers the model toward questions that have one.
   static let instructions = """
-    You write questions for a pub quiz. Every question has exactly one correct \
-    answer — not just among the four options, but anywhere: if anything else \
-    would also be right, write a different question. Questions about which \
-    one of a group has or lacks something, or that ask for "a" or "one" of \
-    something, usually have several right answers (Mercury and Venus both have \
-    no moons), so ask for a superlative, a first, a name, a number or a date \
-    instead. The answer is a well-established fact, not an opinion or a recent \
-    event. The three wrong answers are plausible for the question but \
-    certainly wrong. Keep every question to one short sentence and every \
-    answer to a few words. Every question asks something different.
+    You write questions for a pub quiz, each from a fact you are certain of. \
+    First state the fact: a well-known, long-established fact about the topic, \
+    the kind a school textbook or an encyclopedia's first paragraph states. \
+    Not a record or ranking that changes over time, a recent event, a disputed \
+    claim, or an opinion. Then ask a question that fact answers. \
+    The question has exactly one correct answer — not just among the four \
+    options, but anywhere — so ask for a name, a number, a date, a place, a \
+    first or a superlative, never for "a" or "one" of several things. \
+    The three wrong answers are plausible for the question but certainly wrong. \
+    Keep every question to one short sentence and every answer to a few words. \
+    Every question is about the topic, and asks something different.
     """
 
-  /// How each draft is checked, apart from writing it (`checked`).
+  /// How each draft is checked, apart from writing it (`hasOneRightOption`).
   static let checkInstructions = """
     You check pub-quiz questions before they're played. Judge each option on \
     its own, as an expert would: is it a correct answer to the question? More \
     than one option can be correct, and so can none.
     """
 
-  /// Drafts `count` questions about `topic`, ready to review. The right
-  /// answer lands on a random key in each. Drafts that ask what the round
-  /// already asks are left out (`dropRepeats`), and so are ones a second
-  /// look finds another right answer in (`checked`), so there may be fewer.
-  static func draft(topic: String, count: Int, avoiding round: [HostQuestion] = []) async throws(Failure) -> [HostQuestion] {
+  /// How each draft is answered cold, with no options to lean on (`answersAlike`).
+  static let answerInstructions = "You answer quiz questions. Give only the answer, in a few words."
+
+  /// Checks give the model's own best answer, not a sample of its maybes.
+  private static let checking = GenerationOptions(samplingMode: .greedy)
+
+  /// Drafts `count` questions about `topic`, handing each to `onDraft` as it
+  /// passes its checks, and returns them all. The right answer lands on a
+  /// random key in each. Drafts that ask what `avoiding` (or an earlier
+  /// draft) asks are left out (`dropRepeats`, `sharesAnAnswer`), and so are
+  /// any the options check doubts (`verdict`). It keeps writing until there
+  /// are `count`, up to `draftsPerQuestion` drafts each and `timeLimit`; if
+  /// it's still short then, it makes up the number with drafts only the cold
+  /// answer doubted, unconfirmed. There are fewer than `count` only on a
+  /// topic it can't write that many good drafts about.
+  static func draft(
+    topic: String, count: Int, avoiding round: [HostQuestion] = [], onDraft: (Draft) -> Void = { _ in }
+  ) async throws(Failure) -> [Draft] {
     guard isAvailable else { throw .unavailable }
-    let session = LanguageModelSession(model: .default, instructions: instructions)
-    let response: LanguageModelSession.Response<DraftedRound>
+    let category = category(for: topic)
+    var confirmed: [HostQuestion] = []
+    var likely: [HostQuestion] = []
+    var asked = round
+    var written: [String] = []
+    var session: LanguageModelSession?
+    var budget = count * draftsPerQuestion
+    let deadline = ContinuousClock.now + timeLimit
+    while confirmed.count < count, budget > 0, ContinuousClock.now < deadline, !Task.isCancelled {
+      let batch: [DraftedQuestion]
+      do {
+        batch = try await write(min(batchSize, budget), about: topic, in: &session, avoiding: written)
+      } catch {
+        // The first failure is the host's to hear; a later one ends drafting
+        // with what's in hand.
+        if written.isEmpty { throw error }
+        break
+      }
+      // Nothing new: the model has run out of things to say.
+      guard !batch.isEmpty else { break }
+      budget -= batch.count
+      written += batch.map(\.question)
+      for draft in batch {
+        guard confirmed.count < count, !Task.isCancelled else { break }
+        guard let question = question(from: draft, category: category, correctAt: Int.random(in: 0..<4)),
+          let fresh = dropRepeats([question], of: asked).first,
+          !sharesAnAnswer(fresh, with: confirmed + likely)
+        else { continue }
+        asked.append(fresh)
+        switch await verdict(on: fresh) {
+        case .confirmed:
+          confirmed.append(fresh)
+          onDraft(Draft(question: fresh, isConfirmed: true))
+        case .likely:
+          likely.append(fresh)
+        case .doubtful:
+          break
+        }
+      }
+    }
+    guard !Task.isCancelled else { return [] }
+    let fillers = likely.prefix(count - confirmed.count).map { Draft(question: $0, isConfirmed: false) }
+    fillers.forEach(onDraft)
+    return confirmed.map { Draft(question: $0, isConfirmed: true) } + fillers
+  }
+
+  /// Writes up to `count` more drafts about `topic`. One session carries a
+  /// whole drafting, so the model sees what it's already written and asks
+  /// something new — told only "not these" in a new session, it asks the
+  /// same few facts over in new words. When the session's full, a new one
+  /// is told `written`.
+  private static func write(
+    _ count: Int, about topic: String, in session: inout LanguageModelSession?, avoiding written: [String]
+  ) async throws(Failure) -> [DraftedQuestion] {
+    let prompt: String
+    let isNew = session == nil
+    if isNew {
+      session = LanguageModelSession(model: .default, instructions: instructions)
+      var first = "Write \(count) trivia questions about \(topic)."
+      if !written.isEmpty {
+        // The most recent only: the list costs context, and the oldest are
+        // the least likely to come up again.
+        first += " Don't ask any of these again:\n" + written.suffix(30).map { "- \($0)" }.joined(separator: "\n")
+      }
+      prompt = first
+    } else {
+      prompt = "Write \(count) more trivia questions about \(topic), each from a different fact than any above."
+    }
+    guard let active = session else { throw .failed }
     do {
-      response = try await session.respond(
-        to: "Write \(count) trivia questions about \(topic).",
-        generating: DraftedRound.self
-      )
+      return Array(try await active.respond(to: prompt, generating: DraftedRound.self).content.questions.prefix(count))
+    } catch LanguageModelError.contextSizeExceeded where !isNew {
+      session = nil
+      return try await write(count, about: topic, in: &session, avoiding: written)
     } catch let error as LanguageModelError {
       log.error("drafting failed: \(error.localizedDescription, privacy: .public)")
       switch error {
@@ -87,46 +202,74 @@ enum QuestionDrafter {
       log.error("drafting failed: \(error.localizedDescription, privacy: .public)")
       throw .failed
     }
-    let category = category(for: topic)
-    var keys = SystemRandomNumberGenerator()
-    let drafts = response.content.questions.prefix(count).compactMap {
-      question(from: $0, category: category, correctAt: Int.random(in: 0..<4, using: &keys))
-    }
-    return await checked(dropRepeats(drafts, of: round))
   }
 
-  /// The drafts that, asked again on their own, the model says have exactly
-  /// one right option — the one marked. Writing a question, it rarely
-  /// notices a second right answer or a wrong key; judging the options apart
-  /// from writing them, it catches most. Tested on 20 known questions, this
-  /// left out 8 of the 10 bad ones and none of the 10 good ones, at about
-  /// 0.75 s a question. (Asking the model to also list every right answer as
-  /// it drafts caught none; asking it for a fact about each option first
-  /// caught 9, but cost 2.4 s a question and dropped 3 good ones.)
-  static func checked(_ drafts: [HostQuestion]) async -> [HostQuestion] {
-    var kept: [HostQuestion] = []
-    for draft in drafts {
-      guard !Task.isCancelled else { break }
-      if await hasOneRightOption(draft) { kept.append(draft) }
+  enum Verdict: Equatable {
+    /// Both checks agree.
+    case confirmed
+    /// Its options judged right, but asked cold, the model answered
+    /// something else. From testing, about three in four of these are right.
+    case likely
+    /// The options judged wrong — about one in three of those are right.
+    case doubtful
+  }
+
+  /// A second look, apart from writing it: judging the options, does the
+  /// model call only the marked one right (`hasOneRightOption`), and asked
+  /// the question cold, does it name the marked one (`answersAlike`)? Tested
+  /// on 119 fact-first drafts — 87 right, 32 not — the two together kept 63
+  /// right ones and 5 wrong (93% right, from 73%); the first alone kept 76
+  /// and 10 (88%).
+  static func verdict(on question: HostQuestion) async -> Verdict {
+    async let judged = hasOneRightOption(question)
+    async let answered = answersAlike(question)
+    switch await (judged, answered) {
+    case (true, true): return .confirmed
+    case (true, false): return .likely
+    case (false, _): return .doubtful
     }
-    return kept
   }
 
   private static func hasOneRightOption(_ question: HostQuestion) async -> Bool {
     let session = LanguageModelSession(model: .default, instructions: checkInstructions)
     let options = zip(letters, question.options).map { "\($0). \($1)" }.joined(separator: "\n")
     do {
-      let said = try await session.respond(to: "Question: \(question.text)\n\(options)", generating: OptionCheck.self)
+      let said = try await session.respond(to: "Question: \(question.text)\n\(options)", generating: OptionCheck.self, options: checking)
       return isOnlyRightOption(said.content.correctOptions, of: question)
     } catch {
-      // A check that can't run says nothing against the question, and the
-      // host reviews every one before it's played.
+      // Unchecked isn't checked: there are more drafts where this came from.
       log.error("checking a draft failed: \(error.localizedDescription, privacy: .public)")
-      return true
+      return false
+    }
+  }
+
+  private static func answersAlike(_ question: HostQuestion) async -> Bool {
+    let session = LanguageModelSession(model: .default, instructions: answerInstructions)
+    do {
+      let said = try await session.respond(to: question.text, generating: ColdAnswer.self, options: checking)
+      return option(named: said.content.answer, in: question.options) == question.correct
+    } catch {
+      log.error("answering a draft failed: \(error.localizedDescription, privacy: .public)")
+      return false
     }
   }
 
   private static let letters = ["A", "B", "C", "D"]
+
+  /// Which option a free answer names: the one sharing the most of its words
+  /// — at least half of the shorter's — if no other shares as many. "1776"
+  /// names "July 4, 1776", unless "July 2, 1776" is an option too.
+  static func option(named answer: String, in options: [String]) -> Int? {
+    let said = Fingerprint.terms(in: answer)
+    guard !said.isEmpty else { return nil }
+    let shares = options.map { option -> Double in
+      let terms = Fingerprint.terms(in: option)
+      guard !terms.isEmpty else { return 0 }
+      return Double(said.intersection(terms).count) / Double(min(said.count, terms.count))
+    }
+    guard let best = shares.max(), best >= 0.5, shares.count(where: { $0 == best }) == 1 else { return nil }
+    return shares.firstIndex(of: best)
+  }
 
   /// Whether the options a check called right, `said`, are just the marked
   /// one. It may copy an option with its letter ("C. Mercury"), or give the
@@ -179,6 +322,23 @@ enum QuestionDrafter {
     return kept
   }
 
+  /// Whether `draft` has the answer of one of `earlier`, the drafts kept so
+  /// far. Among the host's own questions that's allowed — the largest planet
+  /// and the one with the Great Red Spot are both Jupiter — but in one round
+  /// of drafts it's nearly always the same fact asked twice ("Which ocean is
+  /// the largest?", "…the biggest?"), and never the variety asked for. One
+  /// answer inside the other counts: "Armor" is "Heavy armor".
+  static func sharesAnAnswer(_ draft: HostQuestion, with earlier: [HostQuestion]) -> Bool {
+    guard draft.options.indices.contains(draft.correct) else { return false }
+    let answer = Fingerprint.terms(in: draft.options[draft.correct])
+    guard !answer.isEmpty else { return false }
+    return earlier.contains { other in
+      guard other.options.indices.contains(other.correct) else { return false }
+      let theirs = Fingerprint.terms(in: other.options[other.correct])
+      return !theirs.isEmpty && (answer.isSubset(of: theirs) || theirs.isSubset(of: answer))
+    }
+  }
+
   /// What a question asks, for spotting the same one twice.
   struct Fingerprint {
     /// The question's words, folded: case, accents and punctuation aside.
@@ -192,7 +352,7 @@ enum QuestionDrafter {
 
     init(_ question: HostQuestion) {
       words = Self.words(in: question.text)
-      let all = Set(words.split(separator: " ").map(String.init))
+      let all = Set(words.split(separator: " ").map { Self.sameAs[String($0)] ?? String($0) })
       // Drafts are written in English. A question with none of its function
       // words is in another language, where they can't be told apart from
       // its subjects, so it repeats only word for word.
@@ -216,6 +376,21 @@ enum QuestionDrafter {
         .joined(separator: " ")
     }
 
+    /// An answer's words for matching another's: folded as `words`, with
+    /// thousands run together ("1,064" is "1064") and articles aside.
+    static func terms(in text: String) -> Set<String> {
+      let joined = text.replacing(/(\d),(?=\d{3})/) { "\($0.1)" }
+      return Set(words(in: joined).split(separator: " ").map(String.init)).subtracting(["a", "an", "the", "of"])
+    }
+
+    /// Words that ask the same thing, folded to one: a "debut album" is a
+    /// "first album", and a film that "came out" was "released".
+    private static let sameAs: [String: String] = [
+      "debut": "first", "debuted": "first",
+      "came": "released", "come": "released", "out": "released", "release": "released",
+      "premiered": "released", "premiere": "released", "published": "released",
+    ]
+
     private static let functionWords: Set<String> = [
       "a", "an", "the", "and", "or", "of", "in", "on", "at", "to", "for", "from", "by", "with", "as", "into", "about",
       "which", "what", "who", "whom", "whose", "when", "where", "why", "how", "many", "much",
@@ -231,17 +406,28 @@ nonisolated struct OptionCheck {
   var correctOptions: [String]
 }
 
+@Generable(description: "A quiz question's answer, given without seeing any options")
+nonisolated struct ColdAnswer {
+  @Guide(description: "The answer, in as few words as possible")
+  var answer: String
+}
+
 @Generable(description: "A round of pub-quiz questions on one topic")
 nonisolated struct DraftedRound {
-  @Guide(description: "The questions, each different", .maximumCount(10))
+  // `QuestionDrafter.batchSize`: a guide takes only a literal.
+  @Guide(description: "The questions, each about a different fact", .maximumCount(4))
   var questions: [DraftedQuestion]
 }
 
-@Generable(description: "One trivia question with one correct answer and three wrong ones")
+/// Properties generate in the order they're declared, so the fact comes first
+/// and the question is written from it.
+@Generable(description: "One trivia question, from a well-known fact, with one correct answer and three wrong ones")
 nonisolated struct DraftedQuestion {
-  @Guide(description: "The question: one sentence, under 120 characters")
+  @Guide(description: "A well-known, long-established fact about the topic, in one sentence")
+  var fact: String
+  @Guide(description: "A question the fact answers: one sentence, under 120 characters")
   var question: String
-  @Guide(description: "The correct answer: an established fact, one to five words")
+  @Guide(description: "The correct answer, as the fact states it: one to five words")
   var correctAnswer: String
   @Guide(description: "Three plausible but certainly wrong answers, one to five words each", .count(3))
   var wrongAnswers: [String]

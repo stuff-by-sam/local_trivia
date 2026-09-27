@@ -101,9 +101,9 @@ struct ScreenPreview: View {
     case .editorEdit:
       over(NavigationStack { QuestionEditorView(question: Sample.unfinished, isNew: false, onSave: { _ in }, onDelete: { _ in }) })
     case .drafting:
-      over(DraftQuestionsView(round: Sample.round, topic: "the solar system", isDrafting: true) { _ in })
+      over(DraftQuestionsView(round: Sample.round, topic: "the solar system", drafts: Array(Sample.draftsToReview.prefix(2)), asked: 5, isDrafting: true) { _ in })
     case .drafts:
-      over(DraftQuestionsView(round: Sample.round, topic: "the solar system", drafts: Sample.drafts, leftOut: 3) { _ in })
+      over(DraftQuestionsView(round: Sample.round, topic: "the solar system", drafts: Sample.draftsToReview, asked: Sample.drafts.count) { _ in })
     case .scannerOff:
       over(QRScannerSheet(access: .denied) { _ in })
     case .scannerRestricted:
@@ -326,6 +326,9 @@ enum Sample {
     HostQuestion(text: "What is the largest planet in the solar system?", options: ["Saturn", "Neptune", "Jupiter", "Uranus"], correct: 2, category: "THE SOLAR SYSTEM"),
     HostQuestion(text: "Which planet has a day longer than its year?", options: ["Venus", "Mars", "Mercury", "Uranus"], correct: 0, category: "THE SOLAR SYSTEM"),
   ]
+
+  /// The last only made up the number: one check doubted it.
+  static let draftsToReview = drafts.enumerated().map { QuestionDrafter.Draft(question: $1, isConfirmed: $0 < drafts.count - 1) }
 
   static func question(elapsed seconds: Double) -> Question {
     Question(

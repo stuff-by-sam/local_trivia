@@ -6,7 +6,7 @@ import Testing
 /// The shortcuts in the host's flow: drafted questions, a new question's
 /// answer key, and deletes that can be taken back.
 struct QuestionDrafterTests {
-  private let draft = DraftedQuestion(question: "Which planet is largest?", correctAnswer: "Jupiter", wrongAnswers: ["Mars", "Venus", "Earth"])
+  private let draft = DraftedQuestion(fact: "Jupiter is the largest planet.", question: "Which planet is largest?", correctAnswer: "Jupiter", wrongAnswers: ["Mars", "Venus", "Earth"])
 
   @Test func putsTheRightAnswerOnTheKeyItWasGiven() throws {
     for key in 0..<4 {
@@ -19,10 +19,10 @@ struct QuestionDrafterTests {
   }
 
   @Test func dropsDraftsThatCantBePlayed() {
-    let repeated = DraftedQuestion(question: "Largest?", correctAnswer: "Jupiter", wrongAnswers: ["Mars", "jupiter", "Earth"])
-    let short = DraftedQuestion(question: "Largest?", correctAnswer: "Jupiter", wrongAnswers: ["Mars", "Earth"])
-    let blank = DraftedQuestion(question: "  ", correctAnswer: "Jupiter", wrongAnswers: ["Mars", "Venus", "Earth"])
-    let empty = DraftedQuestion(question: "Largest?", correctAnswer: "", wrongAnswers: ["Mars", "Venus", "Earth"])
+    let repeated = DraftedQuestion(fact: "Jupiter is the largest planet.", question: "Largest?", correctAnswer: "Jupiter", wrongAnswers: ["Mars", "jupiter", "Earth"])
+    let short = DraftedQuestion(fact: "Jupiter is the largest planet.", question: "Largest?", correctAnswer: "Jupiter", wrongAnswers: ["Mars", "Earth"])
+    let blank = DraftedQuestion(fact: "Jupiter is the largest planet.", question: "  ", correctAnswer: "Jupiter", wrongAnswers: ["Mars", "Venus", "Earth"])
+    let empty = DraftedQuestion(fact: "Jupiter is the largest planet.", question: "Largest?", correctAnswer: "", wrongAnswers: ["Mars", "Venus", "Earth"])
     for unusable in [repeated, short, blank, empty] {
       #expect(QuestionDrafter.question(from: unusable, category: "SPACE", correctAt: 0) == nil)
     }
@@ -41,6 +41,26 @@ struct QuestionDrafterTests {
     #expect(!QuestionDrafter.isOnlyRightOption(["Mercury", "Venus"], of: moons), "two right answers")
     #expect(!QuestionDrafter.isOnlyRightOption(["Venus"], of: moons), "the wrong one marked")
     #expect(!QuestionDrafter.isOnlyRightOption([], of: moons), "none right")
+  }
+
+  /// The second check asks the question with no options, and keeps the
+  /// draft only if the answer names its key — and no other option as well.
+  @Test func readsWhichOptionAColdAnswerNames() {
+    let options = ["Venus", "Mercury", "Mars", "Earth"]
+    #expect(QuestionDrafter.option(named: "Mercury", in: options) == 1)
+    #expect(QuestionDrafter.option(named: "mercury.", in: options) == 1)
+    #expect(QuestionDrafter.option(named: "The planet Mercury", in: options) == 1)
+    #expect(QuestionDrafter.option(named: "Pluto", in: options) == nil)
+    #expect(QuestionDrafter.option(named: "", in: options) == nil)
+
+    #expect(QuestionDrafter.option(named: "Da Vinci", in: ["Michelangelo", "Leonardo da Vinci", "Raphael", "Donatello"]) == 1)
+    #expect(QuestionDrafter.option(named: "Franklin Delano Roosevelt", in: ["Ronald Reagan", "Franklin D. Roosevelt", "John F. Kennedy", "Richard Nixon"]) == 1)
+    #expect(QuestionDrafter.option(named: "1,064°C", in: ["900°C", "1064°C", "1,100°C", "1,200°C"]) == 1, "thousands, however written")
+    #expect(QuestionDrafter.option(named: "100°C", in: ["90 degrees Celsius", "100 degrees Celsius", "110 degrees Celsius", "120 degrees Celsius"]) == 1)
+    #expect(QuestionDrafter.option(named: "1869", in: ["1876", "1869", "1884", "1892"]) == 1)
+    // A year alone can't tell dates in the same year apart.
+    #expect(QuestionDrafter.option(named: "1787", in: ["September 17, 1787", "September 14, 1787", "September 22, 1787", "May 25, 1787"]) == nil)
+    #expect(QuestionDrafter.option(named: "Episode IV", in: ["Episode IV", "Episode VI", "Episode I", "Episode V"]) == 0)
   }
 
   @Test func namesTheCategoryAfterTheTopic() {
@@ -97,6 +117,16 @@ struct DraftRepeatTests {
   @Test func dropsARepeatWithinTheDrafts() {
     let drafts = [question("Who wrote Hamlet?", "William Shakespeare"), question("Which playwright wrote Hamlet?", "william shakespeare")]
     #expect(QuestionDrafter.dropRepeats(drafts, of: []).map(\.text) == ["Who wrote Hamlet?"])
+  }
+
+  /// Within one drafting, a second question with the same answer is the
+  /// same fact reworded — even where the round's own questions may share one.
+  @Test func leavesOutADraftWithAnAnswerAlreadyDrafted() {
+    let kept = [question("Which ocean is the largest?", "Pacific Ocean"), question("What was the Ankylosaurus's main defense?", "Heavy armor")]
+    #expect(QuestionDrafter.sharesAnAnswer(question("Which ocean is the biggest?", "Pacific"), with: kept))
+    #expect(QuestionDrafter.sharesAnAnswer(question("What is the Ankylosaurus's main defense?", "Armor"), with: kept))
+    #expect(!QuestionDrafter.sharesAnAnswer(question("Which ocean is the smallest?", "Arctic Ocean"), with: kept), "a shared word isn't a shared answer")
+    #expect(!QuestionDrafter.sharesAnAnswer(question("Which ocean is the deepest?", "Pacific"), with: []))
   }
 
   @Test func comparesAgainstUnfinishedQuestionsByTheirWordsAlone() {

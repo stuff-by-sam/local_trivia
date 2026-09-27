@@ -2,8 +2,9 @@ import DesignSystem
 import SwiftUI
 
 /// Name a topic, get a round to review: questions drafted on this iPhone,
-/// each shown with its right answer marked, all in until the host takes one
-/// out. Nothing is added until they say so.
+/// each shown with its right answer marked as soon as it's passed its checks,
+/// all in until the host takes one out — as many as they asked for. Nothing
+/// is added until they say so.
 struct DraftQuestionsView: View {
   /// The questions already in the round: drafts that repeat one are left out.
   let round: [HostQuestion]
@@ -12,11 +13,11 @@ struct DraftQuestionsView: View {
   @Environment(\.dismiss) private var dismiss
   @State private var topic: String
   @State private var count = QuestionDrafter.counts.last ?? 10
-  @State private var drafts: [HostQuestion]
+  @State private var drafts: [QuestionDrafter.Draft]
   @State private var left: Set<HostQuestion.ID> = []
   @State private var isDrafting: Bool
-  /// Drafts asked for but not shown: unusable, possibly wrong, or repeats.
-  @State private var leftOut: Int
+  /// How many the last drafting asked for.
+  @State private var asked: Int
   @State private var failure: QuestionDrafter.Failure?
   /// The drafting under way, stopped if the sheet closes first.
   @State private var drafting: Task<Void, Never>?
@@ -24,18 +25,18 @@ struct DraftQuestionsView: View {
 
   /// The rest start where a preview wants them; the app passes a round alone.
   init(
-    round: [HostQuestion], topic: String = "", drafts: [HostQuestion] = [], leftOut: Int = 0, isDrafting: Bool = false,
+    round: [HostQuestion], topic: String = "", drafts: [QuestionDrafter.Draft] = [], asked: Int = 0, isDrafting: Bool = false,
     onAdd: @escaping ([HostQuestion]) -> Void
   ) {
     self.round = round
     self.onAdd = onAdd
     _topic = State(initialValue: topic)
     _drafts = State(initialValue: drafts)
-    _leftOut = State(initialValue: leftOut)
+    _asked = State(initialValue: asked)
     _isDrafting = State(initialValue: isDrafting)
   }
 
-  private var chosen: [HostQuestion] { drafts.filter { !left.contains($0.id) } }
+  private var chosen: [HostQuestion] { drafts.filter { !left.contains($0.id) }.map(\.question) }
 
   var body: some View {
     NavigationStack {
@@ -58,21 +59,31 @@ struct DraftQuestionsView: View {
           }
         }
 
-        if !drafts.isEmpty {
+        if !drafts.isEmpty || isDrafting {
           Section {
-            ForEach(drafts) { question in
-              DraftRow(question: question, isIn: !left.contains(question.id)) {
-                if left.contains(question.id) { left.remove(question.id) } else { left.insert(question.id) }
+            ForEach(drafts) { draft in
+              DraftRow(draft: draft, isIn: !left.contains(draft.id)) {
+                if left.contains(draft.id) { left.remove(draft.id) } else { left.insert(draft.id) }
               }
+            }
+            if isDrafting {
+              Label {
+                Text("Writing and checking \(min(drafts.count + 1, asked)) of \(asked)…")
+                  .textRole(.detail)
+                  .foregroundStyle(.secondary)
+              } icon: {
+                ProgressView()
+              }
+              .frame(minHeight: Size.target)
             }
           } header: {
             SectionHeader("Drafts · \(chosen.count) in")
           } footer: {
             VStack(alignment: .leading, spacing: Space.xs) {
-              if leftOut > 0 {
-                Text("Left out ^[\(leftOut) draft](inflect: true) that could be wrong or repeat the round.")
+              if !isDrafting, drafts.count < asked {
+                Text("Only \(drafts.count) of \(asked) passed the checks on this topic. Draft again for more, or try a broader topic.")
               }
-              Text("Drafted on this iPhone by Apple Intelligence. Check every answer before you play — it can be wrong.")
+              Text("Drafted on this iPhone by Apple Intelligence, and each one checked twice. Check every answer before you play — it can still be wrong.")
             }
           }
         }
@@ -109,16 +120,21 @@ struct DraftQuestionsView: View {
     isTopicFocused = false
     isDrafting = true
     failure = nil
+    // Drafting again means new questions: none of these comes back.
+    let avoiding = round + drafts.map(\.question)
+    let wanted = count
+    Motion.settle.perform {
+      drafts = []
+      left = []
+      asked = wanted
+    }
     drafting = Task {
       defer { isDrafting = false }
       do throws(QuestionDrafter.Failure) {
-        let result = try await QuestionDrafter.draft(topic: topic, count: count, avoiding: round)
-        guard !Task.isCancelled else { return }
-        Motion.settle.perform {
-          drafts = result
-          left = []
-          leftOut = max(0, count - result.count)
+        let result = try await QuestionDrafter.draft(topic: topic, count: wanted, avoiding: avoiding) { draft in
+          Motion.settle.perform { drafts.append(draft) }
         }
+        guard !Task.isCancelled else { return }
         if result.isEmpty { failure = .failed }
       } catch {
         failure = error
@@ -132,11 +148,14 @@ struct DraftQuestionsView: View {
   }
 }
 
-/// A drafted question: in or out, what it asks, and the answer it gives.
+/// A drafted question: in or out, what it asks, the answer it gives, and
+/// whether that answer needs a closer look.
 private struct DraftRow: View {
-  let question: HostQuestion
+  let draft: QuestionDrafter.Draft
   let isIn: Bool
   let onToggle: () -> Void
+
+  private var question: HostQuestion { draft.question }
 
   var body: some View {
     Button(action: onToggle) {
@@ -155,6 +174,11 @@ private struct DraftRow: View {
                 .textRole(.detail)
                 .foregroundStyle(.secondary)
             }
+          }
+          if !draft.isConfirmed {
+            Label("Double-check this answer", systemImage: "exclamationmark.triangle.fill")
+              .textRole(.detail)
+              .foregroundStyle(.warning)
           }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
