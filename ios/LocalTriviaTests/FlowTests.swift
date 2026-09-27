@@ -81,6 +81,14 @@ struct QuestionDrafterTests {
     #expect(QuestionDrafter.verdicts(for: round, judged: judged) == [.confirmed, .doubtful, .confirmed, .doubtful])
   }
 
+  /// 25 on the phone's model takes a few minutes; 5 and 10 keep two.
+  @Test func givesALongerRoundMoreTime() {
+    #expect(QuestionDrafter.counts.contains(25))
+    #expect(QuestionDrafter.timeLimit(for: 5) == .seconds(120))
+    #expect(QuestionDrafter.timeLimit(for: 10) == .seconds(120))
+    #expect(QuestionDrafter.timeLimit(for: 25) == .seconds(300))
+  }
+
   @Test func namesTheCategoryAfterTheTopic() {
     #expect(QuestionDrafter.category(for: "  90s films ") == "90S FILMS")
     #expect(QuestionDrafter.category(for: "") == "GENERAL")

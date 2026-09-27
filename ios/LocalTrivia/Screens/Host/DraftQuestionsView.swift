@@ -1,7 +1,7 @@
 import DesignSystem
 import SwiftUI
 
-/// Name a topic, get a round to review: questions drafted on this iPhone,
+/// Name a topic, get a round to review: questions drafted by Apple Intelligence,
 /// each shown with its right answer marked as soon as it's passed its checks,
 /// all in until the host takes one out — as many as they asked for. Nothing
 /// is added until they say so.
@@ -12,14 +12,15 @@ struct DraftQuestionsView: View {
 
   @Environment(\.dismiss) private var dismiss
   @State private var topic: String
-  @State private var count = QuestionDrafter.counts.last ?? 10
+  @State private var count = QuestionDrafter.defaultCount
   @State private var drafts: [QuestionDrafter.Draft]
   @State private var left: Set<HostQuestion.ID> = []
   @State private var isDrafting: Bool
   /// How many the last drafting asked for.
   @State private var asked: Int
   @State private var failure: QuestionDrafter.Failure?
-  /// Where drafts will be written: in the cloud when it can be reached.
+  /// Where drafts will be written: in the cloud when this build can use it
+  /// and it can be reached.
   @State private var engine = QuestionDrafter.preferredEngine
   /// The drafting under way, stopped if the sheet closes first.
   @State private var drafting: Task<Void, Never>?

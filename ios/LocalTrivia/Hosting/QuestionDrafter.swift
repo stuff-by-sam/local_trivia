@@ -5,11 +5,12 @@ import OSLog
 /// Drafts questions on a topic with the on-device model, for the host to
 /// review — the one slow part of hosting, writing a round, done in one step.
 ///
-/// It drafts with Apple's larger model on Private Cloud Compute when it can
-/// (`Engine.cloud`), which knows far more trivia than the phone's own: the
-/// topic and the drafts go to Apple's servers for the request, and aren't
-/// kept. Offline, over the day's quota, or where Private Cloud Compute isn't
-/// offered, the phone's own model takes over (`Engine.device`).
+/// It drafts with the phone's own model (`Engine.device`). A build carrying
+/// the Private Cloud Compute entitlement (`isCloudEnabled`) drafts with
+/// Apple's larger model there when it can (`Engine.cloud`), which knows far
+/// more trivia: the topic and the drafts go to Apple's servers for the
+/// request, and aren't kept. Offline, over the day's quota, or where Private
+/// Cloud Compute isn't offered, the phone's own model takes over.
 ///
 /// Either way, every draft is written from a fact the model states first
 /// and checked on its own before it's shown, and it keeps drafting until the
@@ -33,19 +34,34 @@ enum QuestionDrafter {
 
   private static let cloud = PrivateCloudComputeLanguageModel()
 
+  /// Whether this build drafts on Private Cloud Compute. That takes the
+  /// com.apple.developer.private-cloud-compute entitlement, which Apple
+  /// grants a team on request; a build signed without it can't reach the
+  /// service, and iOS can't tell an app which entitlements it was signed
+  /// with. So it's off unless the target sets `PRIVATE_CLOUD_COMPUTE` in
+  /// its Active Compilation Conditions — alongside the entitlement in
+  /// LocalTrivia.entitlements (ios/README.md, "Build and run").
+  #if PRIVATE_CLOUD_COMPUTE
+  static let isCloudEnabled = true
+  #else
+  static let isCloudEnabled = false
+  #endif
+
   /// Whether this phone can draft: Apple Intelligence on, and a model ready.
   static var isAvailable: Bool { preferredEngine != nil }
 
-  /// Where a drafting starts: in the cloud when this phone can use it, else
-  /// on the phone. Its quota isn't asked for here — reading it can wait on
-  /// the system, and this runs on the main thread — a request over it fails,
-  /// and the phone takes over (`Failure.cloudUnreachable`).
+  /// Where a drafting starts: in the cloud when this build and phone can use
+  /// it, else on the phone. Its quota isn't asked for here — reading it can
+  /// wait on the system, and this runs on the main thread — a request over it
+  /// fails, and the phone takes over (`Failure.cloudUnreachable`).
   static var preferredEngine: Engine? {
-    if cloud.isAvailable { return .cloud }
+    if isCloudEnabled, cloud.isAvailable { return .cloud }
     return SystemLanguageModel.default.isAvailable ? .device : nil
   }
 
-  static let counts = [5, 10]
+  static let counts = [5, 10, 25]
+  /// What the sheet offers first: a round's worth, drafted in a minute or two.
+  static let defaultCount = 10
 
   /// Drafts the phone's model writes per request. It writes one question
   /// after another and checks nothing until it's done, so small batches get
@@ -59,10 +75,14 @@ enum QuestionDrafter {
   /// Drafts it may write per question asked for, before settling. About
   /// half pass both checks, so this is room for a topic it knows less well.
   static let draftsPerQuestion = 4
-  /// How long it keeps at it. A topic it knows well fills in well within
-  /// this; one it doesn't gets what it can manage, and the host sees each
-  /// draft as it comes, free to add them at any point.
-  static let timeLimit: Duration = .seconds(120)
+  /// How long it keeps at it: two minutes, or 12 seconds a question for a
+  /// longer round — the phone's model takes 4 to 12 a question. A topic it
+  /// knows well fills in well within this; one it doesn't gets what it can
+  /// manage, and the host sees each draft as it comes, free to add them at
+  /// any point.
+  static func timeLimit(for count: Int) -> Duration {
+    max(.seconds(120), .seconds(12) * count)
+  }
 
   /// A draft, and how sure the checks are of it.
   struct Draft: Identifiable, Equatable {
@@ -147,9 +167,9 @@ enum QuestionDrafter {
   /// draft) asks are left out (`dropRepeats`, `sharesAnAnswer`), and so are
   /// any a check doubts (`verdicts(onRound:)` in the cloud, `verdict(on:)`
   /// on the phone). It keeps writing until there are `count`, up to
-  /// `draftsPerQuestion` drafts each and `timeLimit`; if the phone's model is
-  /// still short then, it makes up the number with drafts only the cold
-  /// answer doubted, unconfirmed. There are fewer than `count` only on a
+  /// `draftsPerQuestion` drafts each and `timeLimit(for:)`; if the phone's
+  /// model is still short then, it makes up the number with drafts only the
+  /// cold answer doubted, unconfirmed. There are fewer than `count` only on a
   /// topic it can't write that many good drafts about.
   static func draft(
     topic: String, count: Int, avoiding round: [HostQuestion] = [], onDraft: (Draft) -> Void = { _ in }
@@ -162,7 +182,7 @@ enum QuestionDrafter {
     var written: [String] = []
     var session: LanguageModelSession?
     var budget = count * draftsPerQuestion
-    let deadline = ContinuousClock.now + timeLimit
+    let deadline = ContinuousClock.now + timeLimit(for: count)
     func keep(_ question: HostQuestion, _ verdict: Verdict, by engine: Engine) {
       guard confirmed.count < count, !Task.isCancelled else { return }
       switch verdict {

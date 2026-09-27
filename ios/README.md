@@ -9,10 +9,21 @@ browser clients carry on without it.
 ## Build and run
 
 Open `LocalTrivia.xcodeproj` in **Xcode 27** and run the `LocalTrivia` scheme.
-To install on a device, set a team under *Signing & Capabilities* first. The
-target carries the Private Cloud Compute entitlement
-(`LocalTrivia/LocalTrivia.entitlements`) for drafting, so the team's App ID
-needs that capability too.
+To install on a device, set a team under *Signing & Capabilities* first.
+
+Drafting questions runs on the phone's own model. It can use Apple's larger
+model on Private Cloud Compute instead, which gets far more trivia right, but
+that takes the `com.apple.developer.private-cloud-compute` entitlement, which
+Apple has to grant the team first — a profile without it won't sign a build
+that asks for it. Once the team has it, turn it on in two places:
+
+1. Add the entitlement to `LocalTrivia/LocalTrivia.entitlements` (or add the
+   Private Cloud Compute capability under *Signing & Capabilities*).
+2. Add `PRIVATE_CLOUD_COMPUTE` to the target's *Active Compilation
+   Conditions* (Build Settings), for Debug and Release.
+
+The app can't read its own entitlements on iOS, so the second step is what
+tells it the first was done.
 
 On one phone, tap **Host a Game**, write or import a round, and start hosting.
 On the others, the game shows up on the join screen by itself. Type the PIN
@@ -138,22 +149,24 @@ the server, and its owner plays too.
 - **No TV needed** — the full standings and the live "3 of 5 answered" count
   go to every player's phone either way.
 
-Drafting with Apple Intelligence: name a topic, pick 5 or 10, and Apple's
-larger model on **Private Cloud Compute** writes that many for review. Each
-draft is written from a fact the model states first, then checked on its own
-— which of the four options are right — and kept only when that's just its
-key; the round is written in one request and checked in one more, a couple
-of requests per drafting, since Private Cloud Compute has a usage quota.
-Repeats of the round, or two drafts with one answer, are left out, and it
-drafts again until there are as many as asked for.
+Drafting with Apple Intelligence: name a topic, pick 5, 10 or 25, and the
+phone's own model writes that many for review. Each draft is written from a
+fact the model states first, then checked twice on its own (the options, and
+the question answered cold, with no options to lean on), and kept only when
+both agree with its key. It drafts in batches of four so the first questions
+show in about ten seconds, and keeps going for up to two minutes, or 12
+seconds a question for 25 (five minutes); on a topic it knows less well, it
+makes up the number with drafts only the cold answer doubted, marked
+**Double-check this answer**. Repeats of the round, or two drafts with one
+answer, are left out.
 
-With no internet, over the quota, or where Private Cloud Compute isn't
-offered, the phone's own model drafts instead — and the sheet says which.
-That model knows far less, so it's checked twice (the options, and the
-question answered cold, with no options to lean on), drafts in batches of
-four so the first questions show in about ten seconds, and keeps going for up
-to two minutes; on a topic it knows less well, it makes up the number with
-drafts only the cold answer doubted, marked **Double-check this answer**.
+A build with Private Cloud Compute turned on (see *Build and run*) drafts
+with Apple's larger model there instead, and the sheet says so before
+anything is sent. It checks each draft once — which of the four options are
+right — and keeps it only when that's just its key; a round is written in
+one request (up to 12 questions, so 25 takes at least three) and checked in one more,
+since Private Cloud Compute has a usage quota. With no internet, over the
+quota, or where it isn't offered, the phone's own model takes over.
 
 Measured and graded by hand: on Private Cloud Compute, 60 drafts over 5
 topics (capitals, 90s films, Star Wars, chemistry, Olympic sports) had 58 right
@@ -265,15 +278,16 @@ surface on the network: the host's controls act on the game in-process.
   logs. It never syncs through iCloud Keychain and can't be restored onto
   another phone. iOS keeps Keychain items when an app is deleted; a reinstall
   discards the old token on its first launch.
-- **No analytics, accounts or third-party code**, and one entitlement:
-  Private Cloud Compute, for drafting. Log lines record error kinds and
-  codes, never tokens, PINs, nicknames or addresses.
-- **Drafting goes to Private Cloud Compute, and nowhere else.** The topic,
-  and the drafts to check, are sent to Apple's servers for the request only:
-  Private Cloud Compute doesn't keep them, and neither Apple nor this app can
-  read them. The draft sheet says so before anything is sent. Offline, or
-  over its quota, drafting stays on the phone (`SystemLanguageModel`). The
-  host reviews every answer key before a draft joins the round.
+- **No analytics, accounts, entitlements or third-party code.** Log lines
+  record error kinds and codes, never tokens, PINs, nicknames or addresses.
+- **Drafting stays on the phone.** Questions drafted with Apple Intelligence
+  use the on-device model (`SystemLanguageModel`); the topic and the drafts
+  never leave the phone. A build with Private Cloud Compute turned on (*Build
+  and run*) sends the topic, and the drafts to check, to Apple's servers for
+  the request only — Private Cloud Compute doesn't keep them, and neither
+  Apple nor this app can read them — and the draft sheet says so before
+  anything is sent. The host reviews every answer key before a draft joins
+  the round.
 - **The web player is files, not an API.** A hosting phone serves only the
   files bundled under `Web/`, by exact path, to GET and HEAD; everything else
   on its port is the same player WebSocket the app uses.
@@ -308,7 +322,7 @@ LocalTrivia/
     WebPlayer.swift         The bundled web player, served to phones without the app
     HostController.swift    Hosting lifecycle, and the host's own seat
     HostModels.swift        The round: questions, rules, scoring, on-device storage
-    QuestionDrafter.swift   Questions drafted on a topic — Private Cloud Compute, or the phone's model — for review
+    QuestionDrafter.swift   Questions drafted on a topic — the phone's model, or Private Cloud Compute — for review
     CSVImport.swift         public/shared/csv.js, ported
     JoinLink.swift          Join links (http:// for the QR code, localtrivia://), QR codes, the LAN address
   BigScreen/
