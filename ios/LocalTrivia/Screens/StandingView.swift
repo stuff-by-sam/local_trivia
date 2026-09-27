@@ -17,7 +17,7 @@ struct StandingView: View {
           // With the whole table below it (a phone-hosted game), the big
           // number steps down to make room.
           RankFigure(rank: standing.rank, isCompact: store.leaderboard != nil)
-          Text("of \(store.playerCount) · \(standing.score.grouped) pts")
+          Text("of \(ranked) · \(standing.score.grouped) pts")
             .textRole(.status)
             .foregroundStyle(.secondary)
         }
@@ -39,7 +39,13 @@ struct StandingView: View {
   /// "Your position: 2 of 6, 1,450 points."
   private var position: Text {
     guard let rank = standing.rank else { return Text("Your position: unranked, \(standing.score) points") }
-    return Text("Your position: \(rank) of \(store.playerCount), \(standing.score) points")
+    return Text("Your position: \(rank) of \(ranked), \(standing.score) points")
+  }
+
+  /// How many the rank is out of: everyone in the standings it came with —
+  /// not whoever's connected now, or a room that empties out reads "#6 of 2".
+  private var ranked: Int {
+    store.leaderboard?.standings.count ?? store.playerCount
   }
 }
 
