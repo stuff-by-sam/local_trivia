@@ -5,23 +5,57 @@ import OSLog
 /// Drafts questions on a topic with the on-device model, for the host to
 /// review — the one slow part of hosting, writing a round, done in one step.
 ///
-/// On-device only (`SystemLanguageModel`): the topic and the drafts never
-/// leave the phone, and it works with no internet. A model this size knows
-/// less than it sounds like it does, so every draft is written from a fact it
-/// states first, and checked twice on its own before it's shown; and it keeps
-/// drafting until the host has as many as they asked for. Even so, nothing it
-/// writes goes into a round until the host has seen each question with its
-/// answer marked.
+/// It drafts with Apple's larger model on Private Cloud Compute when it can
+/// (`Engine.cloud`), which knows far more trivia than the phone's own: the
+/// topic and the drafts go to Apple's servers for the request, and aren't
+/// kept. Offline, over the day's quota, or where Private Cloud Compute isn't
+/// offered, the phone's own model takes over (`Engine.device`).
+///
+/// Either way, every draft is written from a fact the model states first
+/// and checked on its own before it's shown, and it keeps drafting until the
+/// host has as many as they asked for. Even so, nothing it writes goes into
+/// a round until the host has seen each question with its answer marked.
 enum QuestionDrafter {
-  /// Whether this phone can draft: Apple Intelligence on, and the model ready.
-  static var isAvailable: Bool { SystemLanguageModel.default.isAvailable }
+  /// Where drafts are written and checked.
+  enum Engine: Equatable, Sendable {
+    /// Apple's larger model, on Private Cloud Compute.
+    case cloud
+    /// The model on this iPhone.
+    case device
+
+    var model: any LanguageModel {
+      switch self {
+      case .cloud: QuestionDrafter.cloud
+      case .device: SystemLanguageModel.default
+      }
+    }
+  }
+
+  private static let cloud = PrivateCloudComputeLanguageModel()
+
+  /// Whether this phone can draft: Apple Intelligence on, and a model ready.
+  static var isAvailable: Bool { preferredEngine != nil }
+
+  /// Where a drafting starts: in the cloud when this phone can use it, else
+  /// on the phone. Its quota isn't asked for here — reading it can wait on
+  /// the system, and this runs on the main thread — a request over it fails,
+  /// and the phone takes over (`Failure.cloudUnreachable`).
+  static var preferredEngine: Engine? {
+    if cloud.isAvailable { return .cloud }
+    return SystemLanguageModel.default.isAvailable ? .device : nil
+  }
 
   static let counts = [5, 10]
 
-  /// Drafts written per request. The model writes a round one question
+  /// Drafts the phone's model writes per request. It writes one question
   /// after another and checks nothing until it's done, so small batches get
   /// the first questions in front of the host sooner: a few seconds each.
   static let batchSize = 4
+  /// The cloud writes the whole round in one request and checks it in one
+  /// more — its quota counts requests — asking for this many more than it
+  /// needs, for the few a check leaves out, up to `cloudBatchLimit`.
+  static let cloudMargin = 3
+  static let cloudBatchLimit = 12
   /// Drafts it may write per question asked for, before settling. About
   /// half pass both checks, so this is room for a topic it knows less well.
   static let draftsPerQuestion = 4
@@ -38,6 +72,8 @@ enum QuestionDrafter {
     /// kept only to make up the number asked for, and flagged for the host
     /// to look at.
     let isConfirmed: Bool
+    /// Which model wrote and checked it.
+    let engine: Engine
 
     var id: HostQuestion.ID { question.id }
   }
@@ -51,13 +87,17 @@ enum QuestionDrafter {
     case unsupportedLanguage
     /// Anything else; worth another try.
     case failed
+    /// Private Cloud Compute couldn't take the request — no internet, the
+    /// quota's reached, or the service is down. Drafting carries on on the
+    /// phone, so the host never sees this.
+    case cloudUnreachable
 
     var message: String {
       switch self {
       case .unavailable: String(localized: "Apple Intelligence isn't available on this iPhone right now.")
       case .declined: String(localized: "That topic can't be drafted. Try another.")
       case .unsupportedLanguage: String(localized: "Drafting isn't available in this language yet.")
-      case .failed: String(localized: "Couldn't draft questions. Try again.")
+      case .failed, .cloudUnreachable: String(localized: "Couldn't draft questions. Try again.")
       }
     }
   }
@@ -105,27 +145,50 @@ enum QuestionDrafter {
   /// passes its checks, and returns them all. The right answer lands on a
   /// random key in each. Drafts that ask what `avoiding` (or an earlier
   /// draft) asks are left out (`dropRepeats`, `sharesAnAnswer`), and so are
-  /// any the options check doubts (`verdict`). It keeps writing until there
-  /// are `count`, up to `draftsPerQuestion` drafts each and `timeLimit`; if
-  /// it's still short then, it makes up the number with drafts only the cold
+  /// any a check doubts (`verdicts(onRound:)` in the cloud, `verdict(on:)`
+  /// on the phone). It keeps writing until there are `count`, up to
+  /// `draftsPerQuestion` drafts each and `timeLimit`; if the phone's model is
+  /// still short then, it makes up the number with drafts only the cold
   /// answer doubted, unconfirmed. There are fewer than `count` only on a
   /// topic it can't write that many good drafts about.
   static func draft(
     topic: String, count: Int, avoiding round: [HostQuestion] = [], onDraft: (Draft) -> Void = { _ in }
   ) async throws(Failure) -> [Draft] {
-    guard isAvailable else { throw .unavailable }
+    guard var engine = preferredEngine else { throw .unavailable }
     let category = category(for: topic)
-    var confirmed: [HostQuestion] = []
-    var likely: [HostQuestion] = []
+    var confirmed: [Draft] = []
+    var likely: [Draft] = []
     var asked = round
     var written: [String] = []
     var session: LanguageModelSession?
     var budget = count * draftsPerQuestion
     let deadline = ContinuousClock.now + timeLimit
+    func keep(_ question: HostQuestion, _ verdict: Verdict, by engine: Engine) {
+      guard confirmed.count < count, !Task.isCancelled else { return }
+      switch verdict {
+      case .confirmed:
+        confirmed.append(Draft(question: question, isConfirmed: true, engine: engine))
+        onDraft(confirmed[confirmed.count - 1])
+      case .likely:
+        likely.append(Draft(question: question, isConfirmed: false, engine: engine))
+      case .doubtful:
+        break
+      }
+    }
     while confirmed.count < count, budget > 0, ContinuousClock.now < deadline, !Task.isCancelled {
+      let size = engine == .cloud ? min(cloudBatchLimit, count - confirmed.count + cloudMargin) : batchSize
       let batch: [DraftedQuestion]
       do {
-        batch = try await write(min(batchSize, budget), about: topic, in: &session, avoiding: written)
+        batch = try await write(min(size, budget), about: topic, on: engine, in: &session, avoiding: written)
+      } catch .cloudUnreachable {
+        // The phone's model takes over, told what's been asked.
+        guard SystemLanguageModel.default.isAvailable else {
+          if written.isEmpty { throw .unavailable }
+          break
+        }
+        engine = .device
+        session = nil
+        continue
       } catch {
         // The first failure is the host's to hear; a later one ends drafting
         // with what's in hand.
@@ -136,28 +199,37 @@ enum QuestionDrafter {
       guard !batch.isEmpty else { break }
       budget -= batch.count
       written += batch.map(\.question)
+      var fresh: [HostQuestion] = []
       for draft in batch {
-        guard confirmed.count < count, !Task.isCancelled else { break }
         guard let question = question(from: draft, category: category, correctAt: Int.random(in: 0..<4)),
-          let fresh = dropRepeats([question], of: asked).first,
-          !sharesAnAnswer(fresh, with: confirmed + likely)
+          let new = dropRepeats([question], of: asked).first,
+          !sharesAnAnswer(new, with: (confirmed + likely).map(\.question) + fresh)
         else { continue }
-        asked.append(fresh)
-        switch await verdict(on: fresh) {
-        case .confirmed:
-          confirmed.append(fresh)
-          onDraft(Draft(question: fresh, isConfirmed: true))
-        case .likely:
-          likely.append(fresh)
-        case .doubtful:
-          break
+        asked.append(new)
+        fresh.append(new)
+      }
+      if engine == .cloud {
+        do {
+          let verdicts = try await verdicts(onRound: fresh)
+          for (question, verdict) in zip(fresh, verdicts) { keep(question, verdict, by: .cloud) }
+          continue
+        } catch {
+          // The cloud wrote them but can't check them: the phone checks
+          // these, and writes the rest.
+          guard SystemLanguageModel.default.isAvailable else { break }
+          engine = .device
+          session = nil
         }
+      }
+      for question in fresh {
+        guard confirmed.count < count, !Task.isCancelled else { break }
+        keep(question, await verdict(on: question), by: .device)
       }
     }
     guard !Task.isCancelled else { return [] }
-    let fillers = likely.prefix(count - confirmed.count).map { Draft(question: $0, isConfirmed: false) }
+    let fillers = Array(likely.prefix(count - confirmed.count))
     fillers.forEach(onDraft)
-    return confirmed.map { Draft(question: $0, isConfirmed: true) } + fillers
+    return confirmed + fillers
   }
 
   /// Writes up to `count` more drafts about `topic`. One session carries a
@@ -165,13 +237,13 @@ enum QuestionDrafter {
   /// something new — told only "not these" in a new session, it asks the
   /// same few facts over in new words. When the session's full, a new one
   /// is told `written`.
-  private static func write(
-    _ count: Int, about topic: String, in session: inout LanguageModelSession?, avoiding written: [String]
+  static func write(
+    _ count: Int, about topic: String, on engine: Engine, in session: inout LanguageModelSession?, avoiding written: [String]
   ) async throws(Failure) -> [DraftedQuestion] {
     let prompt: String
     let isNew = session == nil
     if isNew {
-      session = LanguageModelSession(model: .default, instructions: instructions)
+      session = LanguageModelSession(model: engine.model, instructions: instructions)
       var first = "Write \(count) trivia questions about \(topic)."
       if !written.isEmpty {
         // The most recent only: the list costs context, and the oldest are
@@ -187,20 +259,23 @@ enum QuestionDrafter {
       return Array(try await active.respond(to: prompt, generating: DraftedRound.self).content.questions.prefix(count))
     } catch LanguageModelError.contextSizeExceeded where !isNew {
       session = nil
-      return try await write(count, about: topic, in: &session, avoiding: written)
+      return try await write(count, about: topic, on: engine, in: &session, avoiding: written)
     } catch let error as LanguageModelError {
       log.error("drafting failed: \(error.localizedDescription, privacy: .public)")
       switch error {
       case .guardrailViolation, .refusal: throw .declined
       case .unsupportedLanguageOrLocale: throw .unsupportedLanguage
-      default: throw .failed
+      default: throw engine == .cloud ? .cloudUnreachable : .failed
       }
+    } catch let error as PrivateCloudComputeLanguageModel.Error {
+      log.error("drafting in the cloud failed: \(error.localizedDescription, privacy: .public)")
+      throw .cloudUnreachable
     } catch let error as SystemLanguageModel.Error {
       log.error("drafting failed: \(error.localizedDescription, privacy: .public)")
       throw .unavailable
     } catch {
       log.error("drafting failed: \(error.localizedDescription, privacy: .public)")
-      throw .failed
+      throw engine == .cloud ? .cloudUnreachable : .failed
     }
   }
 
@@ -214,8 +289,9 @@ enum QuestionDrafter {
     case doubtful
   }
 
-  /// A second look, apart from writing it: judging the options, does the
-  /// model call only the marked one right (`hasOneRightOption`), and asked
+  /// The phone's check of one draft, apart from writing it: judging the
+  /// options, does the model call only the marked one right
+  /// (`hasOneRightOption`), and asked
   /// the question cold, does it name the marked one (`answersAlike`)? Tested
   /// on 119 fact-first drafts — 87 right, 32 not — the two together kept 63
   /// right ones and 5 wrong (93% right, from 73%); the first alone kept 76
@@ -230,8 +306,34 @@ enum QuestionDrafter {
     }
   }
 
+  /// The cloud's check, of a whole round in one request: which of each
+  /// question's options are right, judged apart from writing them. A draft
+  /// is confirmed when only its key is. (Its model rarely misses a fact; what
+  /// this catches is a question with two right answers — "the main villain
+  /// of the original trilogy", with Palpatine among the options. Answering
+  /// cold, as the phone also checks, only flagged right ones.)
+  static func verdicts(onRound questions: [HostQuestion], by engine: Engine = .cloud) async throws -> [Verdict] {
+    guard !questions.isEmpty else { return [] }
+    let session = LanguageModelSession(model: engine.model, instructions: checkInstructions)
+    let listed = questions.enumerated().map { number, question in
+      "\(number + 1). \(question.text)\n" + zip(letters, question.options).map { "   \($0). \($1)" }.joined(separator: "\n")
+    }
+    let said = try await session.respond(to: listed.joined(separator: "\n"), generating: RoundCheck.self, options: checking)
+    return verdicts(for: questions, judged: said.content.questions)
+  }
+
+  /// Each question's verdict from a round's check, matched by number. One
+  /// the check skipped is doubtful; one it numbered twice takes the first.
+  static func verdicts(for questions: [HostQuestion], judged: [QuestionCheck]) -> [Verdict] {
+    let right = Dictionary(judged.map { ($0.number, $0.correctOptions) }) { first, _ in first }
+    return questions.indices.map { index in
+      guard let options = right[index + 1] else { return .doubtful }
+      return isOnlyRightOption(options, of: questions[index]) ? .confirmed : .doubtful
+    }
+  }
+
   private static func hasOneRightOption(_ question: HostQuestion) async -> Bool {
-    let session = LanguageModelSession(model: .default, instructions: checkInstructions)
+    let session = LanguageModelSession(model: SystemLanguageModel.default, instructions: checkInstructions)
     let options = zip(letters, question.options).map { "\($0). \($1)" }.joined(separator: "\n")
     do {
       let said = try await session.respond(to: "Question: \(question.text)\n\(options)", generating: OptionCheck.self, options: checking)
@@ -244,7 +346,7 @@ enum QuestionDrafter {
   }
 
   private static func answersAlike(_ question: HostQuestion) async -> Bool {
-    let session = LanguageModelSession(model: .default, instructions: answerInstructions)
+    let session = LanguageModelSession(model: SystemLanguageModel.default, instructions: answerInstructions)
     do {
       let said = try await session.respond(to: question.text, generating: ColdAnswer.self, options: checking)
       return option(named: said.content.answer, in: question.options) == question.correct
@@ -406,6 +508,20 @@ nonisolated struct OptionCheck {
   var correctOptions: [String]
 }
 
+@Generable(description: "Which options correctly answer each of a round of quiz questions")
+nonisolated struct RoundCheck {
+  @Guide(description: "One entry for every question, in order")
+  var questions: [QuestionCheck]
+}
+
+@Generable(description: "Which options correctly answer one quiz question")
+nonisolated struct QuestionCheck {
+  @Guide(description: "The question's number")
+  var number: Int
+  @Guide(description: "Every option that is a correct answer to it, copied exactly. More than one if several are right; none if none are.")
+  var correctOptions: [String]
+}
+
 @Generable(description: "A quiz question's answer, given without seeing any options")
 nonisolated struct ColdAnswer {
   @Guide(description: "The answer, in as few words as possible")
@@ -414,8 +530,8 @@ nonisolated struct ColdAnswer {
 
 @Generable(description: "A round of pub-quiz questions on one topic")
 nonisolated struct DraftedRound {
-  // `QuestionDrafter.batchSize`: a guide takes only a literal.
-  @Guide(description: "The questions, each about a different fact", .maximumCount(4))
+  // `QuestionDrafter.cloudBatchLimit`: a guide takes only a literal.
+  @Guide(description: "The questions, each about a different fact", .maximumCount(12))
   var questions: [DraftedQuestion]
 }
 

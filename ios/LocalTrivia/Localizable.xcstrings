@@ -119,6 +119,12 @@
     "App Icons" : {
 
     },
+    "Apple Intelligence drafts these on this iPhone." : {
+
+    },
+    "Apple Intelligence drafts these with Private Cloud Compute: your topic goes to Apple to write them, and isn't kept." : {
+
+    },
     "Apple Intelligence isn't available on this iPhone right now." : {
 
     },
@@ -246,13 +252,13 @@
     "Draft with Apple Intelligence" : {
 
     },
-    "Drafted on this iPhone by Apple Intelligence, and each one checked twice. Check every answer before you play — it can still be wrong." : {
-
-    },
     "Drafting isn't available in this language yet." : {
 
     },
     "Drafts · %lld in" : {
+
+    },
+    "Each one is checked before it's shown. Check every answer before you play — it can still be wrong." : {
 
     },
     "Edit Question" : {

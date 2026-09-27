@@ -19,6 +19,8 @@ struct DraftQuestionsView: View {
   /// How many the last drafting asked for.
   @State private var asked: Int
   @State private var failure: QuestionDrafter.Failure?
+  /// Where drafts will be written: in the cloud when it can be reached.
+  @State private var engine = QuestionDrafter.preferredEngine
   /// The drafting under way, stopped if the sheet closes first.
   @State private var drafting: Task<Void, Never>?
   @FocusState private var isTopicFocused: Bool
@@ -56,6 +58,10 @@ struct DraftQuestionsView: View {
           if let failure {
             Label(failure.message, systemImage: "exclamationmark.triangle.fill")
               .foregroundStyle(.danger)
+          } else if engine == .cloud {
+            Text("Apple Intelligence drafts these with Private Cloud Compute: your topic goes to Apple to write them, and isn't kept.")
+          } else {
+            Text("Apple Intelligence drafts these on this iPhone.")
           }
         }
 
@@ -83,7 +89,7 @@ struct DraftQuestionsView: View {
               if !isDrafting, drafts.count < asked {
                 Text("Only \(drafts.count) of \(asked) passed the checks on this topic. Draft again for more, or try a broader topic.")
               }
-              Text("Drafted on this iPhone by Apple Intelligence, and each one checked twice. Check every answer before you play — it can still be wrong.")
+              Text("Each one is checked before it's shown. Check every answer before you play — it can still be wrong.")
             }
           }
         }
@@ -120,6 +126,7 @@ struct DraftQuestionsView: View {
     isTopicFocused = false
     isDrafting = true
     failure = nil
+    engine = QuestionDrafter.preferredEngine
     // Drafting again means new questions: none of these comes back.
     let avoiding = round + drafts.map(\.question)
     let wanted = count
@@ -135,6 +142,8 @@ struct DraftQuestionsView: View {
           Motion.settle.perform { drafts.append(draft) }
         }
         guard !Task.isCancelled else { return }
+        // The cloud may have handed over to the phone part way.
+        if let used = result.last?.engine { engine = used }
         if result.isEmpty { failure = .failed }
       } catch {
         failure = error

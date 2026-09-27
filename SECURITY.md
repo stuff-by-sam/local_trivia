@@ -31,9 +31,12 @@ rules:
   never syncs through iCloud Keychain, and can't be restored onto another
   phone. iOS keeps Keychain items when an app is deleted; a reinstall discards
   the old token on its first launch.
-- **Nothing leaves for anywhere but the game — and the App Store, for
+- **Nothing leaves for anywhere but the game — and Apple, for drafting and
   purchases.** No analytics, no accounts, no third-party SDKs or
-  dependencies. Optional themes and app icons are bought through StoreKit;
+  dependencies. Drafting questions sends the topic, and the drafts to check,
+  to Apple's Private Cloud Compute for that request only; it keeps nothing,
+  and the draft sheet says so first. Offline or over its quota, drafting
+  runs on the phone's own model instead. Optional themes and app icons are bought through StoreKit;
   the app sees only which ones the Apple Account owns, as signed
   transactions it verifies. Preferences hold only the nickname draft, the last
   game's address, the chosen theme and a cache of what's owned — replaced by

@@ -63,6 +63,24 @@ struct QuestionDrafterTests {
     #expect(QuestionDrafter.option(named: "Episode IV", in: ["Episode IV", "Episode VI", "Episode I", "Episode V"]) == 0)
   }
 
+  /// The cloud checks a round in one request; its answers come back by
+  /// number, and a question it skipped isn't confirmed.
+  @Test func matchesARoundsCheckToItsQuestionsByNumber() {
+    let round = [
+      HostQuestion(text: "What is the capital of Australia?", options: ["Sydney", "Canberra", "Melbourne", "Perth"], correct: 1),
+      HostQuestion(text: "Who led the Rebel Alliance?", options: ["Leia", "Mon Mothma", "Ackbar", "Lando"], correct: 0),
+      HostQuestion(text: "What is the chemical symbol for gold?", options: ["Ag", "Fe", "Au", "Pb"], correct: 2),
+      HostQuestion(text: "How many sides does a hexagon have?", options: ["5", "6", "7", "8"], correct: 1),
+    ]
+    let judged = [
+      QuestionCheck(number: 3, correctOptions: ["C"]),
+      QuestionCheck(number: 1, correctOptions: ["Canberra"]),
+      QuestionCheck(number: 2, correctOptions: ["Mon Mothma"]),
+      QuestionCheck(number: 1, correctOptions: ["Sydney"]),
+    ]
+    #expect(QuestionDrafter.verdicts(for: round, judged: judged) == [.confirmed, .doubtful, .confirmed, .doubtful])
+  }
+
   @Test func namesTheCategoryAfterTheTopic() {
     #expect(QuestionDrafter.category(for: "  90s films ") == "90S FILMS")
     #expect(QuestionDrafter.category(for: "") == "GENERAL")

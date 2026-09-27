@@ -64,6 +64,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				LocalTrivia.entitlements,
 				Store/Products.storekit,
 			);
 			target = 7263190658000769ED9F98CC /* LocalTrivia */;
@@ -475,6 +476,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = LocalTrivia/LocalTrivia.entitlements;
 				INFOPLIST_FILE = LocalTrivia/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Trivia;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.trivia-games";
@@ -507,6 +509,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = LocalTrivia/LocalTrivia.entitlements;
 				INFOPLIST_FILE = LocalTrivia/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Trivia;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.trivia-games";

@@ -39,7 +39,8 @@ First run seeds the question bank from `seed_questions.json` (12 questions).
 
 The native iPhone/iPad app in `ios/` plays games hosted from a phone, not from
 a laptop. Anyone with the app can tap **Host a Game**, write or import a round
-(CSV, same format as below) or draft one with Apple Intelligence, set the
+(CSV, same format as below) or draft one with Apple Intelligence (on Private
+Cloud Compute, or the phone's own model offline), set the
 scoring, and run the game from their phone — and play in it too. Everyone else
 opens the app, finds the game on their own (the host's phone advertises it over
 Bonjour), types the PIN, and they're in — or, without the app, scans the host's

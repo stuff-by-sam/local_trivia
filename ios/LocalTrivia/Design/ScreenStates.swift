@@ -328,7 +328,7 @@ enum Sample {
   ]
 
   /// The last only made up the number: one check doubted it.
-  static let draftsToReview = drafts.enumerated().map { QuestionDrafter.Draft(question: $1, isConfirmed: $0 < drafts.count - 1) }
+  static let draftsToReview = drafts.enumerated().map { QuestionDrafter.Draft(question: $1, isConfirmed: $0 < drafts.count - 1, engine: .cloud) }
 
   static func question(elapsed seconds: Double) -> Question {
     Question(
