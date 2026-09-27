@@ -285,7 +285,7 @@ final class PreviewModels {
     }
   }
 
-  /// FRIDAY QUIZ found on this Wi-Fi, and the link up — with no socket.
+  /// Friday Quiz found on this Wi-Fi, and the link up — with no socket.
   private func online() {
     store.connect(to: Sample.game)
     store.handle(.connected)
@@ -309,7 +309,7 @@ private final class PreviewTokens: TokenStore, @unchecked Sendable {
 enum Sample {
   static let player = "ROBIN"
   static let others = ["SAM", "Alex", "Jordan", "Priya", "Maximilian-Alexander"]
-  static let game = GameServer(address: "192.168.1.20:3000", name: "FRIDAY QUIZ")!
+  static let game = GameServer(address: "192.168.1.20:3000", name: "Friday Quiz")!
 
   static let round = [
     HostQuestion(text: "Which planet has the most moons?", options: ["Jupiter", "Saturn", "Uranus", "Neptune"], correct: 1, category: "SPACE"),

@@ -439,7 +439,7 @@ private struct TVPodiumStep: View {
 
 // MARK: - Parts
 
-/// "TRIVIA//FRIDAY QUIZ" on the left, where the game is on the right.
+/// "TRIVIA//Friday Quiz" on the left, where the game is on the right.
 private struct Masthead<Trailing: View>: View {
   let gameName: String
   @ViewBuilder var trailing: Trailing

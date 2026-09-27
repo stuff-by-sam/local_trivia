@@ -42,7 +42,7 @@ struct HostSetupView: View {
             LabeledContent {
               TextField("Trivia Night", text: $library.gameName)
                 .multilineTextAlignment(.trailing)
-                .textInputAutocapitalization(.characters)
+                .textInputAutocapitalization(.words)
                 .autocorrectionDisabled()
             } label: {
               Text("Game name")

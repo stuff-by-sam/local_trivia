@@ -170,7 +170,7 @@ private struct JoinCodeSheet: View {
   var body: some View {
     VStack(spacing: Space.xl) {
       Text(verbatim: host.gameName)
-        .textRole(.action)
+        .textRole(.headline)
         .foregroundStyle(.secondary)
         .multilineTextAlignment(.center)
       if let link = host.joinLink {

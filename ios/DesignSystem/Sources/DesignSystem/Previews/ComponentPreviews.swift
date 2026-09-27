@@ -128,8 +128,8 @@ private enum Sample {
   PreviewMatrix {
     VStack(spacing: Space.m) {
       PickerRow(title: "Looking for games…", detail: "JOIN THE HOST'S WI-FI") { ProgressView().controlSize(.small) }
-      PickerRow(title: "FRIDAY QUIZ", detail: "192.168.1.20 · ONLINE") { StatusDot(.online) }
-      PickerRow(title: "FRIDAY QUIZ", detail: "192.168.1.20 · UNREACHABLE") { StatusDot(.failed) }
+      PickerRow(title: "Friday Quiz", detail: "192.168.1.20 · ONLINE") { StatusDot(.online) }
+      PickerRow(title: "Friday Quiz", detail: "192.168.1.20 · UNREACHABLE") { StatusDot(.failed) }
     }
   }
 }

@@ -118,7 +118,10 @@ final class HostLibrary {
   /// What a game started now would play, in order.
   var playable: [HostQuestion] { questions.filter(\.isPlayable) }
 
-  static let defaultName = "TRIVIA NIGHT"
+  static let defaultName = "Trivia Night"
+  /// The default from when names were upper-cased. A round saved with it
+  /// takes the new one; a name the host typed stays as it is.
+  static let oldDefaultName = "TRIVIA NIGHT"
   static let nameLimit = 28
   /// A Bonjour name is one DNS label, 63 bytes. Past that, hosting fails.
   static let nameByteLimit = 63
@@ -151,7 +154,11 @@ final class HostLibrary {
     self.write = write
     let stored = fileURL.flatMap { try? Data(contentsOf: $0) }.flatMap { try? JSONDecoder().decode(Stored.self, from: $0) }
     isLoading = true
-    gameName = stored?.gameName ?? Self.defaultName
+    if let name = stored?.gameName, name != Self.oldDefaultName {
+      gameName = name
+    } else {
+      gameName = Self.defaultName
+    }
     questions = stored?.questions ?? []
     rules = stored?.rules.clamped() ?? HostRules()
     isLoading = false
@@ -166,7 +173,7 @@ final class HostLibrary {
     let trimmed = gameName.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return Self.defaultName }
     // 28 emoji are well past 63 bytes; drop whole characters until it fits.
-    var name = String(trimmed.prefix(Self.nameLimit)).uppercased()
+    var name = String(trimmed.prefix(Self.nameLimit))
     while name.utf8.count > Self.nameByteLimit { name.removeLast() }
     return name
   }

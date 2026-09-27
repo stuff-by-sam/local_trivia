@@ -129,10 +129,26 @@ import Testing
     library.gameName = String(repeating: "🎉", count: 28)
     #expect(library.advertisedName.utf8.count <= HostLibrary.nameByteLimit)
     #expect(library.advertisedName.allSatisfy { $0 == "🎉" })
-    library.gameName = "  friday quiz "
-    #expect(library.advertisedName == "FRIDAY QUIZ")
+    library.gameName = "  Friday quiz "
+    #expect(library.advertisedName == "Friday quiz")
     library.gameName = "   "
     #expect(library.advertisedName == HostLibrary.defaultName)
+  }
+
+  /// Names keep the host's case now. A round saved with the old upper-cased
+  /// default takes the new one; one the host named keeps its name.
+  @Test func replacesTheOldUpperCasedDefaultName() {
+    let url = URL.temporaryDirectory.appending(path: "round-\(UUID().uuidString).json")
+    defer { try? FileManager.default.removeItem(at: url) }
+    func reopened(savedAs name: String) -> String {
+      let saving = HostLibrary(fileURL: url) { data, url in try data.write(to: url) }
+      saving.gameName = name
+      saving.flush(waiting: true)
+      return HostLibrary(fileURL: url) { _, _ in }.gameName
+    }
+    #expect(reopened(savedAs: "TRIVIA NIGHT") == HostLibrary.defaultName)
+    #expect(reopened(savedAs: "PUB QUIZ") == "PUB QUIZ")
+    #expect(reopened(savedAs: "Friday quiz") == "Friday quiz")
   }
 }
 
