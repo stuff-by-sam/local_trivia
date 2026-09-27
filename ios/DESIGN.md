@@ -120,12 +120,19 @@ on a long press.
 xxl 32 · xxxl 48`. Screen margin `Space.l` (16), matching system list insets.
 Stack gaps: related `s`, grouped `m`, sections `xl`.
 
+**Insets** — text never crowds the sides of the shape it sits in. It's
+`Space.inset` (20) in from the sides of an answer, a field, a readout row, a
+card or a toast, clear of the corner's curve; `Space.capsuleInset` (16) in a
+name chip; `Space.keyInset` (10) in an answer's key. An action button's title
+keeps `Space.s` inside the system's own inset. On the TV, `TVMetrics.inset`
+(48) for tiles and rows, `TVMetrics.nameInset` (36) for name tiles.
+
 **Radius** — concentric. `Radius.control 20` (answers, fields, PIN cells),
 `Radius.panel 24` (readouts, cards), capsule for chips and buttons (a name
 chip or undo toast that wraps becomes a `Radius.control` rectangle). A shape
 inside another takes `Radius.concentric(in:inset:)` — its container's radius
 minus the inset, minimum 8 — so the answer key inside an answer button is
-`20 − 14 = 6 → 8`, and the QR code on a card is `24 − 16 = 8`. Computed, not
+`20 − 20 = 0 → 8`, and the QR code on a card is `24 − 20 = 4 → 8`. Computed, not
 `ConcentricRectangle`: the same shapes also sit outside any container.
 
 **Targets** — 44×44 pt minimum everywhere (`Size.target`). Answer buttons

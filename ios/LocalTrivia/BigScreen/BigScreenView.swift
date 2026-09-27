@@ -172,7 +172,7 @@ private struct LobbyBoard: View {
             .tvRole(.name)
             .lineLimit(1)
             .minimumScaleFactor(0.6)
-            .padding(.horizontal, TVMetrics.rowGap * 2)
+            .padding(.horizontal, TVMetrics.nameInset)
             .frame(maxWidth: .infinity, minHeight: TVMetrics.nameHeight)
             .background(.panel, in: .capsule)
         }
@@ -363,7 +363,7 @@ private struct StandingRow: View {
         .tvRole(.standingScore)
         .monospacedDigit()
     }
-    .padding(.horizontal, TVMetrics.gap)
+    .padding(.horizontal, TVMetrics.inset)
     .frame(minHeight: TVMetrics.rowHeight)
     .background(.panel, in: .rect(cornerRadius: TVMetrics.rowRadius))
   }
@@ -575,7 +575,7 @@ private struct AnswerTile: View {
       }
     }
     .foregroundStyle(state == .correct ? AnyShapeStyle(.onAccent) : AnyShapeStyle(.primary))
-    .padding(.horizontal, TVMetrics.gap)
+    .padding(.horizontal, TVMetrics.inset)
     .frame(maxWidth: .infinity, minHeight: TVMetrics.tileHeight)
     .background {
       shape.fill(state == .correct ? style.color : style.color.opacity(0.12))
@@ -591,7 +591,7 @@ private struct AnswerTile: View {
             .frame(width: proxy.size.width * share, height: TVMetrics.voteBar)
         }
         .frame(height: TVMetrics.voteBar)
-        .padding(.horizontal, TVMetrics.gap)
+        .padding(.horizontal, TVMetrics.inset)
         .padding(.bottom, TVMetrics.rowGap)
       }
     }

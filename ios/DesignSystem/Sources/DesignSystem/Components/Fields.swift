@@ -68,7 +68,7 @@ public struct PromptField<Field: View>: View {
       field
         .font(.mono(.title3, weight: .semibold))
     }
-    .padding(.horizontal, Space.l)
+    .padding(.horizontal, Space.inset)
     .frame(minHeight: Size.field)
     .glassEffect(.regular.interactive(), in: .rect(cornerRadius: Radius.control))
   }
@@ -109,7 +109,7 @@ public struct PickerRow<Mark: View>: View {
         .foregroundStyle(.secondary)
         .accessibilityHidden(true)
     }
-    .padding(.horizontal, Space.l)
+    .padding(.horizontal, Space.inset)
     .frame(minHeight: Size.picker)
     .contentShape(.rect)
     .glassEffect(.regular.interactive(), in: .rect(cornerRadius: Radius.control))

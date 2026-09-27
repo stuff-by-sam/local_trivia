@@ -157,7 +157,7 @@ struct JoinCodeCard: View {
             .frame(width: Size.qrCard, height: Size.qrCard)
         }
       }
-      .padding(Space.l)
+      .padding(Space.inset)
       .panel()
     }
   }
@@ -320,7 +320,7 @@ struct QRCodeView: View {
         .resizable()
         .scaledToFit()
         .padding(Space.s)
-        .background(.white, in: .rect(cornerRadius: Radius.concentric(in: Radius.panel, inset: Space.l)))
+        .background(.white, in: .rect(cornerRadius: Radius.concentric(in: Radius.panel, inset: Space.inset)))
         .accessibilityLabel("QR code to join this game")
     }
   }

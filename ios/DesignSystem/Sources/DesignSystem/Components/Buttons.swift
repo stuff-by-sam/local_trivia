@@ -80,6 +80,8 @@ private struct ActionLabel: View {
     }
     .textRole(.action)
     .foregroundStyle(foreground)
+    // Inside the system's own inset: a long title stays clear of the ends.
+    .padding(.horizontal, Space.s)
     .frame(maxWidth: .infinity, minHeight: Size.target - Space.m)
   }
 

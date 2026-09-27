@@ -82,7 +82,7 @@ struct QRScannerSheet: View {
         }
       }
       .textRole(.status)
-      .padding(.horizontal, Space.l)
+      .padding(.horizontal, Space.inset)
       .frame(minHeight: Size.target)
       .glassEffect(in: .capsule)
       .padding(.horizontal, Space.screen)

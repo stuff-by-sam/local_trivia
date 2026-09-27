@@ -76,7 +76,7 @@ struct UndoToast: View {
         .foregroundStyle(.onAccent)
         .accessibilityShowsLargeContentViewer()
     }
-    .padding(.leading, Space.l)
+    .padding(.leading, Space.inset)
     .padding(.trailing, Space.xs)
     .frame(minHeight: Size.field)
     // A capsule on one line; at accessibility sizes the message wraps, and

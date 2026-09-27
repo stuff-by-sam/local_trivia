@@ -12,8 +12,8 @@ public struct AnswerKey: View {
     self.isInverted = isInverted
   }
 
-  /// Sits inside an answer button, `keyInset` in from its edge.
-  static let inset: CGFloat = 14
+  /// Sits inside an answer button, `inset` in from its edge.
+  static let inset: CGFloat = Space.inset
   static let radius = Radius.concentric(in: Radius.control, inset: inset)
 
   public var body: some View {
@@ -25,7 +25,7 @@ public struct AnswerKey: View {
     }
     .font(.mono(.subheadline, weight: .bold))
     .foregroundStyle(ink)
-    .padding(.horizontal, Space.s)
+    .padding(.horizontal, Space.keyInset)
     .padding(.vertical, Space.xs)
     .background(ink.opacity(0.14), in: .rect(cornerRadius: Self.radius))
     .fixedSize()

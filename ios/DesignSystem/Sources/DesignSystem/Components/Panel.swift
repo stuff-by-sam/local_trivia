@@ -46,7 +46,7 @@ public struct Readout<Content: View>: View {
       Group(subviews: content) { rows in
         ForEach(rows) { row in
           row
-            .padding(.horizontal, Space.l)
+            .padding(.horizontal, Space.inset)
             .padding(.vertical, Space.m)
           if row.id != rows.last?.id {
             Rectangle()

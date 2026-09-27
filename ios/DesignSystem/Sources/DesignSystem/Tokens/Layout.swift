@@ -14,6 +14,15 @@ nonisolated public enum Space {
 
   /// The screen's side margin, as the system's lists inset.
   public static let screen: CGFloat = l
+
+  /// How far text sits in from the sides of the shape around it — an
+  /// answer, a field, a readout row, a card, a toast — clear of its corners.
+  public static let inset: CGFloat = 20
+  /// The same, inside a name chip: a small capsule, whose round ends already
+  /// hold the text off the edge.
+  public static let capsuleInset: CGFloat = 16
+  /// The same, inside something as small as an answer's key.
+  public static let keyInset: CGFloat = 10
 }
 
 /// Corner radii. Nested shapes are concentric: an inner radius is its
@@ -78,6 +87,10 @@ nonisolated public enum TVMetrics {
   public static let wideGap: CGFloat = 110
   public static let tileGap: CGFloat = 28
   public static let rowGap: CGFloat = 12
+  /// How far text sits in from the sides of a tile or row (`Space.inset`,
+  /// at the TV's scale), and of a name tile, a capsule.
+  public static let inset: CGFloat = 48
+  public static let nameInset: CGFloat = 36
   public static let textWidth: CGFloat = 1540
   public static let tableWidth: CGFloat = 1400
   public static let podiumWidth: CGFloat = 1500

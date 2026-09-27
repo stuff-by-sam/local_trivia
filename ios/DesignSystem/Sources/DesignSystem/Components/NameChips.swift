@@ -82,7 +82,7 @@ public struct NameChips: View {
           .textRole(isViewer(name) ? .bodyEmphasis : .body)
           .foregroundStyle(isViewer(name) ? AnyShapeStyle(.themeAccent) : AnyShapeStyle(.primary))
           .multilineTextAlignment(.leading)
-          .padding(.horizontal, Space.m)
+          .padding(.horizontal, Space.capsuleInset)
           .padding(.vertical, Space.xs)
           .frame(minHeight: Size.target - Space.s)
           .background(.panel, in: shape)
