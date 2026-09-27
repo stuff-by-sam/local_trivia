@@ -234,6 +234,9 @@
     "Done" : {
 
     },
+    "Double-check this answer" : {
+
+    },
     "Draft Again" : {
 
     },
@@ -243,7 +246,7 @@
     "Draft with Apple Intelligence" : {
 
     },
-    "Drafted on this iPhone by Apple Intelligence. Check every answer before you play — it can be wrong." : {
+    "Drafted on this iPhone by Apple Intelligence, and each one checked twice. Check every answer before you play — it can still be wrong." : {
 
     },
     "Drafting isn't available in this language yet." : {
@@ -373,9 +376,6 @@
     "Left %@" : {
 
     },
-    "Left out ^[%lld draft](inflect: true) that could be wrong or repeat the round." : {
-
-    },
     "Left out of this round" : {
 
     },
@@ -482,19 +482,26 @@
     "On the TV" : {
 
     },
+    "Only %lld of %lld passed the checks on this topic. Draft again for more, or try a broader topic." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Only %1$lld of %2$lld passed the checks on this topic. Draft again for more, or try a broader topic."
+          }
+        }
+      }
+    },
     "Open Control Center and tap Screen Mirroring." : {
 
     },
     "Open Settings" : {
 
     },
-    "Open Trivia on the same Wi-Fi, or scan with the Camera." : {
-
-    },
-    "Open Trivia on this Wi-Fi and type the code, or scan it with the Camera." : {
-
-    },
     "Or connect the phone to a TV with an HDMI adapter." : {
+
+    },
+    "Or go to %@" : {
 
     },
     "Owned" : {
@@ -604,7 +611,13 @@
     "Scan to Join" : {
 
     },
-    "Scan, or find %@ in the app" : {
+    "Scan with any phone's camera to play in the browser, or open Trivia on the same Wi-Fi." : {
+
+    },
+    "Scan with any phone's camera, or find %@ in the Trivia app" : {
+
+    },
+    "Scan with your phone's camera, or open Trivia on this Wi-Fi and type the code." : {
 
     },
     "Scores start next question" : {
@@ -809,6 +822,16 @@
     },
     "Write a Question" : {
 
+    },
+    "Writing and checking %lld of %lld…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Writing and checking %1$lld of %2$lld…"
+          }
+        }
+      }
     },
     "You" : {
 

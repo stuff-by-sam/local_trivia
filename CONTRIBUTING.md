@@ -40,7 +40,8 @@ fresh clone installs without the native module and the server won't start.
 
 **The game rules have two implementations.** `server/gameSession.js` runs
 laptop-hosted games for the browser; `ios/LocalTrivia/Hosting/HostedGame.swift`
-is a port of it that runs phone-hosted games for the iOS app (and
+is a port of it that runs phone-hosted games for the iOS app and the browsers
+that join them (and
 `Scoring`/`CSVImport` port `public/shared/scoring.js` and `csv.js`). The two
 speak the same events — which is what lets `scripts/loadtest.js` play against
 a phone — so a rule or protocol change (scoring, tie-breaks, late joiners, PIN

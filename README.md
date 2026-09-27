@@ -39,10 +39,12 @@ First run seeds the question bank from `seed_questions.json` (12 questions).
 
 The native iPhone/iPad app in `ios/` plays games hosted from a phone, not from
 a laptop. Anyone with the app can tap **Host a Game**, write or import a round
-(CSV, same format as below), set the scoring, and run the game from their
-phone — and play in it too. Everyone else opens the app, finds the game on
-their own (the host's phone advertises it over Bonjour), types the PIN, and
-they're in. Standings go to every player's phone, and if the host mirrors their
+(CSV, same format as below) or draft one with Apple Intelligence, set the
+scoring, and run the game from their phone — and play in it too. Everyone else
+opens the app, finds the game on their own (the host's phone advertises it over
+Bonjour), types the PIN, and they're in — or, without the app, scans the host's
+QR code with their camera and plays in the browser: the hosting phone serves
+this repo's player page itself. Standings go to every player's phone, and if the host mirrors their
 phone to a TV (AirPlay, or an HDMI adapter), the TV becomes the big screen: the
 join code, each question and its answers, the reveal and the standings.
 

@@ -2,7 +2,8 @@
 
 The native app: SwiftUI, Liquid Glass, iOS 27. Every game it plays is hosted
 from a phone — one player taps **Host a Game**, and everyone else joins with
-the app. It doesn't join laptop-hosted games: the laptop server and its
+the app, or without it: the host's QR code opens the game in any phone's
+browser. The app doesn't join laptop-hosted games: the laptop server and its
 browser clients carry on without it.
 
 ## Build and run
@@ -103,9 +104,8 @@ the server, and its owner plays too.
 - **Set up the round** — name the game, write questions (four answers, tap a
   key to mark the right one — there's no default — optional category and time
   limit; Return moves to the next field, and it saves as you go), draft them
-  with Apple Intelligence on phones that have it (each draft is checked again
-  on its own, and one with a second right answer, a wrong key or a question
-  already in the round is left out), or import a CSV in the web
+  with Apple Intelligence on phones that have it (see *Drafting* below), or
+  import a CSV in the web
   console's format; reorder and include/exclude, and set the
   scoring: top points, time per question, a floor for slow correct answers,
   points for wrong answers, shuffle and auto-advance — with a live preview of
@@ -118,11 +118,13 @@ the server, and its owner plays too.
   at full size, End Round / Skip / End Game, Edit Round between games, and
   Stop Hosting, which tells every phone the game is over. The game's name and
   the host's own name are fixed once hosting starts.
-- **Join** — other phones find the game over Bonjour, or scan
-  the QR code: in the app, or with the Camera, which opens the app straight
-  into the game with the PIN filled in. With no router, the host can turn on
-  Personal Hotspot and everyone joins that — turned on after hosting starts,
-  it's picked up when the host comes back to the app.
+- **Join** — other phones find the game over Bonjour, or scan the QR code.
+  It holds the game's own address with the PIN (`http://192.168.1.20:3000/?pin=4821`),
+  so any phone's camera opens the web player in its browser with the PIN
+  filled in — no app needed — and the app's scanner joins in the app. The
+  address is shown beside it for anyone who'd rather type it. With no router,
+  the host can turn on Personal Hotspot and everyone joins that — turned on
+  after hosting starts, it's picked up when the host comes back to the app.
 - **On a TV, if there is one** — mirror the phone to an Apple TV or any
   AirPlay TV (Control Center → Screen Mirroring), or plug in an HDMI adapter,
   and the TV becomes the big screen for the room: the join code and QR code,
@@ -133,6 +135,26 @@ the server, and its owner plays too.
 - **No TV needed** — the full standings and the live "3 of 5 answered" count
   go to every player's phone either way.
 
+Drafting with Apple Intelligence: name a topic, pick 5 or 10, and the
+on-device model writes that many for review. A model this size gets a lot of
+trivia wrong, so each draft is written from a fact it states first, then
+checked twice on its own — judging the four options, and answering the
+question cold with no options — and only kept when both agree with its key.
+It drafts in batches of four in one session, so the first questions show up
+in about ten seconds and the model sees what it's already asked, and keeps
+going until there are as many as asked for (two minutes at most); on a topic
+it knows less well, it makes up the number with drafts only the cold answer
+doubted, marked **Double-check this answer**. Repeats of the round, or two
+drafts with one answer, are left out.
+
+Measured on the on-device model and graded by hand: on 120 drafts over 12
+topics, the fact-first prompt took the right answers from 45% to 73%; on 10
+fresh topics, 93% of the drafts both checks confirmed were right, about two
+in three of the flagged ones were, and it returned 71 of the 75 questions
+asked for. A round of 5 takes 20 seconds to a minute; 10 on a thin topic,
+about two. That's still not every answer right, so the host reviews each one
+before a draft joins the round.
+
 How it's built:
 
 - `HostedGame` — the game engine: `server/gameSession.js`, ported rule for
@@ -141,13 +163,18 @@ How it's built:
 - `HostServer` — an actor serving Socket.IO over WebSocket with `NWListener`,
   advertised over Bonjour. It speaks the laptop server's wire, so the Node
   test bots play against it too: `node scripts/loadtest.js <PIN> 3 http://<phone>:3000`.
+  The same port serves the web player (`WebPlayer`): the laptop's own
+  `public/play` page, copied into the app at build time, with a small
+  WebSocket-only Socket.IO client of its own (`ios/Web/socket.io`). A request
+  that asks to upgrade becomes a game connection; any other gets a file. The
+  HTTP and WebSocket framing is in `HTTP.swift`.
 - `HostController` — starts and stops hosting, bridges the two, and seats the
   host in their own game over loopback, so the host's player screens are
   everyone else's. The host's controls call the engine directly; nothing on
   the network can reach them.
 
-Limits: phone-hosted games are app-only (no browser players) and have no
-question images. iOS suspends a backgrounded app, so the host should keep
+Limits: phone-hosted games have no question images, and browser players get
+the laptop's web player, not the app's screens. iOS suspends a backgrounded app, so the host should keep
 Trivia open — a quick switch away is covered by a background grace period,
 and the server comes back on the same port when the app returns. If the host
 never does come back, players aren't stranded: once the link has failed, a
@@ -236,6 +263,9 @@ surface on the network: the host's controls act on the game in-process.
   use the on-device model only (`SystemLanguageModel`); the topic and the
   drafts never leave the phone, and the host reviews every answer key before
   a draft joins the round.
+- **The web player is files, not an API.** A hosting phone serves only the
+  files bundled under `Web/`, by exact path, to GET and HEAD; everything else
+  on its port is the same player WebSocket the app uses.
 - **Purchases go through StoreKit, and nothing else leaves.** The app learns
   which themes and icons the Apple Account owns, as signed transactions it
   verifies, and nothing about the player. The owned list cached in
@@ -262,12 +292,14 @@ LocalTrivia/
     TokenStore.swift        The resume token, in the Keychain
   Hosting/
     HostedGame.swift        The game engine — gameSession.js, ported
-    HostServer.swift        Socket.IO over WebSocket (NWListener) + Bonjour
+    HostServer.swift        Socket.IO over WebSocket (NWListener) + Bonjour, and the web player
+    HTTP.swift              HTTP/1.1 requests and WebSocket frames — pure, no I/O
+    WebPlayer.swift         The bundled web player, served to phones without the app
     HostController.swift    Hosting lifecycle, and the host's own seat
     HostModels.swift        The round: questions, rules, scoring, on-device storage
     QuestionDrafter.swift   Questions drafted on a topic by the on-device model, for review
     CSVImport.swift         public/shared/csv.js, ported
-    JoinLink.swift          localtrivia:// join links, QR codes, the LAN address
+    JoinLink.swift          Join links (http:// for the QR code, localtrivia://), QR codes, the LAN address
   BigScreen/
     BigScreen.swift         A connected TV gets its own scene, not a mirror of the phone
     BigScreenView.swift     The game for the room: lobby, question, reveal, standings, podium
@@ -281,7 +313,11 @@ LocalTrivia/
     Host/                   Round setup, question editor, host controls
 LocalTriviaTests/           Swift Testing: wire format, payloads, the full game loop, the shop
 LocalTriviaUITests/         Hosts a game in the simulator and plays it through; tries on a theme
+Web/socket.io/              The web player's Socket.IO client, for phone-hosted games
 ```
+
+The web player itself is `../public/play`, `shared` and `fonts`, copied into
+the app's `Web/` folder by the target's *Web Player* build phase.
 
 No third-party dependencies. Swift 6 with strict concurrency, main-actor
 isolation by default. The networking and protocol types are `nonisolated` and

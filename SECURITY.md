@@ -48,7 +48,10 @@ A phone that hosts runs a small server of its own (`ios/LocalTrivia/Hosting/`).
 Its surface is deliberately narrower than the laptop's:
 
 - **Player events only.** It speaks `join`, `resume` and `submitAnswer`; there
-  is no admin API and no `host:*` event. The host's controls act on the game
+  is no admin API and no `host:*` event. Besides the WebSocket, its port serves
+  the web player — only the files bundled under the app's `Web/` folder, by
+  exact path, to GET and HEAD — and a request that hasn't finished its headers
+  in 10 seconds, or whose headers pass 8 KB, is closed. The host's controls act on the game
   engine in-process and never cross the network, so nothing on the Wi-Fi can
   start, skip, kick or end anything.
 - **Local peers only.** Connections from outside private, link-local and
@@ -62,10 +65,13 @@ Its surface is deliberately narrower than the laptop's:
 - **The answer key stays on the host's phone**, in a file encrypted whenever
   the phone is locked (`.completeFileProtection`). Players are only ever sent a
   question's correct answer at the reveal, exactly as on the laptop.
-- **Join links** (`localtrivia://join?url=…&pin=…`, what the host's QR code
-  holds) are held to the local-network rule above: a local-network server and
-  a four-digit PIN, or nothing. A link can put a phone into a game on your
-  Wi-Fi; it can't send it anywhere else.
+- **Join links** (`http://<phone>:<port>/?pin=…`, what the host's QR code
+  holds, and `localtrivia://join?url=…&pin=…`) are held to the local-network
+  rule above when the app opens or scans one: a local-network server and a
+  four-digit PIN, or nothing. A link can put a phone into a game on your
+  Wi-Fi; it can't send it anywhere else. A browser that follows the web link
+  gets the player page from the hosting phone itself — plain HTTP on the LAN,
+  like the laptop server.
 
 ## The operator boundary
 
