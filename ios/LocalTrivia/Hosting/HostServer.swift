@@ -8,6 +8,11 @@ import Synchronization
 /// work unchanged — advertised over Bonjour as `GameBrowser.serviceType`,
 /// which only phones advertise.
 ///
+/// The same port serves the web player (`WebPlayer`) over plain HTTP, so the
+/// join link in the host's QR code works in any phone's browser: a request
+/// that asks to upgrade becomes a game connection, and any other gets a file
+/// and a closed connection (`HTTP.swift` has the framing).
+///
 /// It only moves frames. What they mean is `HostedGame`'s business, and the
 /// host's controls never travel over the network at all: there is no admin
 /// surface here to reach.
@@ -35,6 +40,9 @@ actor HostServer {
   /// Frames are small JSON; anything bigger is refused, not buffered.
   static let maxMessageBytes = 64 * 1024
   static let ports: [UInt16] = Array(3000...3019)
+  /// How long a connection has to finish its request: a phone that opens
+  /// one and says nothing doesn't get to hold it.
+  static let requestTimeout: Duration = .seconds(10)
 
   nonisolated let events: AsyncStream<Event>
   private let continuation: AsyncStream<Event>.Continuation
@@ -53,6 +61,8 @@ actor HostServer {
     let connection: NWConnection
     let sid: String
     let peer: String
+    /// A game connection, not a page being fetched.
+    var isUpgraded = false
     var isAttached = false
     var lastHeard = ContinuousClock.now
     var pump: Task<Void, Never>?
@@ -66,6 +76,7 @@ actor HostServer {
   }
 
   private enum Frame: Sendable {
+    /// Upgraded to a WebSocket: a game connection.
     case ready
     case text(String)
     case closed
@@ -115,11 +126,10 @@ actor HostServer {
   }
 
   private func listen(on port: UInt16) async throws {
-    let parameters = NWParameters.tcp
-    let websocket = NWProtocolWebSocket.Options()
-    websocket.autoReplyPing = true
-    websocket.maximumMessageSize = Self.maxMessageBytes
-    parameters.defaultProtocolStack.applicationProtocols.insert(websocket, at: 0)
+    let tcp = NWProtocolTCP.Options()
+    // Frames are small and a tapped answer is timed: send each at once.
+    tcp.noDelay = true
+    let parameters = NWParameters(tls: nil, tcp: tcp)
     parameters.includePeerToPeer = false
 
     guard let endpointPort = NWEndpoint.Port(rawValue: port) else { throw StartError.noFreePort }
@@ -170,19 +180,22 @@ actor HostServer {
   func stop() async {
     listener?.cancel()
     listener = nil
-    let closing = links.values.map(\.connection)
-    for link in links.values {
+    let closing = Array(links.values)
+    for link in closing {
       link.pump?.cancel()
       link.heartbeat?.cancel()
     }
     links = [:]
-    // Frames go out in order, so once this one's taken, so is everything before it.
+    // Frames go out in order, so once the close is taken, so is everything before it.
     await withTaskGroup(of: Void.self) { group in
-      for connection in closing {
-        group.addTask { await Self.flush(Wire.disconnect, on: connection) }
+      for link in closing where link.isUpgraded {
+        group.addTask { [connection = link.connection] in
+          Self.write(Wire.disconnect, on: connection)
+          await Self.flush(WebSocketFrame.close(WebSocketFrame.goingAway), on: connection)
+        }
       }
     }
-    for connection in closing { connection.cancel() }
+    for link in closing { link.connection.cancel() }
     continuation.finish()
   }
 
@@ -202,9 +215,9 @@ actor HostServer {
     links[id] = link
 
     let (frames, sink) = AsyncStream.makeStream(of: Frame.self)
+    // `.ready` comes from the handshake (`readRequest`), not from TCP.
     connection.stateUpdateHandler = { state in
       switch state {
-      case .ready: sink.yield(.ready)
       case .failed, .cancelled:
         sink.yield(.closed)
         sink.finish()
@@ -212,8 +225,13 @@ actor HostServer {
       }
     }
     link.pump = Task { await self.pump(id, frames) }
+    link.heartbeat = Task {
+      try? await Task.sleep(for: Self.requestTimeout)
+      guard !Task.isCancelled else { return }
+      self.closeIfIdle(id)
+    }
     connection.start(queue: queue)
-    Self.receive(on: connection, into: sink)
+    Self.readRequest(on: connection, into: sink)
   }
 
   /// One task per connection, draining its frames in order.
@@ -222,9 +240,12 @@ actor HostServer {
       guard let link = links[id] else { break }
       switch frame {
       case .ready:
+        link.isUpgraded = true
+        link.lastHeard = .now
         Self.write(
           Wire.open(sid: link.sid, pingInterval: Self.pingInterval, pingTimeout: Self.pingTimeout, maxPayload: Self.maxMessageBytes),
           on: link.connection)
+        link.heartbeat?.cancel()
         link.heartbeat = Task { await self.heartbeat(id) }
       case .text(let text):
         link.lastHeard = .now
@@ -255,6 +276,11 @@ actor HostServer {
     case .open, .pong, .noop, .connectError, .unsupported:
       break
     }
+  }
+
+  private func closeIfIdle(_ id: ConnectionID) {
+    guard let link = links[id], !link.isUpgraded else { return }
+    close(id)
   }
 
   /// The server pings; a client that goes quiet past interval + timeout is gone.
@@ -298,41 +324,98 @@ actor HostServer {
 
   // MARK: - I/O
 
-  private nonisolated static func receive(on connection: NWConnection, into sink: AsyncStream<Frame>.Continuation) {
-    connection.receiveMessage { data, context, _, error in
-      guard error == nil, data != nil || context != nil else {
-        sink.yield(.closed)
-        sink.finish()
-        return
+  /// Reads a request's head. An upgrade becomes a game connection
+  /// (`readFrames`); anything else is answered from `WebPlayer` and closed.
+  private nonisolated static func readRequest(on connection: NWConnection, buffered: Data = Data(), into sink: AsyncStream<Frame>.Continuation) {
+    connection.receive(minimumIncompleteLength: 1, maximumLength: HTTPRequest.maxHeadBytes) { data, _, isComplete, error in
+      var buffer = buffered
+      if let data { buffer.append(data) }
+      switch HTTPRequest.parse(buffer) {
+      case .incomplete:
+        guard error == nil, !isComplete else { return finish(sink) }
+        readRequest(on: connection, buffered: buffer, into: sink)
+      case .invalid:
+        answer(.error(400, "Bad Request"), on: connection, then: sink)
+      case .complete(let request, let rest):
+        guard request.isWebSocketUpgrade else {
+          return answer(WebPlayer.shared.response(to: request), on: connection, then: sink)
+        }
+        // Socket.IO's path, as the laptop server has it.
+        guard request.path.hasPrefix("/socket.io"), let key = request.headers["sec-websocket-key"] else {
+          return answer(.error(404, "Not Found"), on: connection, then: sink)
+        }
+        send(HTTPResponse.switchingToWebSocket(key: key).serialized, on: connection)
+        sink.yield(.ready)
+        var messages = WebSocketMessages(maxMessageBytes: maxMessageBytes)
+        guard deliver(messages.receive(rest), on: connection, into: sink) else { return }
+        readFrames(on: connection, messages: messages, into: sink)
       }
-      let metadata = context?.protocolMetadata(definition: NWProtocolWebSocket.definition) as? NWProtocolWebSocket.Metadata
-      switch metadata?.opcode {
-      case .text?:
-        if let data { sink.yield(.text(String(decoding: data, as: UTF8.self))) }
-      case .close?:
-        sink.yield(.closed)
-        sink.finish()
-        return
-      default:
-        break
-      }
-      receive(on: connection, into: sink)
     }
   }
 
-  private nonisolated static func write(_ text: String, on connection: NWConnection, then done: (@Sendable () -> Void)? = nil) {
-    let metadata = NWProtocolWebSocket.Metadata(opcode: .text)
-    let context = NWConnection.ContentContext(identifier: "frame", metadata: [metadata])
-    connection.send(content: Data(text.utf8), contentContext: context, isComplete: true, completion: .contentProcessed { _ in done?() })
+  private nonisolated static func readFrames(on connection: NWConnection, messages: WebSocketMessages, into sink: AsyncStream<Frame>.Continuation) {
+    connection.receive(minimumIncompleteLength: 1, maximumLength: maxMessageBytes) { data, _, isComplete, error in
+      var messages = messages
+      guard error == nil else { return finish(sink) }
+      if let data, !data.isEmpty {
+        guard deliver(messages.receive(data), on: connection, into: sink) else { return }
+      }
+      guard !isComplete else { return finish(sink) }
+      readFrames(on: connection, messages: messages, into: sink)
+    }
+  }
+
+  /// Hands up what arrived, answering pings and closes. False once the
+  /// connection is done.
+  private nonisolated static func deliver(_ events: [WebSocketMessages.Event], on connection: NWConnection, into sink: AsyncStream<Frame>.Continuation) -> Bool {
+    for event in events {
+      switch event {
+      case .text(let text):
+        sink.yield(.text(text))
+      case .ping(let payload):
+        send(WebSocketFrame(opcode: .pong, payload: payload).serialized, on: connection)
+      case .pong:
+        break
+      case .close:
+        send(WebSocketFrame.close(WebSocketFrame.normalClosure).serialized, on: connection)
+        finish(sink)
+        return false
+      case .invalid(let code):
+        send(WebSocketFrame.close(code).serialized, on: connection)
+        finish(sink)
+        return false
+      }
+    }
+    return true
+  }
+
+  /// A whole response, then the connection closes once it's sent.
+  private nonisolated static func answer(_ response: HTTPResponse, on connection: NWConnection, then sink: AsyncStream<Frame>.Continuation) {
+    connection.send(content: response.serialized, contentContext: .finalMessage, isComplete: true, completion: .contentProcessed { _ in
+      finish(sink)
+    })
+  }
+
+  private nonisolated static func finish(_ sink: AsyncStream<Frame>.Continuation) {
+    sink.yield(.closed)
+    sink.finish()
+  }
+
+  private nonisolated static func send(_ data: Data, on connection: NWConnection, then done: (@Sendable () -> Void)? = nil) {
+    connection.send(content: data, completion: .contentProcessed { _ in done?() })
+  }
+
+  private nonisolated static func write(_ text: String, on connection: NWConnection) {
+    send(WebSocketFrame.text(text).serialized, on: connection)
   }
 
   /// Writes a frame and waits for the stack to take it — or a second, for a
   /// peer that's stopped reading.
-  private nonisolated static func flush(_ text: String, on connection: NWConnection) async {
+  private nonisolated static func flush(_ frame: WebSocketFrame, on connection: NWConnection) async {
     let sent = Once<Void>()
     await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
       sent.onFirst { done.resume() }
-      write(text, on: connection) { sent.fire(()) }
+      send(frame.serialized, on: connection) { sent.fire(()) }
       Task {
         try? await Task.sleep(for: .seconds(1))
         sent.fire(())

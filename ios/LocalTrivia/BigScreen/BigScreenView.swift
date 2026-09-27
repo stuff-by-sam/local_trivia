@@ -129,11 +129,16 @@ private struct LobbyBoard: View {
               .tvRole(.pin)
               .foregroundStyle(.themeAccent)
               .glow(.tv)
-            Text("Open Trivia on this Wi-Fi and type the code, or scan it with the Camera.")
-              .tvRole(.instruction)
-              .foregroundStyle(.secondary)
-              .frame(maxWidth: TVMetrics.instructionWidth, alignment: .leading)
-              .fixedSize(horizontal: false, vertical: true)
+            Group {
+              Text("Scan with your phone's camera, or open Trivia on this Wi-Fi and type the code.")
+              if let link = host.joinLink {
+                Text("Or go to \(link.address)")
+              }
+            }
+            .tvRole(.instruction)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: TVMetrics.instructionWidth, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
           }
           if let link = host.joinLink {
             QRCodeView(payload: link.url.absoluteString)

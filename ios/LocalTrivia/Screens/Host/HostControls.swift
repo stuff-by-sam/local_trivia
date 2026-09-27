@@ -146,7 +146,7 @@ struct JoinCodeCard: View {
             .lineLimit(1)
             .minimumScaleFactor(0.6)
             .accessibilityLabel(Text("PIN \(game.pin.map(String.init).joined(separator: " "))"))
-          Text(host.lanAddress == nil ? "Turn on Wi-Fi or Personal Hotspot so others can join" : "Scan, or find \(host.gameName) in the app")
+          Text(host.lanAddress == nil ? "Turn on Wi-Fi or Personal Hotspot so others can join" : "Scan with any phone's camera, or find \(host.gameName) in the Trivia app")
             .textRole(.labelSmall)
             .foregroundStyle(host.lanAddress == nil ? AnyShapeStyle(.warning) : AnyShapeStyle(.secondary))
             .fixedSize(horizontal: false, vertical: true)
@@ -186,10 +186,18 @@ private struct JoinCodeSheet: View {
           .foregroundStyle(.themeAccent)
           .glow(.hero)
       }
-      Text("Open Trivia on the same Wi-Fi, or scan with the Camera.")
-        .textRole(.detail)
-        .foregroundStyle(.secondary)
-        .multilineTextAlignment(.center)
+      VStack(spacing: Space.xs) {
+        Text("Scan with any phone's camera to play in the browser, or open Trivia on the same Wi-Fi.")
+          .textRole(.detail)
+          .foregroundStyle(.secondary)
+        if let link = host.joinLink {
+          Text("Or go to \(link.address)")
+            .textRole(.detail)
+            .foregroundStyle(.secondary)
+            .textSelection(.enabled)
+        }
+      }
+      .multilineTextAlignment(.center)
     }
     .padding(Space.xxl)
     .frame(maxWidth: .infinity)

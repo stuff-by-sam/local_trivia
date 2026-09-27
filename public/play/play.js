@@ -34,6 +34,10 @@ const countdown = createCountdown(({ whole, fraction, low }) => {
 $('in-nick').value = store.nickDraft;
 $('in-nick').addEventListener('input', e => { store.nickDraft = e.target.value; });
 
+// A phone-hosted game's QR code links here with its PIN (`?pin=4821`).
+const linkedPin = new URLSearchParams(location.search).get('pin');
+if (linkedPin && /^\d{4,6}$/.test(linkedPin)) $('in-pin').value = linkedPin;
+
 // ---- join ----
 
 $('btn-join').addEventListener('click', () => {
@@ -56,7 +60,14 @@ socket.on('joined', snap => {
 });
 
 socket.on('connect', () => {
+  $('link-lost').hidden = true;
   if (store.token) socket.emit('resume', { token: store.token });
+});
+
+// A dropped link says so, rather than leaving a stale screen up. Not when the
+// server let us go on purpose — that comes with its own message ('kicked').
+socket.on('disconnect', reason => {
+  if (reason !== 'io server disconnect') $('link-lost').hidden = false;
 });
 
 socket.on('resumed', snap => applySnapshot(snap));

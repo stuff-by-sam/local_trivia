@@ -4,11 +4,18 @@ import Darwin
 import Foundation
 import UIKit
 
-/// `localtrivia://join?url=http://192.168.1.20:3000&pin=4821` — what the host's
-/// QR code holds. Scanned with the Camera app it opens this app straight into
-/// the game; scanned in-app it does the same. The PIN rides along because the
-/// code is only ever on the host's screen, in the room — the same place the
-/// PIN itself is shown.
+/// `http://192.168.1.20:3000/?pin=4821` — what the host's QR code holds: the
+/// game's own address, which also serves the web player (`WebPlayer`), so any
+/// phone's camera opens the game in its browser with the PIN filled in. The
+/// app's scanner reads the same link and joins in the app instead.
+///
+/// `localtrivia://join?url=http://192.168.1.20:3000&pin=4821` opens the app
+/// into the game from anywhere else.
+///
+/// The PIN rides along because the code is only ever on the host's screen or
+/// TV, in the room — the same place the PIN itself is shown. It's also what
+/// tells a phone host's link from a laptop's bare address, which isn't a game
+/// this app plays.
 nonisolated struct JoinLink: Equatable, Sendable {
   static let scheme = "localtrivia"
 
@@ -21,23 +28,39 @@ nonisolated struct JoinLink: Equatable, Sendable {
   }
 
   /// Anything can open a URL, so it's held to the same rules as a restored
-  /// game: local-network servers only, and a PIN that's four digits or nothing.
+  /// game: local-network servers only, and a PIN that's four digits or nothing
+  /// — and for a web link, four digits.
   init?(url: URL) {
-    guard url.scheme?.lowercased() == Self.scheme, url.host() == "join",
-      let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems,
-      let address = items.first(where: { $0.name == "url" })?.value,
-      let server = GameServer(address: address)
-    else { return nil }
-    self.init(server: server, pin: items.first { $0.name == "pin" }?.value)
+    guard let parts = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
+    let pin = parts.queryItems?.first { $0.name == "pin" }?.value
+    switch url.scheme?.lowercased() {
+    case Self.scheme:
+      guard url.host() == "join",
+        let address = parts.queryItems?.first(where: { $0.name == "url" })?.value,
+        let server = GameServer(address: address)
+      else { return nil }
+      self.init(server: server, pin: pin)
+    case "http":
+      guard ["", "/", "/play"].contains(parts.path), let pin = pin.flatMap(Self.validPIN),
+        let host = parts.host?.trimmingCharacters(in: CharacterSet(charactersIn: "[]")), let port = parts.port,
+        let server = GameServer(address: "http://\(host.contains(":") ? "[\(host)]" : host):\(port)")
+      else { return nil }
+      self.init(server: server, pin: pin)
+    default:
+      return nil
+    }
   }
 
+  /// The web link: the player page, with the PIN filled in.
   var url: URL {
-    var parts = URLComponents()
-    parts.scheme = Self.scheme
-    parts.host = "join"
-    parts.queryItems = [URLQueryItem(name: "url", value: server.url.absoluteString)] + (pin.map { [URLQueryItem(name: "pin", value: $0)] } ?? [])
+    var parts = URLComponents(url: server.url, resolvingAgainstBaseURL: false)!
+    parts.path = "/"
+    parts.queryItems = pin.map { [URLQueryItem(name: "pin", value: $0)] }
     return parts.url!
   }
+
+  /// `192.168.1.20:3000`, for typing into a browser when there's no camera.
+  var address: String { server.address }
 
   private static func validPIN(_ pin: String) -> String? {
     pin.count == GameStore.pinLength && pin.allSatisfy { $0.isASCII && $0.isNumber } ? pin : nil

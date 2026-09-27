@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		A1D5E5C0000000000000A004 /* DesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = A1D5E5C0000000000000A002 /* DesignSystem */; };
+		A1D5E5C0000000000000B011 /* play in Web Player */ = {isa = PBXBuildFile; fileRef = A1D5E5C0000000000000B001 /* play */; };
+		A1D5E5C0000000000000B012 /* shared in Web Player */ = {isa = PBXBuildFile; fileRef = A1D5E5C0000000000000B002 /* shared */; };
+		A1D5E5C0000000000000B013 /* fonts in Web Player */ = {isa = PBXBuildFile; fileRef = A1D5E5C0000000000000B003 /* fonts */; };
+		A1D5E5C0000000000000B014 /* socket.io in Web Player */ = {isa = PBXBuildFile; fileRef = A1D5E5C0000000000000B004 /* socket.io */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,7 +36,28 @@
 		66FD7F39564190D02825756D /* LocalTrivia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LocalTrivia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D89BA1FCB93A58DEE4EE1850 /* LocalTriviaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LocalTriviaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		40F7949C97F91E799B4564CD /* LocalTriviaUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LocalTriviaUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1D5E5C0000000000000B001 /* play */ = {isa = PBXFileReference; lastKnownFileType = folder; name = play; path = ../public/play; sourceTree = "<group>"; };
+		A1D5E5C0000000000000B002 /* shared */ = {isa = PBXFileReference; lastKnownFileType = folder; name = shared; path = ../public/shared; sourceTree = "<group>"; };
+		A1D5E5C0000000000000B003 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = ../public/fonts; sourceTree = "<group>"; };
+		A1D5E5C0000000000000B004 /* socket.io */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "socket.io"; path = Web/socket.io; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A1D5E5C0000000000000B030 /* Web Player */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Web;
+			dstSubfolderSpec = 7;
+			files = (
+				A1D5E5C0000000000000B011 /* play in Web Player */,
+				A1D5E5C0000000000000B012 /* shared in Web Player */,
+				A1D5E5C0000000000000B013 /* fonts in Web Player */,
+				A1D5E5C0000000000000B014 /* socket.io in Web Player */,
+			);
+			name = "Web Player";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		D30D2431B91E4A7A1997A9C2 /* Exceptions for "LocalTrivia" folder in "LocalTrivia" target */ = {
@@ -97,6 +122,7 @@
 			children = (
 				A1D5E5C0000000000000A006 /* DesignSystem */,
 				DFD11111692B7E97E3708955 /* LocalTrivia */,
+				A1D5E5C0000000000000B020 /* Web */,
 				BCBF6AF555B3D3434053E86C /* LocalTriviaTests */,
 				B6CF3F73DB7A593F54C0248E /* LocalTriviaUITests */,
 				7BAC04F9FF4B47F5D138438B /* Products */,
@@ -113,6 +139,17 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		A1D5E5C0000000000000B020 /* Web */ = {
+			isa = PBXGroup;
+			children = (
+				A1D5E5C0000000000000B001 /* play */,
+				A1D5E5C0000000000000B002 /* shared */,
+				A1D5E5C0000000000000B003 /* fonts */,
+				A1D5E5C0000000000000B004 /* socket.io */,
+			);
+			name = Web;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -123,6 +160,7 @@
 				E023EB9C566697FC80217D53 /* Sources */,
 				7F701D34FB2193875A8EC691 /* Frameworks */,
 				C28FB734B67B2B93A0722D00 /* Resources */,
+				A1D5E5C0000000000000B030 /* Web Player */,
 			);
 			buildRules = (
 			);
