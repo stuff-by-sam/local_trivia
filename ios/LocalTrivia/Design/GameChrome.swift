@@ -57,6 +57,7 @@ struct GameToolbar: ViewModifier {
           .labelStyle(.titleAndIcon)
           .textRole(.status)
           .fixedSize()
+          .readoutTarget()
           .accessibilityAddTraits(.updatesFrequently)
           .accessibilityShowsLargeContentViewer()
         }
@@ -177,9 +178,12 @@ struct LeaveButton: View {
 
 extension View {
   /// A toolbar readout is read, not tapped — but it's found by touch, and
-  /// held for the Large Content Viewer, so it's a full target tall.
+  /// held for the Large Content Viewer, so it's a full target tall. The
+  /// system's glass capsule hugs a readout closer than a button's title, so
+  /// it keeps `Space.m` inside that: clear of the capsule's round ends.
   fileprivate func readoutTarget() -> some View {
-    frame(minHeight: Size.target)
+    padding(.horizontal, Space.m)
+      .frame(minHeight: Size.target)
       .contentShape(.rect)
   }
 }
