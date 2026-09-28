@@ -2,12 +2,13 @@ import DesignSystem
 import StoreKit
 import SwiftUI
 
-/// Themes and app icons: try a theme on, buy it, wear it.
+/// Themes, app icons and answer markers: try one on, buy it, wear it.
 ///
 /// Out of the way on purpose — a toolbar button on the join screen — because
-/// the game is the point. Tapping a theme this phone doesn't own dresses the
-/// shop in it, so it's tried on before it's bought; closing the shop takes
-/// it off again.
+/// the game is the point. Each kind is a group that opens when it's wanted.
+/// Tapping a theme or a marker set this phone doesn't own dresses the shop in
+/// it, so it's tried on before it's bought; closing the shop takes it off
+/// again.
 struct ShopView: View {
   @Environment(Shop.self) private var shop
   @Environment(\.purchase) private var purchase
@@ -16,18 +17,24 @@ struct ShopView: View {
 
   /// A theme being tried on, not yet owned.
   @State private var trying: Theme?
+  /// A marker set being tried on, not yet owned.
+  @State private var tryingMarkers: AnswerMarkers?
+  @State private var showsThemes = false
+  @State private var showsIcons = false
+  @State private var showsMarkers = false
   /// The shop's last notice, held here so the alert keeps its words while it
   /// animates away.
   @State private var alert = ""
   @State private var isAlerting = false
 
   private var shown: Theme { trying ?? shop.theme }
+  private var shownMarkers: AnswerMarkers { tryingMarkers ?? shop.markers }
 
   var body: some View {
     NavigationStack {
       List {
         Section {
-          Showcase(theme: shown, isTryingOn: !shop.owns(shown))
+          Showcase(theme: shown, trying: trying, tryingMarkers: tryingMarkers)
         }
         .listRowBackground(Color.clear)
 
@@ -37,11 +44,19 @@ struct ShopView: View {
           }
         }
 
+        if shop.availability == .unavailable {
+          Section {
+            StoreUnavailable()
+          }
+        }
+
         themes
 
         if shop.canChangeIcon {
           icons
         }
+
+        markers
 
         Section {
           Button {
@@ -71,7 +86,9 @@ struct ShopView: View {
       }
     }
     .theme(shown)
+    .environment(\.answerMarkers, shownMarkers)
     .motion(.settle, value: shown)
+    .motion(.settle, value: shownMarkers)
     .task { await shop.loadProductsIfNeeded() }
     .onChange(of: shop.notice) { _, notice in
       guard let notice else { return }
@@ -79,14 +96,18 @@ struct ShopView: View {
       isAlerting = true
       shop.notice = nil
     }
-    // The theme being tried on is now owned — bought on its own, in the
-    // bundle, or approved by a parent — so it goes on for real.
+    // What's being tried on is now owned — bought on its own, in the bundle,
+    // or approved by a parent — so it goes on for real.
     .onChange(of: shop.owned) {
       if let trying, shop.owns(trying) { shop.wear(trying) }
+      if let tryingMarkers, shop.owns(tryingMarkers) { shop.wear(tryingMarkers) }
     }
     // Whatever was just put on is what the shop shows.
     .onChange(of: shop.theme) {
       trying = nil
+    }
+    .onChange(of: shop.markers) {
+      tryingMarkers = nil
     }
   }
 
@@ -94,25 +115,26 @@ struct ShopView: View {
 
   private var themes: some View {
     Section {
-      if shop.availability == .unavailable {
-        StoreUnavailable()
-      }
-      ForEach(Theme.allCases) { theme in
-        ThemeRow(theme: theme, isShown: theme == shown) {
-          if shop.owns(theme) {
-            trying = nil
-            shop.wear(theme)
-          } else {
-            trying = theme
+      DisclosureGroup(isExpanded: $showsThemes) {
+        ForEach(Theme.allCases) { theme in
+          ThemeRow(theme: theme, isShown: theme == shown) {
+            if shop.owns(theme) {
+              trying = nil
+              shop.wear(theme)
+            } else {
+              trying = theme
+            }
+          } onBuy: {
+            buy(theme.productID)
           }
-        } onBuy: {
-          buy(theme.productID)
+        }
+      } label: {
+        GroupLabel("Themes", current: shop.theme.name) {
+          ThemeSwatch(theme: shop.theme, isShown: false)
         }
       }
-    } header: {
-      SectionHeader("Themes")
     } footer: {
-      Text("A theme dresses this phone, and any TV it puts the game on. Answers keep their colours and shapes on every phone, so B is always the cyan triangle.")
+      Text("A theme dresses this phone, any TV it puts the game on, and the browsers in a game it hosts.")
     }
   }
 
@@ -120,22 +142,53 @@ struct ShopView: View {
 
   private var icons: some View {
     Section {
-      LazyVGrid(columns: [GridItem(.adaptive(minimum: Size.iconTile * (typeSize.isAccessibilitySize ? 2.4 : 1.4)), spacing: Space.m)], spacing: Space.l) {
-        ForEach(AppIcon.allCases) { icon in
-          IconTile(icon: icon) {
-            if shop.owns(icon) {
-              Task { await shop.setIcon(icon) }
-            } else {
-              buy(icon.productID)
+      DisclosureGroup(isExpanded: $showsIcons) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: Size.iconTile * (typeSize.isAccessibilitySize ? 2.4 : 1.4)), spacing: Space.m)], spacing: Space.l) {
+          ForEach(AppIcon.allCases) { icon in
+            IconTile(icon: icon) {
+              if shop.owns(icon) {
+                Task { await shop.setIcon(icon) }
+              } else {
+                buy(icon.productID)
+              }
             }
           }
         }
+        .padding(.vertical, Space.s)
+      } label: {
+        GroupLabel("App Icons", current: shop.icon.name) {
+          IconArtwork(shop.icon.design, size: Size.swatch)
+        }
       }
-      .padding(.vertical, Space.s)
-    } header: {
-      SectionHeader("App Icons")
     } footer: {
       Text("Changes Trivia's icon on your Home Screen.")
+    }
+  }
+
+  // MARK: - Markers
+
+  private var markers: some View {
+    Section {
+      DisclosureGroup(isExpanded: $showsMarkers) {
+        ForEach(AnswerMarkers.allCases) { markers in
+          MarkerRow(markers: markers, isShown: markers == shownMarkers) {
+            if shop.owns(markers) {
+              tryingMarkers = nil
+              shop.wear(markers)
+            } else {
+              tryingMarkers = markers
+            }
+          } onBuy: {
+            buy(markers.productID)
+          }
+        }
+      } label: {
+        GroupLabel("Answer Markers", current: shop.markers.name) {
+          MarkerSwatch(markers: shop.markers, isShown: false)
+        }
+      }
+    } footer: {
+      Text("The shapes beside each answer's letter, on this phone and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan.")
     }
   }
 
@@ -145,10 +198,13 @@ struct ShopView: View {
   }
 }
 
-/// The theme on show, drawn the way the join screen draws itself.
+/// What's on show, drawn the way the join screen draws itself: the theme,
+/// and the answer markers above the wordmark.
 private struct Showcase: View {
   let theme: Theme
-  let isTryingOn: Bool
+  /// What's being tried on and isn't owned yet, if anything.
+  let trying: Theme?
+  let tryingMarkers: AnswerMarkers?
 
   var body: some View {
     VStack(spacing: Space.l) {
@@ -156,8 +212,8 @@ private struct Showcase: View {
         .font(.subheadline)
       Wordmark(scale: .showcase)
       VStack(spacing: Space.xs) {
-        StatusLine(isTryingOn ? "Trying on \(String(localized: theme.name))" : "Wearing \(String(localized: theme.name))")
-        Text(theme.tagline)
+        StatusLine(verbatim: status)
+        Text(tagline)
           .textRole(.detail)
           .foregroundStyle(.secondary)
           .multilineTextAlignment(.center)
@@ -166,10 +222,51 @@ private struct Showcase: View {
     .frame(maxWidth: .infinity)
     .padding(.vertical, Space.s)
     .accessibilityElement(children: .ignore)
-    .accessibilityLabel(
-      isTryingOn
-        ? Text("Trying on \(String(localized: theme.name)). \(String(localized: theme.tagline))")
-        : Text("Wearing \(String(localized: theme.name)). \(String(localized: theme.tagline))"))
+    .accessibilityLabel(Text(verbatim: "\(status). \(String(localized: tagline))"))
+  }
+
+  private var status: String {
+    switch (trying, tryingMarkers) {
+    case let (theme?, markers?): String(localized: "Trying on \(String(localized: theme.name)) with \(String(localized: markers.name))")
+    case let (theme?, nil): String(localized: "Trying on \(String(localized: theme.name))")
+    case let (nil, markers?): String(localized: "Trying on \(String(localized: markers.name))")
+    case (nil, nil): String(localized: "Wearing \(String(localized: theme.name))")
+    }
+  }
+
+  /// What's being tried on says what it is; otherwise the theme does.
+  private var tagline: LocalizedStringResource {
+    if trying == nil, let tryingMarkers { tryingMarkers.tagline } else { theme.tagline }
+  }
+}
+
+/// A group's row while it's closed: what's in it, and what's on now.
+private struct GroupLabel<Artwork: View>: View {
+  let title: LocalizedStringKey
+  let current: LocalizedStringResource
+  @ViewBuilder var artwork: Artwork
+
+  init(_ title: LocalizedStringKey, current: LocalizedStringResource, @ViewBuilder artwork: () -> Artwork) {
+    self.title = title
+    self.current = current
+    self.artwork = artwork()
+  }
+
+  var body: some View {
+    HStack(spacing: Space.m) {
+      artwork
+      VStack(alignment: .leading, spacing: Space.xxs) {
+        Text(title)
+          .textRole(.bodyEmphasis)
+          .foregroundStyle(.primary)
+        Text(current)
+          .textRole(.detail)
+          .foregroundStyle(.secondary)
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    .padding(.vertical, Space.xs)
+    .accessibilityElement(children: .combine)
   }
 }
 
@@ -214,6 +311,53 @@ private struct ThemeRow: View {
           .foregroundStyle(.secondary)
       } else if let productID = theme.productID {
         PriceButton(productID: productID, name: theme.name, action: onBuy)
+      }
+    }
+    .padding(.vertical, Space.xs)
+  }
+}
+
+private struct MarkerRow: View {
+  let markers: AnswerMarkers
+  let isShown: Bool
+  let onSelect: () -> Void
+  let onBuy: () -> Void
+
+  @Environment(Shop.self) private var shop
+  @Environment(\.dynamicTypeSize) private var typeSize
+
+  var body: some View {
+    OfferLayout(isStacked: typeSize.isAccessibilitySize) {
+      Button(action: onSelect) {
+        HStack(spacing: Space.m) {
+          MarkerSwatch(markers: markers, isShown: isShown)
+          VStack(alignment: .leading, spacing: Space.xxs) {
+            Text(markers.name)
+              .textRole(.bodyEmphasis)
+              .foregroundStyle(.primary)
+            Text(markers.tagline)
+              .textRole(.detail)
+              .foregroundStyle(.secondary)
+              .fixedSize(horizontal: false, vertical: true)
+          }
+          .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .contentShape(.rect)
+      }
+      .buttonStyle(.plain)
+      .accessibilityHint(shop.owns(markers) ? "Uses these markers." : "Tries these markers on.")
+
+      if shop.markers == markers {
+        Image(systemName: "checkmark")
+          .fontWeight(.bold)
+          .foregroundStyle(.themeAccent)
+          .accessibilityLabel("In use")
+      } else if shop.owns(markers) {
+        Text("Owned")
+          .textRole(.labelSmall)
+          .foregroundStyle(.secondary)
+      } else if let productID = markers.productID {
+        PriceButton(productID: productID, name: markers.name, action: onBuy)
       }
     }
     .padding(.vertical, Space.xs)
@@ -274,12 +418,13 @@ private struct PriceButton: View {
   }
 }
 
-/// Every theme and icon in one purchase.
+/// Every theme, icon and marker set in one purchase.
 private struct EverythingOffer: View {
   let onBuy: () -> Void
 
   private static let themes = Theme.allCases.filter { $0.productID != nil }.count
   private static let icons = AppIcon.allCases.filter { $0.productID != nil }.count
+  private static let markers = AnswerMarkers.allCases.filter { $0.productID != nil }.count
 
   @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -288,7 +433,7 @@ private struct EverythingOffer: View {
       VStack(alignment: .leading, spacing: Space.xxs) {
         Text("Everything")
           .textRole(.bodyEmphasis)
-        Text("All ^[\(Self.themes) theme](inflect: true) and ^[\(Self.icons) app icon](inflect: true)")
+        Text("All ^[\(Self.themes) theme](inflect: true), ^[\(Self.icons) app icon](inflect: true) and ^[\(Self.markers) set](inflect: true) of answer markers")
           .textRole(.detail)
           .foregroundStyle(.secondary)
           .fixedSize(horizontal: false, vertical: true)

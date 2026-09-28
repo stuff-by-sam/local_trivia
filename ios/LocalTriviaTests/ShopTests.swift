@@ -77,7 +77,9 @@ import Testing
     await shop.refreshEntitlements()
     #expect(shop.owns(Theme.phosphor))
     #expect(shop.owns(AppIcon.classic))
+    #expect(shop.owns(AnswerMarkers.classic))
     #expect(Theme.allCases.filter { !shop.owns($0) }.count == Theme.allCases.count - 1)
+    #expect(AnswerMarkers.allCases.filter { !shop.owns($0) }.count == AnswerMarkers.allCases.count - 1)
   }
 
   @Test func aThemeHasToBeBoughtBeforeItsWorn() async throws {
@@ -104,6 +106,23 @@ import Testing
     #expect(shop.chosenTheme == .cobalt)
   }
 
+  /// Markers are bought, worn and taken back the way a theme is.
+  @Test func markersHaveToBeBoughtAndARefundTakesThemBack() async throws {
+    let shop = await makeShop()
+    shop.wear(AnswerMarkers.suits)
+    #expect(shop.markers == .classic)
+
+    try await buy(AnswerMarkers.suits.productID, in: shop)
+    #expect(shop.owns(AnswerMarkers.suits))
+    #expect(shop.markers == .suits, "a set goes on as soon as it's bought")
+    #expect(shop.theme == .phosphor, "and leaves the theme alone")
+    #expect(defaults.string(forKey: "markers") == "suits")
+
+    try await refund(AnswerMarkers.suits.productID, in: shop)
+    #expect(shop.markers == .classic)
+    #expect(shop.chosenMarkers == .suits, "the choice is kept, for if the purchase comes back")
+  }
+
   @Test func anIconGoesOnTheHomeScreenAndARefundTakesItOff() async throws {
     let shop = await makeShop()
     await shop.setIcon(.gold)
@@ -126,11 +145,15 @@ import Testing
     #expect(shop.ownsEverything)
     #expect(Theme.allCases.allSatisfy(shop.owns))
     #expect(AppIcon.allCases.allSatisfy(shop.owns))
+    #expect(AnswerMarkers.allCases.allSatisfy(shop.owns))
     #expect(shop.theme == .phosphor, "the bundle has nothing in particular to put on")
+    #expect(shop.markers == .classic)
 
     shop.wear(Theme.noir)
+    shop.wear(AnswerMarkers.critters)
     await shop.setIcon(.synthwave)
     #expect(shop.theme == .noir)
+    #expect(shop.markers == .critters)
     #expect(icons.alternateIconName == "AppIcon-Synthwave")
   }
 
@@ -150,12 +173,14 @@ import Testing
     try await buy(Theme.amber.productID, in: shop)
     try await buy(Shop.everythingID, in: shop)
     shop.wear(Theme.cobalt)
+    shop.wear(AnswerMarkers.sky)
     await shop.setIcon(.noir)
 
     try await refund(Shop.everythingID, in: shop)
     #expect(shop.owns(Theme.amber))
     #expect(!shop.owns(Theme.cobalt))
     #expect(shop.theme == .phosphor)
+    #expect(shop.markers == .classic)
     #expect(shop.icon == .classic)
     #expect(icons.alternateIconName == nil)
   }
@@ -194,13 +219,16 @@ import Testing
 
   /// The cache puts the theme on screen at launch; StoreKit has the last word.
   @Test func trustsTheCacheOnlyUntilStoreKitAnswers() async {
-    defaults.set([Theme.synthwave.productID!], forKey: "ownedProducts")
+    defaults.set([Theme.synthwave.productID!, AnswerMarkers.elements.productID!], forKey: "ownedProducts")
     defaults.set("synthwave", forKey: "theme")
+    defaults.set("elements", forKey: "markers")
     let shop = Shop(defaults: defaults, icons: icons)
     #expect(shop.theme == .synthwave)
+    #expect(shop.markers == .elements)
 
     await shop.refreshEntitlements()
     #expect(shop.theme == .phosphor, "nothing was ever bought")
+    #expect(shop.markers == .classic)
   }
 
   /// Every alternate icon is built into the app under the name the shop sets.

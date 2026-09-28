@@ -4,8 +4,8 @@ import OSLog
 import StoreKit
 import UIKit
 
-/// Themes and app icons, sold as non-consumable in-app purchases — one at a
-/// time, or all at once (`everythingID`).
+/// Themes, app icons and answer markers, sold as non-consumable in-app
+/// purchases — one at a time, or all at once (`everythingID`).
 ///
 /// StoreKit's verified entitlements are the record of what this phone owns;
 /// nothing is unlocked on the app's say-so. The last answer is cached in
@@ -16,7 +16,8 @@ import UIKit
 ///
 /// Choosing and owning are kept apart: `chosenTheme` is what the player picked,
 /// `theme` is what they're entitled to wear. A theme that's taken back returns
-/// by itself if the purchase does (restored, or approved by a parent).
+/// by itself if the purchase does (restored, or approved by a parent). Answer
+/// markers work the same way (`chosenMarkers`, `markers`).
 @Observable
 final class Shop {
   enum Availability: Equatable {
@@ -42,22 +43,28 @@ final class Shop {
   private(set) var chosenTheme: Theme {
     didSet { defaults.set(chosenTheme.rawValue, forKey: Keys.theme) }
   }
+  private(set) var chosenMarkers: AnswerMarkers {
+    didSet { defaults.set(chosenMarkers.rawValue, forKey: Keys.markers) }
+  }
   /// What the home screen shows. Read when the shop starts: iOS keeps it.
   private(set) var icon: AppIcon = .classic
 
   /// What the app is drawn in: the chosen theme, while it's owned.
   var theme: Theme { owns(chosenTheme) ? chosenTheme : .phosphor }
+  /// The shapes the answers are drawn with: the chosen set, while it's owned.
+  var markers: AnswerMarkers { owns(chosenMarkers) ? chosenMarkers : .classic }
 
   var canChangeIcon: Bool { icons.supportsAlternateIcons }
 
-  /// The bundle: every theme and icon, including ones added later.
+  /// The bundle: every theme, icon and marker set, including ones added later.
   static let everythingID = "com.stuffbysam.localtrivia.bundle.everything"
 
-  static let productIDs = Theme.allCases.compactMap(\.productID) + AppIcon.allCases.compactMap(\.productID) + [everythingID]
+  static let productIDs = Theme.allCases.compactMap(\.productID) + AppIcon.allCases.compactMap(\.productID)
+    + AnswerMarkers.allCases.compactMap(\.productID) + [everythingID]
 
   /// Whether the bundle, or every item in it, is owned: nothing left to buy.
   var ownsEverything: Bool {
-    Theme.allCases.allSatisfy(owns) && AppIcon.allCases.allSatisfy(owns)
+    Theme.allCases.allSatisfy(owns) && AppIcon.allCases.allSatisfy(owns) && AnswerMarkers.allCases.allSatisfy(owns)
   }
 
   /// How a product is bought: SwiftUI's `purchase` action from the shop's
@@ -77,6 +84,7 @@ final class Shop {
   private enum Keys {
     static let owned = "ownedProducts"
     static let theme = "theme"
+    static let markers = "markers"
   }
 
   init(defaults: UserDefaults = .standard, icons: any IconSwitcher = HomeScreen()) {
@@ -84,10 +92,12 @@ final class Shop {
     self.icons = icons
     owned = Set(defaults.stringArray(forKey: Keys.owned) ?? [])
     chosenTheme = defaults.string(forKey: Keys.theme).flatMap(Theme.init(rawValue:)) ?? .phosphor
+    chosenMarkers = defaults.string(forKey: Keys.markers).flatMap(AnswerMarkers.init(rawValue:)) ?? .classic
   }
 
   func owns(_ theme: Theme) -> Bool { owns(theme.productID) }
   func owns(_ icon: AppIcon) -> Bool { owns(icon.productID) }
+  func owns(_ markers: AnswerMarkers) -> Bool { owns(markers.productID) }
 
   /// Free (no product), bought on its own, or in the bundle.
   private func owns(_ productID: String?) -> Bool {
@@ -173,6 +183,8 @@ final class Shop {
       await transaction.finish()
       if let theme = Theme.allCases.first(where: { $0.productID == transaction.productID }) {
         wear(theme)
+      } else if let markers = AnswerMarkers.allCases.first(where: { $0.productID == transaction.productID }) {
+        wear(markers)
       } else if let icon = AppIcon.allCases.first(where: { $0.productID == transaction.productID }) {
         await setIcon(icon)
       }
@@ -206,8 +218,8 @@ final class Shop {
     }
     await refreshEntitlements()
     notice = owned.isEmpty
-      ? String(localized: "This Apple Account hasn't bought any themes or icons yet.")
-      : String(localized: "Your themes and icons are restored.")
+      ? String(localized: "This Apple Account hasn't bought any themes, icons or markers yet.")
+      : String(localized: "Your themes, icons and markers are restored.")
   }
 
   // MARK: - Wearing
@@ -215,6 +227,11 @@ final class Shop {
   func wear(_ theme: Theme) {
     guard owns(theme) else { return }
     chosenTheme = theme
+  }
+
+  func wear(_ markers: AnswerMarkers) {
+    guard owns(markers) else { return }
+    chosenMarkers = markers
   }
 
   /// Changes the home screen icon. iOS tells the player it has.

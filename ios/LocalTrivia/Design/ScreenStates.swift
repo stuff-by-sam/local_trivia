@@ -59,29 +59,34 @@ enum ScreenState: String, CaseIterable {
 struct ScreenPreview: View {
   let state: ScreenState
   let theme: Theme
+  let markers: AnswerMarkers
 
   @State private var models: PreviewModels
   @Namespace private var glass
 
   /// `chosen` is the answer a chosen question has picked, 0–3.
-  init(_ state: ScreenState, theme: Theme = .phosphor, chosen: Int = 1) {
+  init(_ state: ScreenState, theme: Theme = .phosphor, markers: AnswerMarkers = .classic, chosen: Int = 1) {
     self.state = state
     self.theme = theme
+    self.markers = markers
     _models = State(initialValue: PreviewModels(state, chosen: chosen))
   }
 
-  /// `-screen question.chosen -theme amber -chosen 3`: that screen, for a UI test.
+  /// `-screen question.chosen -theme amber -markers suits -chosen 3`: that
+  /// screen, for a UI test.
   static func fromLaunchArguments() -> ScreenPreview? {
     let defaults = UserDefaults.standard
     guard let name = defaults.string(forKey: "screen"), let state = ScreenState(rawValue: name) else { return nil }
     let theme = defaults.string(forKey: "theme").flatMap(Theme.init(rawValue:)) ?? .phosphor
+    let markers = defaults.string(forKey: "markers").flatMap(AnswerMarkers.init(rawValue:)) ?? .classic
     let chosen = defaults.object(forKey: "chosen") == nil ? 1 : defaults.integer(forKey: "chosen")
-    return ScreenPreview(state, theme: theme, chosen: chosen)
+    return ScreenPreview(state, theme: theme, markers: markers, chosen: chosen)
   }
 
   var body: some View {
     content
       .theme(theme)
+      .environment(\.answerMarkers, markers)
       .environment(models.store)
       .environment(models.browser)
       .environment(models.host)

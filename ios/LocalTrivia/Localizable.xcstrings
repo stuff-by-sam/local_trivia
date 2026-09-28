@@ -73,8 +73,11 @@
     "A monochrome tube, warm as an old terminal" : {
       "extractionState" : "manual"
     },
-    "A theme dresses this phone, and any TV it puts the game on. Answers keep their colours and shapes on every phone, so B is always the cyan triangle." : {
+    "A theme dresses this phone, any TV it puts the game on, and the browsers in a game it hosts." : {
 
+    },
+    "A tortoise, a fish, a cat and a bird" : {
+      "extractionState" : "manual"
     },
     "A wrong answer earns" : {
 
@@ -91,12 +94,12 @@
     "Adds or leaves out this question." : {
 
     },
-    "All ^[%lld theme](inflect: true) and ^[%lld app icon](inflect: true)" : {
+    "All ^[%lld theme](inflect: true), ^[%lld app icon](inflect: true) and ^[%lld set](inflect: true) of answer markers" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "All ^[%1$lld theme](inflect: true) and ^[%2$lld app icon](inflect: true)"
+            "value" : "All ^[%1$lld theme](inflect: true), ^[%2$lld app icon](inflect: true) and ^[%3$lld set](inflect: true) of answer markers"
           }
         }
       }
@@ -108,6 +111,9 @@
 
     },
     "Answer %@" : {
+
+    },
+    "Answer Markers" : {
 
     },
     "Answer on your phone" : {
@@ -183,8 +189,14 @@
     "Choose your Apple TV, or a TV with AirPlay." : {
 
     },
+    "Circle, triangle, square and diamond: the game's own" : {
+      "extractionState" : "manual"
+    },
     "Classic" : {
-
+      "extractionState" : "manual"
+    },
+    "Clubs, spades, hearts and diamonds, from the card table" : {
+      "extractionState" : "manual"
     },
     "Cobalt" : {
       "extractionState" : "manual"
@@ -224,6 +236,9 @@
     },
     "Couldn't start hosting: %@" : {
 
+    },
+    "Critters" : {
+      "extractionState" : "manual"
     },
     "Delete All" : {
 
@@ -269,6 +284,9 @@
     },
     "Edit Round…" : {
 
+    },
+    "Elements" : {
+      "extractionState" : "manual"
     },
     "End Game" : {
 
@@ -369,6 +387,9 @@
     },
     "Join code" : {
 
+    },
+    "Leaf, water, fire and lightning" : {
+      "extractionState" : "manual"
     },
     "Leave Game" : {
 
@@ -644,6 +665,9 @@
     "Skipped ^[%lld row](inflect: true):" : {
 
     },
+    "Sky" : {
+      "extractionState" : "manual"
+    },
     "Standings" : {
 
     },
@@ -664,6 +688,12 @@
     },
     "Stop hosting?" : {
 
+    },
+    "Suits" : {
+      "extractionState" : "manual"
+    },
+    "Sun, moon, cloud and star" : {
+      "extractionState" : "manual"
     },
     "Synthwave" : {
       "extractionState" : "manual"
@@ -704,13 +734,16 @@
     "The game is on the TV" : {
 
     },
+    "The shapes beside each answer's letter, on this phone and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan." : {
+
+    },
     "Themes" : {
 
     },
     "Themes & Icons" : {
 
     },
-    "This Apple Account hasn't bought any themes or icons yet." : {
+    "This Apple Account hasn't bought any themes, icons or markers yet." : {
 
     },
     "This iPhone doesn't allow the camera. Type the PIN from the host's phone instead." : {
@@ -749,6 +782,9 @@
     "Total" : {
 
     },
+    "Tries these markers on." : {
+
+    },
     "Tries this theme on." : {
 
     },
@@ -761,12 +797,12 @@
     "Trying on %@" : {
 
     },
-    "Trying on %@. %@" : {
+    "Trying on %@ with %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Trying on %1$@. %2$@"
+            "value" : "Trying on %1$@ with %2$@"
           }
         }
       }
@@ -779,6 +815,9 @@
     },
     "Unranked" : {
       "extractionState" : "manual"
+    },
+    "Uses these markers." : {
+
     },
     "Violet on midnight, down to the horizon" : {
       "extractionState" : "manual"
@@ -797,16 +836,6 @@
     },
     "Wearing %@" : {
 
-    },
-    "Wearing %@. %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Wearing %1$@. %2$@"
-          }
-        }
-      }
     },
     "Wears this theme." : {
 
@@ -861,7 +890,7 @@
     "Your position: unranked, %lld points" : {
 
     },
-    "Your themes and icons are restored." : {
+    "Your themes, icons and markers are restored." : {
 
     },
     "^[%lld player](inflect: true)" : {
@@ -876,7 +905,19 @@
     "and %lld more" : {
 
     },
+    "bird" : {
+      "extractionState" : "manual"
+    },
+    "cat" : {
+      "extractionState" : "manual"
+    },
     "circle" : {
+      "extractionState" : "manual"
+    },
+    "cloud" : {
+      "extractionState" : "manual"
+    },
+    "club" : {
       "extractionState" : "manual"
     },
     "diamond" : {
@@ -884,6 +925,27 @@
     },
     "down %lld" : {
 
+    },
+    "drop" : {
+      "extractionState" : "manual"
+    },
+    "fish" : {
+      "extractionState" : "manual"
+    },
+    "flame" : {
+      "extractionState" : "manual"
+    },
+    "heart" : {
+      "extractionState" : "manual"
+    },
+    "leaf" : {
+      "extractionState" : "manual"
+    },
+    "lightning bolt" : {
+      "extractionState" : "manual"
+    },
+    "moon" : {
+      "extractionState" : "manual"
     },
     "of %lld · %@ pts" : {
       "localizations" : {
@@ -898,7 +960,19 @@
     "pts" : {
 
     },
+    "spade" : {
+      "extractionState" : "manual"
+    },
     "square" : {
+      "extractionState" : "manual"
+    },
+    "star" : {
+      "extractionState" : "manual"
+    },
+    "sun" : {
+      "extractionState" : "manual"
+    },
+    "tortoise" : {
       "extractionState" : "manual"
     },
     "triangle" : {

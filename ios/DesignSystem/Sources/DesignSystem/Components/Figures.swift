@@ -2,12 +2,14 @@ import SwiftUI
 
 /// The answer set, in its colours: the brand mark.
 public struct AnswerSetMark: View {
+  @Environment(\.answerMarkers) private var markers
+
   public init() {}
 
   public var body: some View {
     HStack(spacing: Space.l) {
       ForEach(AnswerStyle.allCases) { style in
-        Image(systemName: style.symbol)
+        Image(systemName: markers.symbol(for: style))
           .foregroundStyle(style.color)
       }
     }

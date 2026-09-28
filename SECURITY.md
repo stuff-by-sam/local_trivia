@@ -37,10 +37,10 @@ rules:
   with Private Cloud Compute turned on — off by default, see ios/README.md —
   sends the topic, and the drafts to check, to Apple's Private Cloud Compute
   for that request only; it keeps nothing, and the draft sheet says so
-  first.) Optional themes and app icons are bought through StoreKit;
+  first.) Optional themes, app icons and answer markers are bought through StoreKit;
   the app sees only which ones the Apple Account owns, as signed
   transactions it verifies. Preferences hold only the nickname draft, the last
-  game's address, the chosen theme and a cache of what's owned — replaced by
+  game's address, the chosen theme and answer markers, and a cache of what's owned — replaced by
   StoreKit's answer at every launch, so editing it unlocks nothing. The
   privacy manifest declares exactly that.
 - **Untrusted text is rendered as text.** Questions, answers and other players'

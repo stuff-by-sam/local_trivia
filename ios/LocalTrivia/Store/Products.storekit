@@ -143,7 +143,7 @@
       "internalID" : "6740000010",
       "localizations" : [
         {
-          "description" : "Every theme and every app icon.",
+          "description" : "Every theme, app icon and set of answer markers.",
           "displayName" : "Everything",
           "locale" : "en_US"
         }
@@ -285,6 +285,66 @@
       ],
       "productID" : "com.stuffbysam.localtrivia.icon.titanium",
       "referenceName" : "Icon: Titanium",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000020",
+      "localizations" : [
+        {
+          "description" : "Clubs, spades, hearts and diamonds beside your answers.",
+          "displayName" : "Suits Markers",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.markers.suits",
+      "referenceName" : "Markers: Suits",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000021",
+      "localizations" : [
+        {
+          "description" : "Leaf, water, fire and lightning beside your answers.",
+          "displayName" : "Elements Markers",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.markers.elements",
+      "referenceName" : "Markers: Elements",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000022",
+      "localizations" : [
+        {
+          "description" : "Sun, moon, cloud and star beside your answers.",
+          "displayName" : "Sky Markers",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.markers.sky",
+      "referenceName" : "Markers: Sky",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6740000023",
+      "localizations" : [
+        {
+          "description" : "A tortoise, a fish, a cat and a bird beside your answers.",
+          "displayName" : "Critters Markers",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.stuffbysam.localtrivia.markers.critters",
+      "referenceName" : "Markers: Critters",
       "type" : "NonConsumable"
     }
   ],

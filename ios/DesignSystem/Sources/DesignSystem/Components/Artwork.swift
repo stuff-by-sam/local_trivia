@@ -165,3 +165,42 @@ public struct ThemeSwatch: View {
       .accessibilityHidden(true)
   }
 }
+
+/// A set of answer markers as a swatch: its four shapes, two by two, in the
+/// answers' colours — the set's row in the shop.
+public struct MarkerSwatch: View {
+  let markers: AnswerMarkers
+  let isShown: Bool
+
+  public init(markers: AnswerMarkers, isShown: Bool) {
+    self.markers = markers
+    self.isShown = isShown
+  }
+
+  public var body: some View {
+    let shape = RoundedRectangle(cornerRadius: Radius.control / 2)
+    Grid(horizontalSpacing: Space.xxs, verticalSpacing: Space.xxs) {
+      GridRow {
+        glyph(.a)
+        glyph(.b)
+      }
+      GridRow {
+        glyph(.c)
+        glyph(.d)
+      }
+    }
+    .font(.system(size: Size.swatch / 3.5, weight: .bold))
+    .frame(width: Size.swatch, height: Size.swatch)
+    .background(.panel, in: shape)
+    .overlay {
+      shape.strokeBorder(isShown ? AnyShapeStyle(.themeAccent) : AnyShapeStyle(.panelStroke), lineWidth: isShown ? 1.5 : 1)
+    }
+    .accessibilityHidden(true)
+  }
+
+  private func glyph(_ style: AnswerStyle) -> some View {
+    Image(systemName: markers.symbol(for: style))
+      .foregroundStyle(style.color)
+      .frame(width: Size.swatch / 2.6, height: Size.swatch / 2.6)
+  }
+}

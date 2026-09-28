@@ -79,8 +79,8 @@ and every screen is built from the `DesignSystem` package that codifies it.
   the accent while playing, green or red at the reveal, gold on the podium.
   It only animates when that mood changes.
 - **The answer set is the brand.** Each answer is a keycap (`▲ B`) in the same
-  colour, shape and letter as on the TV (`AnswerStyle` mirrors `PAL` in
-  `public/shared/common.js`). The answers stay neutral glass with a breath of
+  colour and letter as on the TV (`AnswerStyle` mirrors `PAL` in
+  `public/shared/common.js`), and the shape of the phone's answer markers. The answers stay neutral glass with a breath of
   their colour until you choose one, which lights up. Its glass then flows into
   the result badge at the reveal.
 - **Terminal details, used sparingly.** A blinking cursor marks anything that's
@@ -201,12 +201,14 @@ and the server comes back on the same port when the app returns. If the host
 never does come back, players aren't stranded: once the link has failed, a
 leave button appears on every screen.
 
-## Themes and icons
+## Themes, icons and answer markers
 
 Optional, and out of the way: a **Themes & Icons** button in the join
 screen's toolbar, and nowhere in a game. Everything is a one-time,
-non-consumable in-app purchase — each theme and icon on its own, or
-**Everything** in one go. Phosphor and the classic icon are free.
+non-consumable in-app purchase — each theme, icon and marker set on its own,
+or **Everything** in one go. Phosphor, the classic icon and the classic
+markers are free. The shop keeps each kind in a group of its own, closed
+until it's opened; a closed group says what's in use.
 
 - **Themes** — Amber, Cobalt, Synthwave, Noir, Gold, Holographic,
   Chalkboard, Glass and Titanium. A theme is the accent, the ink behind the
@@ -226,8 +228,8 @@ non-consumable in-app purchase — each theme and icon on its own, or
   its game: they have no theme of their own, so the web player is served in
   the host's accent (`Theme.webAccent`), as a laptop serves it in its
   operator's. Other phones with the app keep their own theme. A theme never
-  touches the answer set or the status colours: B is the cyan triangle on
-  every phone in the room, whoever's wearing what, and red is still wrong.
+  touches the answer colours or the status colours: B is cyan on every
+  phone in the room, whoever's wearing what, and red is still wrong.
 - **App icons** — one to match every theme: the classic icon's four
   shapes, recoloured (Holographic's in foil, Chalkboard's in pastel chalk on
   slate, Titanium's in brushed metal). Glass's shapes are glass layers over
@@ -235,8 +237,16 @@ non-consumable in-app purchase — each theme and icon on its own, or
   Composer file beside
   `AppIcon.icon`, named in the target's *Alternate App Icon Sets* build
   setting.
-- **Everything** — one product that unlocks every theme and icon, including
-  any added later: the app treats owning it as owning each of them. It's
+- **Answer markers** — the shapes beside each answer's letter, in place of
+  the classic circle, triangle, square and diamond: Suits (club, spade,
+  heart, diamond), Elements (leaf, water, fire, lightning), Sky (sun, moon,
+  cloud, star) and Critters (tortoise, fish, cat, bird). A set is tried on
+  like a theme, and dresses this phone's answers and any TV it puts the game
+  on. Letters and colours don't change, so B is cyan on every phone, and
+  VoiceOver names the shape a set uses ("B, spade: Saturn"). Browser players
+  keep the classic shapes.
+- **Everything** — one product that unlocks every theme, icon and marker
+  set, including any added later: the app treats owning it as owning each of them. It's
   offered until there's nothing left to buy. Refunding it takes back only
   what came in it, not what was bought on its own.
 - **Restore Purchases** asks the App Store for everything the Apple Account
@@ -247,13 +257,16 @@ How it's built:
 - `Shop` — StoreKit 2. Verified entitlements are the only record of what's
   owned. They're cached in preferences so a bought theme is on screen from
   the first frame, and checked again at every launch, so a refund takes a
-  theme (or icon) back. A `Transaction.updates` listener picks up Ask to Buy
+  theme (or icon, or marker set) back. A `Transaction.updates` listener picks up Ask to Buy
   approvals, refunds and purchases made elsewhere. Entitlements live on the
   device, so what's bought works offline; only buying and restoring need the
   internet. What the player chose and what they own are kept apart, so a
   theme that's taken back returns by itself if the purchase does.
 - `Theme` — the catalog of looks, and the `theme` environment value the
   `Backdrop` draws from. Views keep reading `accent`, which follows it.
+- `AnswerMarkers` — the catalog of marker sets, and the `answerMarkers`
+  environment value `AnswerKey`, `AnswerSetMark` and the TV's answers draw
+  their shapes from.
 - `ShopView` — buys through SwiftUI's `purchase` action, which presents the
   App Store's sheet over the right scene.
 
@@ -297,7 +310,7 @@ surface on the network: the host's controls act on the game in-process.
   written into a file is the host's theme colour, into the player page's
   `<html data-accent>`, and only as a `#rrggbb`.
 - **Purchases go through StoreKit, and nothing else leaves.** The app learns
-  which themes and icons the Apple Account owns, as signed transactions it
+  which themes, icons and marker sets the Apple Account owns, as signed transactions it
   verifies, and nothing about the player. The owned list cached in
   preferences is replaced by StoreKit's answer at every launch, so editing it
   unlocks nothing.
@@ -336,7 +349,7 @@ LocalTrivia/
   Design/                   The in-game toolbar; screen states for previews; three prototype directions (debug builds)
   Store/
     Shop.swift              StoreKit 2: products, verified entitlements, buying, restoring
-    ShopView.swift          Themes & Icons: try on, buy, wear
+    ShopView.swift          Themes & Icons: themes, icons and answer markers, each a group to open; try on, buy, wear
     AppIcon.swift           The alternate app icons, and a drawing of each
     Products.storekit       Local StoreKit configuration (Run scheme and tests; not in the app)
   Screens/                  One view per game phase, the launch, and the QR scanner

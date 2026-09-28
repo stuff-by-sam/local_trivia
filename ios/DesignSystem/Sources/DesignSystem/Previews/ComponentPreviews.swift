@@ -230,6 +230,28 @@ private enum Sample {
   .preferredColorScheme(.dark)
 }
 
+#Preview("Answer markers") {
+  ScrollView {
+    VStack(alignment: .leading, spacing: Space.l) {
+      ForEach(AnswerMarkers.allCases) { markers in
+        HStack(spacing: Space.m) {
+          MarkerSwatch(markers: markers, isShown: markers == .classic)
+          VStack(alignment: .leading, spacing: Space.s) {
+            AnswerSetMark()
+            HStack(spacing: Space.s) {
+              ForEach(AnswerStyle.allCases) { AnswerKey(style: $0) }
+            }
+            Text(markers.name).textRole(.labelSmall)
+          }
+        }
+        .environment(\.answerMarkers, markers)
+      }
+    }
+    .padding(Space.l)
+  }
+  .preferredColorScheme(.dark)
+}
+
 #Preview("Themes") {
   ScrollView {
     LazyVGrid(columns: [GridItem(.adaptive(minimum: Size.qrCard))], spacing: Space.m) {

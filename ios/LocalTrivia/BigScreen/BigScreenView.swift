@@ -532,12 +532,14 @@ private struct AnswerTile: View {
   /// This answer's votes against the most any answer got, for its bar.
   var share: Double?
 
+  @Environment(\.answerMarkers) private var markers
+
   var body: some View {
     let ink = state == .correct ? Palette.onAccentInk : style.color
     let shape = RoundedRectangle(cornerRadius: TVMetrics.tileRadius)
     HStack(spacing: TVMetrics.tileGap) {
       HStack(spacing: TVMetrics.rowGap) {
-        Image(systemName: style.symbol)
+        Image(systemName: markers.symbol(for: style))
           .imageScale(.small)
         Text(verbatim: style.letter)
       }

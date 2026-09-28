@@ -69,13 +69,20 @@ from the asset catalog's `AccentColor`.)
 | `neutral` | `#9AA8BA` | same | missed / no answer |
 | `medal1/2/3` | `#F5C542` / `#C7CED8` / `#D98E5B` | same | podium and ranks 1–3, always with "1st/2nd/3rd" |
 
-**The answer set** is not a theme colour and never changes: A `#56FF8A` circle,
-B `#55E6FF` triangle, C `#FFB347` square, D `#FF6AD5` diamond — the web game's
+**The answer set** is not a theme colour, and its colours and letters never
+change: A `#56FF8A`, B `#55E6FF`, C `#FFB347`, D `#FF6AD5` — the web game's
 `PAL`. Answer colours appear only on answers. (Medals were green and cyan;
 now gold, silver, bronze, so "third place" no longer reads as "B".)
 
+**The shapes** beside the letters are the phone's `AnswerMarkers`: Classic's
+circle, triangle, square and diamond (the web game's), or a set from the shop —
+Suits, Elements, Sky, Critters. A set dresses its phone and the TV that phone
+drives, and nothing else; the web game keeps Classic. Every set's four shapes
+differ in silhouette, not just colour, and have their own names for VoiceOver.
+A key is still colour + shape + letter, so no answer depends on colour alone.
+
 **Themes** (sold in the shop) change `accent`, `ink` and the backdrop texture
-only. They never touch the answer set or status colours. `ThemeTests` holds
+only. They never touch the answer colours, the shapes or the status colours. `ThemeTests` holds
 each theme's accent on its ink, and `onAccent` on its accent, to 7:1.
 
 ## Type
@@ -238,7 +245,7 @@ touches the network.
 | `Badge` | glass (verdict), drawn (waiting) |
 | `NameChips` (`FlowLayout`) | names, the viewer's own, a long name wrapping; read as one list |
 | `UndoToast` (`.undoToast`) | shown, counting down, undone |
-| `ThemeSwatch`, `IconArtwork` | every theme and icon; shown |
+| `ThemeSwatch`, `IconArtwork`, `MarkerSwatch` | every theme, icon and marker set; shown |
 | `Backdrop` | moods idle/question/correct/wrong/missed/celebrate × 10 textures × RT/IC/RM |
 | Empty / loading / error | `ContentUnavailableView`, `StatusLine`, `FieldMessage` |
 
