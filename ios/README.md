@@ -35,6 +35,19 @@ extracts them from the app and the DesignSystem package the same way. Plurals
 use automatic grammar agreement (`^[3 question](inflect: true)`), not plural
 variants.
 
+## Releasing
+
+[AppStore.md](AppStore.md) has everything App Store Connect asks for: the
+listing, age rating and privacy answers, and the notes for App Review.
+`scripts/app-store-screenshots.sh` takes the screenshots, on the 6.9" iPhone
+and 13" iPad simulators, from the debug build's screen fixtures. The privacy
+policy and support pages it links to are `docs/` at the repository's root,
+served by GitHub Pages.
+
+Raise `CURRENT_PROJECT_VERSION` for every upload, and `MARKETING_VERSION`
+for every release. Then *Product → Archive*, and *Distribute App → App Store
+Connect* in the Organizer.
+
 ## What makes it fast
 
 - **No typing an address.** A hosting phone advertises `_trivia-phone._tcp`

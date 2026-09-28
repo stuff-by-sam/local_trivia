@@ -1,0 +1,92 @@
+/* The app's look for its two web pages: near-black ink, one phosphor
+   accent, SF Pro for reading and SF Mono for the game's own voice. */
+
+:root {
+  --ink: #04080a;
+  --panel: #07120c;
+  --line: #1e4d30;
+  --text: #e4f5e8;
+  --soft: #a9c9b2;
+  --accent: #56ff8a;
+  --accent-rgb: 86, 255, 138;
+  --font-text: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--ink); }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(var(--accent-rgb), 0.14), transparent 70%),
+    var(--ink);
+  color: var(--text);
+  font: 17px/1.6 var(--font-text);
+  -webkit-text-size-adjust: 100%;
+}
+
+main {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 4rem;
+}
+
+.wordmark {
+  display: inline-block;
+  margin: 0 0 0.25rem;
+  font: 700 2.4rem/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  text-decoration: none;
+  text-shadow: 0 0 18px rgba(var(--accent-rgb), 0.45);
+}
+.wordmark .cursor { animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .wordmark .cursor { animation: none; } }
+
+.tagline { margin: 0 0 2.5rem; color: var(--soft); }
+
+h1, h2, h3 { font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.04em; }
+h1 { font-size: 1.6rem; text-transform: uppercase; color: var(--text); margin: 0 0 1.5rem; }
+h2 {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 2.75rem 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+h3 { font-size: 1rem; margin: 1.75rem 0 0.25rem; color: var(--text); }
+
+p, li { color: var(--text); }
+ul, ol { padding-left: 1.25rem; }
+li + li { margin-top: 0.4rem; }
+.soft { color: var(--soft); }
+strong { color: #fff; }
+
+a { color: var(--accent); text-underline-offset: 0.2em; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+.panel {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.panel p { margin: 0; }
+.panel p + p { margin-top: 0.5rem; }
+
+footer {
+  margin-top: 3.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  font: 0.85rem/1.6 var(--font-mono);
+  color: var(--soft);
+}
+footer a { color: var(--soft); }
+footer nav a + a { margin-left: 1.25rem; }
