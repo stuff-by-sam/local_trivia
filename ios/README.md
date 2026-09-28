@@ -326,7 +326,7 @@ LocalTrivia/
     CSVImport.swift         public/shared/csv.js, ported
     JoinLink.swift          Join links (http:// for the QR code, localtrivia://), QR codes, the LAN address
   BigScreen/
-    BigScreen.swift         A connected TV gets its own scene, not a mirror of the phone
+    BigScreen.swift         A connected TV gets its own scene (a scene accessory), not a mirror of the phone
     BigScreenView.swift     The game for the room: lobby, question, reveal, standings, podium
   Design/                   The in-game toolbar; screen states for previews; three prototype directions (debug builds)
   Store/

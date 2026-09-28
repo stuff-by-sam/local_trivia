@@ -1,7 +1,6 @@
 import DesignSystem
 import Observation
 import SwiftUI
-import UIKit
 
 /// A TV showing the game to the room: an Apple TV or AirPlay TV the phone is
 /// mirroring to, or a display on a cable.
@@ -13,58 +12,35 @@ import UIKit
 /// Any phone in a game can do it; it's usually the host's.
 @Observable
 final class BigScreen {
-  /// Displays showing the game right now: almost always none or one.
-  fileprivate(set) var displays = 0
-
-  var isConnected: Bool { displays > 0 }
+  /// Whether a TV is showing the game right now.
+  fileprivate(set) var isConnected = false
 }
 
-/// Hands a connected display the big screen, instead of a mirror of the phone.
-final class AppDelegate: NSObject, UIApplicationDelegate {
-  func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-    #if DEBUG
-    UITestSettings.apply()
-    #endif
-    return true
-  }
-
-  func application(
-    _ application: UIApplication,
-    configurationForConnecting session: UISceneSession,
-    options: UIScene.ConnectionOptions
-  ) -> UISceneConfiguration {
-    let configuration = UISceneConfiguration(name: nil, sessionRole: session.role)
-    if session.role == .windowExternalDisplayNonInteractive {
-      configuration.delegateClass = BigScreenSceneDelegate.self
+extension View {
+  /// Offers a connected TV the game for the room (`BigScreenView`) in place
+  /// of a mirror of the phone.
+  ///
+  /// Since iOS 27 the system connects a display's scene only for a scene
+  /// accessory the app has registered, from a view that's on screen — so this
+  /// goes on the phone's root view, which is always there. An app that only
+  /// answers `application(_:configurationForConnecting:options:)` for the
+  /// external-display role, as iOS 26 and earlier allowed, is never asked:
+  /// the TV just mirrors the phone.
+  func offersBigScreen(_ models: AppModels) -> some View {
+    sceneAccessory {
+      ExternalNonInteractiveAccessory {
+        // A scene of its own, outside the phone's window: hand it the models
+        // rather than count on the environment reaching it.
+        BigScreenView()
+          .chosenTheme()
+          .environment(\.backdropFollowsTilt, false)
+          .environment(models.store)
+          .environment(models.host)
+          .environment(models.shop)
+      }
+      .onAvailabilityChange { isAvailable in
+        models.bigScreen.isConnected = isAvailable
+      }
     }
-    return configuration
-  }
-}
-
-final class BigScreenSceneDelegate: NSObject, UIWindowSceneDelegate {
-  var window: UIWindow?
-
-  func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options: UIScene.ConnectionOptions) {
-    guard let scene = scene as? UIWindowScene else { return }
-    let models = AppModels.shared
-    let window = UIWindow(windowScene: scene)
-    window.overrideUserInterfaceStyle = .dark
-    window.rootViewController = UIHostingController(
-      rootView: BigScreenView()
-        .chosenTheme()
-        .environment(\.backdropFollowsTilt, false)
-        .environment(models.store)
-        .environment(models.host)
-        .environment(models.shop)
-    )
-    window.isHidden = false
-    self.window = window
-    models.bigScreen.displays += 1
-  }
-
-  func sceneDidDisconnect(_ scene: UIScene) {
-    guard window != nil else { return }
-    window = nil
-    AppModels.shared.bigScreen.displays -= 1
   }
 }
