@@ -41,6 +41,14 @@ body {
    else is the VT323 display face inherited from <body>. */
 .ui { font-family: var(--font-ui); }
 
+.link-lost {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: var(--bg-panel); border-top: 1px solid var(--line);
+  color: var(--c-amber); font-size: 11px; letter-spacing: 1px; text-align: center;
+  z-index: 10;
+}
+
 /* ---- JOIN ---- */
 #s-join { gap: 10px; }
 .logo {

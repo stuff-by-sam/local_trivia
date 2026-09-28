@@ -83,6 +83,19 @@ test('serves the three screens', async () => {
   }
 });
 
+test('the presenter gets a join QR code it colours itself', async () => {
+  const presenter = connect();
+  assert.equal(await connected(presenter), true);
+  presenter.emit('present:hello');
+  const snap = await waitFor(presenter, 'present:sync');
+  presenter.close();
+  assert.ok(snap && snap.qrSvg.startsWith('<svg'), 'present:sync carries the QR code as SVG');
+  // Its colours come from present.css, so it follows the accent.
+  assert.match(snap.qrSvg, /class="qr-bg"/);
+  assert.match(snap.qrSvg, /class="qr-fg"/);
+  assert.doesNotMatch(snap.qrSvg, /(fill|stroke)="#/, 'no colour is fixed in the SVG');
+});
+
 test('admin API is reachable from loopback', async () => {
   const { status, body } = await api('GET', '/api/questions');
   assert.equal(status, 200);

@@ -1,0 +1,41 @@
+{
+  "fill" : {
+    "automatic-gradient" : "extended-srgb:0.07000,0.06000,0.12000,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "circle.svg",
+          "name" : "circle"
+        },
+        {
+          "image-name" : "triangle.svg",
+          "name" : "triangle"
+        },
+        {
+          "image-name" : "square.svg",
+          "name" : "square"
+        },
+        {
+          "image-name" : "diamond.svg",
+          "name" : "diamond"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.4
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

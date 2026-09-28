@@ -35,6 +35,27 @@ The server prints the LAN join URL and a QR code, e.g.:
 
 First run seeds the question bank from `seed_questions.json` (12 questions).
 
+## iOS app
+
+The native iPhone/iPad app in `ios/` plays games hosted from a phone, not from
+a laptop. Anyone with the app can tap **Host a Game**, write or import a round
+(CSV, same format as below) or draft one with Apple Intelligence on the
+phone, set the
+scoring, and run the game from their phone — and play in it too. Everyone else
+opens the app, finds the game on their own (the host's phone advertises it over
+Bonjour), types the PIN, and they're in — or, without the app, scans the host's
+QR code with their camera and plays in the browser: the hosting phone serves
+this repo's player page itself, in the colour of the host's theme. Standings go to every player's phone, and if the host mirrors their
+phone to a TV (AirPlay, or an HDMI adapter), the TV becomes the big screen: the
+join code, each question and its answers, the reveal and the standings.
+
+Optional themes and app icons are sold in the app, under **Themes & Icons**
+on the join screen; the game itself is free and complete without them.
+
+The laptop server above is for browser players; the app doesn't join it.
+
+Build it with Xcode 27 for iOS 27; see [ios/README.md](ios/README.md).
+
 ## Notes
 
 - Same wifi required; guest/hotel networks with client isolation won't work.
@@ -84,9 +105,11 @@ public/
   shared/         theme tokens, DOM/format helpers, sfx, scoring, CSV parser
   fonts/          self-hosted VT323 + Space Mono
 uploads/          question images
-scripts/          loadtest.js (simulated players), op.js (one-shot host command)
+scripts/          loadtest.js (simulated players), op.js (one-shot host command),
+                  autohost.js (bots + a scripted operator, for client testing)
 test/             smoke.test.js (game loop), auth.test.js (operator boundary),
                   api.test.js (admin REST routes)
+ios/              native SwiftUI app: hosts games from a phone, and plays them (Xcode 27, iOS 27)
 ```
 
 > **One shared scope.** The browser loads these as classic `<script>` tags, so
@@ -141,10 +164,22 @@ live to every connected phone and the presenter — no reload:
 - **Accent colour** — a colour wheel plus seven presets and a
   **RESET TO GREEN** button.
 
+Every screen is also *served* in the accent: the server writes it into the
+page as `<html data-accent="#…">`, and `theme.js`, loaded in `<head>`, paints
+it before the first frame. So a phone that scans the QR code sees the room's
+colours on the join screen, before it has joined anything, and the browser's
+own toolbar follows (`<meta name="theme-color">`). The presenter's QR code is
+SVG coloured by `present.css`, so it takes the accent too. A phone hosting
+from the iOS app serves its web player the same way, in the accent of the
+host's theme.
+
 The accent isn't a single value. `public/shared/theme.js` rotates the whole
 green family — headings, the text ramp, dim labels, hairlines and panel
 backgrounds — by the hue delta between the pick and the default, scaling
-saturation and **leaving lightness alone**. That matters:
+saturation and **leaving lightness alone**. The one exception is the accent
+itself: a pick lighter than the green is used exactly as picked, so a pastel
+stays a pastel (it's text and hairlines on the dark panels, and never a fill
+with text on it, so a lighter accent only adds contrast). That matters:
 
 - the shipped green is reproduced byte-for-byte (there's an exact
   short-circuit, so no rounding drift)
