@@ -68,9 +68,7 @@ struct RootView: View {
     screen
       .id(store.phase.screen)
       .screenTransition()
-      // On iPad, keep the phone-sized column the game is designed for.
-      .frame(maxWidth: Size.column)
-      .frame(maxWidth: .infinity)
+      .gameColumn()
   }
 
   @ViewBuilder
@@ -113,6 +111,14 @@ struct RootView: View {
     case .final: .correct
     case .join, .spectating, .standings: nil
     }
+  }
+}
+
+extension View {
+  /// On iPad, keeps the phone-sized column the game is designed for, centred.
+  func gameColumn() -> some View {
+    frame(maxWidth: Size.column)
+      .frame(maxWidth: .infinity)
   }
 }
 
