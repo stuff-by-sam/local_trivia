@@ -82,6 +82,10 @@ final class HostController {
   /// The host's own player, seated in this game like everyone else.
   @ObservationIgnored private weak var seat: GameStore?
   @ObservationIgnored private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
+  /// When the host left the app, while they're away.
+  @ObservationIgnored private var wentAway: ContinuousClock.Instant?
+  /// Ends a finished game just before iOS suspends the app.
+  @ObservationIgnored private var suspension: Task<Void, Never>?
   @ObservationIgnored private let encoder = JSONEncoder()
   @ObservationIgnored private let decoder = JSONDecoder()
 
@@ -150,13 +154,17 @@ final class HostController {
     }
   }
 
-  /// Ends the game for everyone and closes the server.
-  func stop(leaving store: GameStore) async {
+  /// Ends the game for everyone and closes the server: its listener, its
+  /// Bonjour advert and every connection. `store` is the host's own seat.
+  func stop(leaving store: GameStore?) async {
     guard isHosting, let server else { return }
     let advertised = joinLink?.server.url
     status = .stopping
+    suspension?.cancel()
+    suspension = nil
+    wentAway = nil
     game?.close()
-    store.forgetGame(endedAt: advertised)
+    store?.forgetGame(endedAt: advertised)
     // Let the goodbyes go out before the connections close.
     outbox?.finish()
     await sender?.value
@@ -222,24 +230,78 @@ final class HostController {
 
   // MARK: - Lifecycle
 
+  /// How long before iOS suspends a backgrounded app that a finished game is
+  /// ended: time enough for every phone to hear it.
+  static let goodbyeTime: TimeInterval = 5
+  /// A game left unfinished this long is over, not paused: coming back ends it
+  /// rather than bringing it back to a room that's moved on.
+  static let staleAfter: Duration = .seconds(30 * 60)
+
   /// iOS suspends a backgrounded app, and a suspended host is a game that
-  /// stops. Ask for time on the way out so a quick app switch doesn't end it,
-  /// and re-open the listener on the way back if it was torn down.
+  /// stops. Ask for time on the way out so a quick app switch doesn't end
+  /// it. If the host is still away when that time runs out, a game that's
+  /// over is closed for good; one still being played is paused, and comes
+  /// back when the host does.
   func appDidEnterBackground() {
     storedLibrary?.flush(waiting: true)
     guard isHosting, backgroundTask == .invalid else { return }
+    wentAway = .now
     backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "Hosting a game") { [weak self] in
       self?.endBackgroundTask()
     }
+    let remaining = UIApplication.shared.backgroundTimeRemaining
+    // Far more than any real allowance means iOS hasn't set one.
+    let allowance = remaining < 600 ? remaining : 30
+    suspension = Task { [weak self] in
+      try? await Task.sleep(for: .seconds(max(allowance - Self.goodbyeTime, 0)))
+      guard !Task.isCancelled else { return }
+      await self?.appWillSuspend()
+    }
+  }
+
+  /// The app's about to be suspended with the host still away.
+  func appWillSuspend() async {
+    guard game?.state == .podium else { return }
+    await stop(leaving: seat)
   }
 
   func appDidBecomeActive() {
+    suspension?.cancel()
+    suspension = nil
     endBackgroundTask()
+    let away = wentAway.map { ContinuousClock.now - $0 }
+    wentAway = nil
+    Task { await resume(afterAway: away) }
+  }
+
+  /// Back from `away`: pick the game up where it was, unless it's been left
+  /// so long that it's over.
+  func resume(afterAway away: Duration?) async {
     guard isHosting, let server else { return }
+    if let away, away >= Self.staleAfter {
+      await stop(leaving: seat)
+      return
+    }
     // Wi-Fi or Personal Hotspot may have come up while the app was away —
     // often because the join card asked for it.
     lanAddress = LocalAddress.current()
-    Task { [lanAddress] in await server.ensureListening(lanAddress: lanAddress) }
+    await server.ensureListening(lanAddress: lanAddress)
+  }
+
+  /// The app is being quit — swiped away — while it hosts. The engine's
+  /// goodbyes go out through the main actor, which is busy quitting, so the
+  /// server says it itself, off the main thread, and the app waits a moment
+  /// for it to go before the process ends and takes every connection with it.
+  func appWillTerminate() {
+    guard isHosting, let server, let json = try? encoder.encode(HostedGame.hostEnded) else { return }
+    let ended = Wire.event(json: json)
+    let done = DispatchSemaphore(value: 0)
+    Task.detached {
+      await server.sendToAll(ended)
+      await server.stop()
+      done.signal()
+    }
+    _ = done.wait(timeout: .now() + 2)
   }
 
   private func endBackgroundTask() {
@@ -262,7 +324,8 @@ final class HostController {
     case .detached(let id):
       game.detach(id)
     case .listenerStopped:
-      if let server { Task { await server.ensureListening(lanAddress: lanAddress) } }
+      guard isHosting, let server else { return }
+      Task { [lanAddress] in await server.ensureListening(lanAddress: lanAddress) }
     }
   }
 

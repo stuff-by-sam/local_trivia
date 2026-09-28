@@ -34,9 +34,13 @@ const countdown = createCountdown(({ whole, fraction, low }) => {
 $('in-nick').value = store.nickDraft;
 $('in-nick').addEventListener('input', e => { store.nickDraft = e.target.value; });
 
-// A phone-hosted game's QR code links here with its PIN (`?pin=4821`).
+// A phone-hosted game's QR code links here with its PIN (`?pin=4821`), so
+// there's no PIN to go and find.
 const linkedPin = new URLSearchParams(location.search).get('pin');
-if (linkedPin && /^\d{4,6}$/.test(linkedPin)) $('in-pin').value = linkedPin;
+if (linkedPin && /^\d{4,6}$/.test(linkedPin)) {
+  $('in-pin').value = linkedPin;
+  $('join-foot').hidden = true;
+}
 
 // ---- join ----
 

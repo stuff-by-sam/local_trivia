@@ -478,6 +478,7 @@
 				CODE_SIGN_ENTITLEMENTS = LocalTrivia/LocalTrivia.entitlements;
 				INFOPLIST_FILE = LocalTrivia/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Trivia;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.trivia-games";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan the QR code on the host's phone to join their game.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Trivia finds, joins and hosts games on your Wi-Fi network.";
@@ -511,6 +512,7 @@
 				CODE_SIGN_ENTITLEMENTS = LocalTrivia/LocalTrivia.entitlements;
 				INFOPLIST_FILE = LocalTrivia/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Trivia;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.trivia-games";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan the QR code on the host's phone to join their game.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Trivia finds, joins and hosts games on your Wi-Fi network.";

@@ -37,8 +37,9 @@ struct RootView: View {
       looks.start()
     }
     .onChange(of: looks.theme, initial: true) { _, theme in host.theme = theme }
-    .onChange(of: browser.games) { _, games in store.discovered(games) }
-    .onChange(of: store.connection) { _, _ in store.discovered(browser.games) }
+    .onChange(of: browser.games) { _, games in store.discovered(games, isComplete: browser.hasSettled) }
+    .onChange(of: store.connection) { _, _ in store.discovered(browser.games, isComplete: browser.hasSettled) }
+    .onChange(of: browser.hasSettled) { _, settled in store.discovered(browser.games, isComplete: settled) }
     .onChange(of: scenePhase) { _, phase in
       switch phase {
       case .active:
@@ -68,9 +69,7 @@ struct RootView: View {
     screen
       .id(store.phase.screen)
       .screenTransition()
-      // On iPad, keep the phone-sized column the game is designed for.
-      .frame(maxWidth: Size.column)
-      .frame(maxWidth: .infinity)
+      .gameColumn()
   }
 
   @ViewBuilder
@@ -113,6 +112,14 @@ struct RootView: View {
     case .final: .correct
     case .join, .spectating, .standings: nil
     }
+  }
+}
+
+extension View {
+  /// On iPad, keeps the phone-sized column the game is designed for, centred.
+  func gameColumn() -> some View {
+    frame(maxWidth: Size.column)
+      .frame(maxWidth: .infinity)
   }
 }
 

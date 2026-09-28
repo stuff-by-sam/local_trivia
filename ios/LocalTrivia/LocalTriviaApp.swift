@@ -52,4 +52,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     #endif
     return true
   }
+
+  /// Quit while hosting: the game ends for every phone, not just this one.
+  func applicationWillTerminate(_ application: UIApplication) {
+    AppModels.shared.host.appWillTerminate()
+  }
 }

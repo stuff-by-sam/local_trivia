@@ -134,9 +134,9 @@ struct ScreenPreview: View {
     NavigationStack {
       Group {
         if glassContainer {
-          GlassEffectContainer(spacing: Space.xs) { screen }
+          GlassEffectContainer(spacing: Space.xs) { screen.gameColumn() }
         } else {
-          screen
+          screen.gameColumn()
         }
       }
       .containerBackground(for: .navigation) { Backdrop(mood: mood) }
