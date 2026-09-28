@@ -31,19 +31,35 @@ function lanIp() {
 
 const JOIN_URL = `http://${lanIp()}:${PORT}`;
 
-// Rendered once at boot and handed to every presenter that connects.
-const QR_COLORS = { dark: '#7dff9e', light: '#0b1f12' };
-let qrDataUrl = '';
-QRCode.toDataURL(JOIN_URL, { color: QR_COLORS, margin: 1, scale: 8 })
-  .then(url => { qrDataUrl = url; })
+// Rendered once at boot and handed to every presenter that connects. It's
+// SVG with its colours left to the presenter's stylesheet (`.qr-bg`, `.qr-fg`),
+// so the code takes on the operator's accent with the rest of the screen.
+let qrSvg = '';
+QRCode.toString(JOIN_URL, { type: 'svg', margin: 1 })
+  .then(svg => {
+    qrSvg = svg
+      .replace(/<path fill="#[0-9a-f]+"/i, '<path class="qr-bg"')
+      .replace(/<path stroke="#[0-9a-f]+"/i, '<path class="qr-fg"');
+  })
   .catch(() => {});
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 
-app.get('/', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'play', 'index.html')));
-app.get('/play', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'play', 'index.html')));
-app.get('/present', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'present', 'index.html')));
+// Each screen goes out wearing the operator's accent, as <html data-accent>,
+// which theme.js paints from <head>. So a phone that scans the QR code sees
+// the room's colours on the join screen, before it's joined anything.
+function sendScreen(res, screen) {
+  fs.readFile(path.join(PUBLIC_DIR, screen, 'index.html'), 'utf8', (err, html) => {
+    if (err) return res.status(500).type('text/plain').send('MISSING ' + screen.toUpperCase());
+    const { accent } = repo.getSettings();
+    res.type('html').send(/^#[0-9a-f]{6}$/i.test(accent) ? html.replace('<html', `<html data-accent="${accent}"`) : html);
+  });
+}
+
+app.get('/', (_req, res) => sendScreen(res, 'play'));
+app.get('/play', (_req, res) => sendScreen(res, 'play'));
+app.get('/present', (_req, res) => sendScreen(res, 'present'));
 app.get('/admin', (req, res) => {
   if (!reqIsAdmin(req)) {
     return res.status(403).type('text/plain').send(
@@ -52,7 +68,7 @@ app.get('/admin', (req, res) => {
       'and append ?k=<token> to operate from this device.'
     );
   }
-  res.sendFile(path.join(PUBLIC_DIR, 'admin', 'index.html'));
+  sendScreen(res, 'admin');
 });
 app.use(express.static(PUBLIC_DIR));
 app.use('/uploads', express.static(UPLOADS_DIR));
@@ -144,7 +160,7 @@ io.on('connection', socket => {
     socket.join('presenters');
     const snap = session.presenterSnapshot();
     snap.joinUrl = JOIN_URL;
-    snap.qrDataUrl = qrDataUrl;
+    snap.qrSvg = qrSvg;
     socket.emit('present:sync', snap);
   });
 

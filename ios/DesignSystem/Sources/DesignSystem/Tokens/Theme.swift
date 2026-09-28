@@ -4,10 +4,13 @@ import SwiftUI
 /// texture the glass refracts. Phosphor is the game's own; the rest are sold
 /// in the app's shop.
 ///
-/// A theme is this phone's alone — it never crosses the network — and it
-/// never touches the answer set or the status colours. "B, the cyan triangle"
-/// has to mean the same thing on every phone in the room and on the TV,
-/// whoever's wearing what; green is still right and red still wrong.
+/// A theme is this phone's own: other phones with the app keep theirs. The
+/// one thing that leaves is the accent of a host's theme (`webAccent`), for
+/// the browser players in their game, who have no theme of their own — the
+/// laptop's web player dresses them in the operator's accent the same way.
+/// A theme never touches the answer set or the status colours. "B, the cyan
+/// triangle" has to mean the same thing on every phone in the room and on the
+/// TV, whoever's wearing what; green is still right and red still wrong.
 nonisolated public enum Theme: String, CaseIterable, Identifiable, Sendable {
   case phosphor, amber, cobalt, synthwave, noir, gold, holographic, chalkboard, glass, titanium
 
@@ -45,18 +48,28 @@ nonisolated public enum Theme: String, CaseIterable, Identifiable, Sendable {
 
   /// Headings, the cursor, the lit edge of controls. Bright enough for
   /// `Palette.onAccentInk` to sit on it wherever a control is filled with it.
-  public var accent: Color {
+  public var accent: Color { Color(hex: accentRGB) }
+
+  /// The accent as the web player takes it, `#rrggbb`: what a hosting
+  /// phone's browser players are dressed in (`public/shared/theme.js`
+  /// rotates the page's green family to it, as for a laptop's accent).
+  public var webAccent: String {
+    let hex = String(accentRGB, radix: 16)
+    return "#" + String(repeating: "0", count: 6 - hex.count) + hex
+  }
+
+  private var accentRGB: UInt32 {
     switch self {
-    case .phosphor: Color(hex: 0x56FF8A)
-    case .amber: Color(hex: 0xFFB000)
-    case .cobalt: Color(hex: 0x7C9DFF)
-    case .synthwave: Color(hex: 0xC77DFF)
-    case .noir: Color(hex: 0xEDEDED)
-    case .gold: Color(hex: 0xF5C542)
-    case .holographic: Color(hex: 0xD4C4FF)
-    case .chalkboard: Color(hex: 0xFFF0A0)
-    case .glass: Color(hex: 0xBFEFFF)
-    case .titanium: Color(hex: 0xC5CDD8)
+    case .phosphor: 0x56FF8A
+    case .amber: 0xFFB000
+    case .cobalt: 0x7C9DFF
+    case .synthwave: 0xC77DFF
+    case .noir: 0xEDEDED
+    case .gold: 0xF5C542
+    case .holographic: 0xD4C4FF
+    case .chalkboard: 0xFFF0A0
+    case .glass: 0xBFEFFF
+    case .titanium: 0xC5CDD8
     }
   }
 

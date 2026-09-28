@@ -54,7 +54,8 @@ Its surface is deliberately narrower than the laptop's:
 - **Player events only.** It speaks `join`, `resume` and `submitAnswer`; there
   is no admin API and no `host:*` event. Besides the WebSocket, its port serves
   the web player — only the files bundled under the app's `Web/` folder, by
-  exact path, to GET and HEAD — and a request that hasn't finished its headers
+  exact path, to GET and HEAD, with nothing written into them but the host's
+  theme colour as a `#rrggbb` — and a request that hasn't finished its headers
   in 10 seconds, or whose headers pass 8 KB, is closed. The host's controls act on the game
   engine in-process and never cross the network, so nothing on the Wi-Fi can
   start, skip, kick or end anything.

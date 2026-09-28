@@ -36,6 +36,7 @@ struct RootView: View {
       store.start()
       shop.start()
     }
+    .onChange(of: shop.theme, initial: true) { _, theme in host.theme = theme }
     .onChange(of: browser.games) { _, games in store.discovered(games) }
     .onChange(of: store.connection) { _, _ in store.discovered(browser.games) }
     .onChange(of: scenePhase) { _, phase in

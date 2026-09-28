@@ -54,6 +54,8 @@ actor HostServer {
   private var serviceName = ""
   private var advertises = true
   private var lanAddress: String?
+  /// What the web player is served wearing: the host's accent (`WebPlayer`).
+  private var webAccent: String?
 
   private static let log = Logger(subsystem: "com.stuffbysam.localtrivia", category: "host-server")
 
@@ -106,6 +108,11 @@ actor HostServer {
       }
     }
     throw .noFreePort
+  }
+
+  /// Dresses the web player in the host's theme from the next page served.
+  func setWebAccent(_ accent: String?) {
+    webAccent = accent
   }
 
   /// After a long suspension the listener may be gone; bring it back on the
@@ -231,7 +238,7 @@ actor HostServer {
       self.closeIfIdle(id)
     }
     connection.start(queue: queue)
-    Self.readRequest(on: connection, into: sink)
+    Self.readRequest(on: connection, accent: webAccent, into: sink)
   }
 
   /// One task per connection, draining its frames in order.
@@ -326,19 +333,19 @@ actor HostServer {
 
   /// Reads a request's head. An upgrade becomes a game connection
   /// (`readFrames`); anything else is answered from `WebPlayer` and closed.
-  private nonisolated static func readRequest(on connection: NWConnection, buffered: Data = Data(), into sink: AsyncStream<Frame>.Continuation) {
+  private nonisolated static func readRequest(on connection: NWConnection, buffered: Data = Data(), accent: String?, into sink: AsyncStream<Frame>.Continuation) {
     connection.receive(minimumIncompleteLength: 1, maximumLength: HTTPRequest.maxHeadBytes) { data, _, isComplete, error in
       var buffer = buffered
       if let data { buffer.append(data) }
       switch HTTPRequest.parse(buffer) {
       case .incomplete:
         guard error == nil, !isComplete else { return finish(sink) }
-        readRequest(on: connection, buffered: buffer, into: sink)
+        readRequest(on: connection, buffered: buffer, accent: accent, into: sink)
       case .invalid:
         answer(.error(400, "Bad Request"), on: connection, then: sink)
       case .complete(let request, let rest):
         guard request.isWebSocketUpgrade else {
-          return answer(WebPlayer.shared.response(to: request), on: connection, then: sink)
+          return answer(WebPlayer.shared.response(to: request, accent: accent), on: connection, then: sink)
         }
         // Socket.IO's path, as the laptop server has it.
         guard request.path.hasPrefix("/socket.io"), let key = request.headers["sec-websocket-key"] else {

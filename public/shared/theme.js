@@ -10,7 +10,9 @@
 
    Consequences that matter:
      - picking the default green is a no-op, so the shipped look is exact
-     - lightness never moves, so contrast ratios survive any hue
+     - lightness never moves, so contrast ratios survive any hue — except
+       that a pick lighter than the green becomes the accent as it is, which
+       only adds contrast (see the end of accentVars)
      - the A/B/C/D answer palette in common.js is deliberately untouched: those
        four colours are a semantic set paired with shapes and letters, and
        rotating them would let two options collide. */
@@ -127,6 +129,16 @@ function accentVars(accent) {
     const { r, g, b } = hexToRgb(shiftHex(hex, deltaH, satScale));
     vars[name] = `${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}`;
   }
+  // The accent itself is the pick, exactly, whenever that's lighter than the
+  // default: a pale colour (a phone host's Holographic or Glass theme, say)
+  // stays pale instead of being deepened to the green's lightness. Never
+  // darker — it's text and hairlines on the dark panels, and a fill with no
+  // text on it, so a lighter accent can only gain contrast.
+  if (target.l > base.l) {
+    const rgb = hexToRgb(picked);
+    vars['--c-green'] = rgbToHex(rgb);
+    vars['--c-green-rgb'] = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
+  }
   return vars;
 }
 
@@ -137,5 +149,16 @@ function applyAccent(accent, root) {
   if (!el || !el.style) return null;
   const vars = accentVars(accent);
   for (const [name, value] of Object.entries(vars)) el.style.setProperty(name, value);
+  // The browser's own bar (Safari's toolbar, Chrome's status bar) matches the page.
+  const bar = !root && document.querySelector('meta[name="theme-color"]');
+  if (bar) bar.content = vars['--bg'];
   return vars;
+}
+
+// Whoever serves the page — the laptop, or a phone hosting from the app —
+// writes the host's accent into <html data-accent>. Pages load this file in
+// <head>, so it's painted before anything is drawn: a player sees the host's
+// colours from the join screen on, not green until they've joined.
+if (typeof document !== 'undefined' && document.documentElement && document.documentElement.dataset.accent) {
+  applyAccent(document.documentElement.dataset.accent);
 }

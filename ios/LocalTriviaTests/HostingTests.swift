@@ -1,3 +1,4 @@
+import DesignSystem
 import Foundation
 import Testing
 
@@ -354,6 +355,22 @@ import Testing
     #expect(recorder.last(to: 6) == .resumeFailed)
   }
 
+  /// Browser players wear the host's accent: it's in every snapshot, and a
+  /// change goes to everyone, as the laptop's `settingsChanged` does.
+  @Test func dressesBrowserPlayersInTheHostsAccent() throws {
+    let changes = { recorder.all(to: .everyone).filter { if case .settingsChanged = $0 { true } else { false } } }
+    game.accent = "#ffb000"
+    #expect(changes() == [.settingsChanged(SettingsChange(accent: "#ffb000"))])
+    seat("Ada", on: 1)
+    guard case .joined(let snapshot)? = recorder.last(to: 1) else {
+      Issue.record("not seated")
+      return
+    }
+    #expect(snapshot.accent == "#ffb000")
+    game.accent = "#ffb000"
+    #expect(changes().count == 1, "an unchanged accent isn't sent again")
+  }
+
   @Test func tellsEveryoneWhenTheHostCloses() {
     seat("Host", on: 1)
     seat("Guest", on: 2)
@@ -438,6 +455,36 @@ import Testing
     #expect(guest.notice == "THE HOST ENDED THE GAME")
     #expect(hostPlayer.server == nil)
     #expect(!host.isHosting)
+  }
+
+  /// A browser player is served the page in the host's theme, and follows
+  /// the host if it changes.
+  @Test func servesBrowsersThePageInTheHostsTheme() async throws {
+    let host = HostController(library: HostLibrary(fileURL: nil), advertises: false)
+    host.theme = .amber
+    let hostPlayer = player("Host")
+    await host.start(joining: hostPlayer)
+    guard case .live(let port) = host.status else {
+      Issue.record("didn't start: \(host.status)")
+      return
+    }
+    let page = try #require(URL(string: "http://127.0.0.1:\(port)/"))
+    let served = { String(decoding: try await URLSession.shared.data(from: page).0, as: UTF8.self) }
+    #expect(try await served().contains(##"<html data-accent="#ffb000""##))
+    #expect(host.game?.accent == "#ffb000")
+
+    host.theme = .cobalt
+    #expect(host.game?.accent == "#7c9dff", "players already in are told")
+    let cobalt = ##"<html data-accent="#7c9dff""##
+    let deadline = ContinuousClock.now + .seconds(5)
+    var html = try await served()
+    while !html.contains(cobalt), ContinuousClock.now < deadline {
+      try await Task.sleep(for: .milliseconds(20))
+      html = try await served()
+    }
+    #expect(html.contains(cobalt), "and the next page is served in it")
+
+    await host.stop(leaving: hostPlayer)
   }
 
   /// Leaving asks nothing first, because it can be undone: the host keeps a

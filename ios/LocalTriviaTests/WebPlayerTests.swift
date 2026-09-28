@@ -141,6 +141,25 @@ struct WebPlayerTests {
     #expect(player.response(to: get("/play")).body == page.body)
   }
 
+  /// A browser has no theme of its own: a hosting phone serves the page in
+  /// the host's accent, and `theme.js` paints it before the first frame, so a
+  /// player sees the host's colours from the join screen on.
+  @Test func servesThePageInTheHostsAccent() throws {
+    let player = WebPlayer.shared
+    for path in ["/", "/play", "/play/index.html"] {
+      let html = String(decoding: player.response(to: get(path), accent: "#ffb000").body, as: UTF8.self)
+      #expect(html.contains(##"<html data-accent="#ffb000" lang="en">"##), "\(path)")
+    }
+    let html = String(decoding: player.response(to: get("/"), accent: "#ffb000").body, as: UTF8.self)
+    let script = try #require(html.range(of: #"<script src="/shared/theme.js"></script>"#))
+    #expect(script.lowerBound < html.range(of: "</head>")!.lowerBound, "theme.js runs from <head>")
+
+    // Only the page, and only a colour.
+    #expect(player.response(to: get("/play/play.js"), accent: "#ffb000").body == player.response(to: get("/play/play.js")).body)
+    #expect(player.response(to: get("/"), accent: #""><script>alert(1)</script>"#).body == player.response(to: get("/")).body)
+    #expect(!String(decoding: player.response(to: get("/")).body, as: UTF8.self).contains("data-accent"))
+  }
+
   @Test func servesOnlyWhatsBundled() {
     let player = WebPlayer.shared
     for path in ["/../Info.plist", "/play/../../Info.plist", "/Info.plist", "/admin/admin.js", "/nope", "/play/"] {

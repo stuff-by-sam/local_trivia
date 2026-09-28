@@ -566,7 +566,8 @@ final class GameStore {
     case .answeredCount(let count):
       answered = count
 
-    case .ignored:
+    // The host's accent is for browser players; this phone wears its own theme.
+    case .settingsChanged, .ignored:
       break
     }
   }

@@ -230,6 +230,17 @@ test('saves settings, clamping out-of-range values', async () => {
   assert.equal(longName.body.bankName.length, 28, 'bank name is capped for the presenter header');
 });
 
+test('serves every screen in the accent, before anyone joins', async () => {
+  await api('PUT', '/api/settings', { accent: '#FFB000' });
+  for (const p of ['/', '/play', '/present', '/admin']) {
+    const html = await (await fetch(BASE + p)).text();
+    assert.match(html, /<html data-accent="#ffb000"/, `${p} is served in the accent`);
+    // theme.js paints it from <head>, ahead of the first frame.
+    assert.ok(html.indexOf('/shared/theme.js') < html.indexOf('</head>'), `${p} loads theme.js in <head>`);
+  }
+  await api('PUT', '/api/settings', { accent: '#56ff8a' });
+});
+
 test('uploads an image and serves it back', async () => {
   // Smallest valid PNG: 1x1, so the test stays honest about content type
   // without carrying a binary fixture around.

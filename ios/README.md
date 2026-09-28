@@ -222,9 +222,12 @@ non-consumable in-app purchase — each theme and icon on its own, or
   permission.
   Tapping one dresses the shop in it, so it's tried on before it's bought;
   closing the shop takes it off. A theme dresses this phone and any TV it's
-  showing the game on. It never crosses the network, and never touches the
-  answer set or the status colours: B is the cyan triangle on every phone in
-  the room, whoever's wearing what, and red is still wrong.
+  showing the game on, and, when this phone hosts, the browser players in
+  its game: they have no theme of their own, so the web player is served in
+  the host's accent (`Theme.webAccent`), as a laptop serves it in its
+  operator's. Other phones with the app keep their own theme. A theme never
+  touches the answer set or the status colours: B is the cyan triangle on
+  every phone in the room, whoever's wearing what, and red is still wrong.
 - **App icons** — one to match every theme: the classic icon's four
   shapes, recoloured (Holographic's in foil, Chalkboard's in pastel chalk on
   slate, Titanium's in brushed metal). Glass's shapes are glass layers over
@@ -290,7 +293,9 @@ surface on the network: the host's controls act on the game in-process.
   the round.
 - **The web player is files, not an API.** A hosting phone serves only the
   files bundled under `Web/`, by exact path, to GET and HEAD; everything else
-  on its port is the same player WebSocket the app uses.
+  on its port is the same player WebSocket the app uses. The one thing
+  written into a file is the host's theme colour, into the player page's
+  `<html data-accent>`, and only as a `#rrggbb`.
 - **Purchases go through StoreKit, and nothing else leaves.** The app learns
   which themes and icons the Apple Account owns, as signed transactions it
   verifies, and nothing about the player. The owned list cached in

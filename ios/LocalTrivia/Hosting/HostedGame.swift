@@ -73,6 +73,15 @@ final class HostedGame {
   private(set) var questionIndex = -1
   private(set) var order: [HostQuestion] = []
   private(set) var answered = AnsweredCount(answered: 0, total: 0)
+  /// The host's accent, `#rrggbb`, for browser players to wear — they have
+  /// no theme of their own. The laptop's `settings.accent`, and sent the same
+  /// way: in every snapshot, and to everyone when it changes.
+  var accent: String? {
+    didSet {
+      guard accent != oldValue else { return }
+      deliver(.settingsChanged(SettingsChange(accent: accent)), .everyone)
+    }
+  }
 
   var connectedPlayers: [Player] { players.filter(\.isConnected) }
   var isLastQuestion: Bool { questionIndex + 1 >= order.count }
@@ -96,12 +105,14 @@ final class HostedGame {
 
   init(
     pin: String = HostedGame.randomPIN(),
+    accent: String? = nil,
     deliver: @escaping (ServerEvent, Audience) -> Void,
     uptime: @escaping () -> Duration = { let origin = ContinuousClock.now; return { ContinuousClock.now - origin } }()
   ) {
     self.pin = pin
     self.deliver = deliver
     self.uptime = uptime
+    self.accent = accent
   }
 
   nonisolated static func randomPIN() -> String {
@@ -461,7 +472,8 @@ final class HostedGame {
       question: state == .questionActive && isEligibleNow ? current.map { payload(for: $0, elapsedMs: elapsedMs) } : nil,
       lockedIndex: state == .questionActive ? player.pick?.option : nil,
       lastResult: state == .reveal && isEligibleNow ? player.lastResult : nil,
-      podium: state == .podium ? finalResult().podium : nil
+      podium: state == .podium ? finalResult().podium : nil,
+      accent: accent
     )
   }
 

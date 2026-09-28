@@ -1,3 +1,4 @@
+import DesignSystem
 import Foundation
 import Observation
 import OSLog
@@ -50,6 +51,16 @@ final class HostController {
   private(set) var lanAddress: String?
   private(set) var actionError: String?
   var sheet: Sheet?
+  /// The host's theme. Browser players, who have no theme of their own, are
+  /// dressed in its accent — the page they're served, and any change after;
+  /// phones with the app keep their own.
+  var theme: Theme = .phosphor {
+    didSet {
+      guard theme != oldValue else { return }
+      game?.accent = theme.webAccent
+      if let server { Task { [accent = theme.webAccent] in await server.setWebAccent(accent) } }
+    }
+  }
 
   var isHosting: Bool {
     if case .live = status { true } else { false }
@@ -100,6 +111,7 @@ final class HostController {
     gameName = library.advertisedName
 
     let server = HostServer()
+    await server.setWebAccent(theme.webAccent)
     let port: UInt16
     do {
       port = try await server.start(name: gameName, lanAddress: lanAddress, advertises: advertises)
@@ -120,7 +132,7 @@ final class HostController {
       }
     }
 
-    let game = HostedGame(deliver: { [weak self] event, audience in self?.deliver(event, to: audience) })
+    let game = HostedGame(accent: theme.webAccent, deliver: { [weak self] event, audience in self?.deliver(event, to: audience) })
     self.game = game
 
     pump = Task { [weak self] in
