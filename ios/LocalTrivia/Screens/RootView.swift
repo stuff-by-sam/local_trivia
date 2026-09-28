@@ -37,8 +37,9 @@ struct RootView: View {
       looks.start()
     }
     .onChange(of: looks.theme, initial: true) { _, theme in host.theme = theme }
-    .onChange(of: browser.games) { _, games in store.discovered(games) }
-    .onChange(of: store.connection) { _, _ in store.discovered(browser.games) }
+    .onChange(of: browser.games) { _, games in store.discovered(games, isComplete: browser.hasSettled) }
+    .onChange(of: store.connection) { _, _ in store.discovered(browser.games, isComplete: browser.hasSettled) }
+    .onChange(of: browser.hasSettled) { _, settled in store.discovered(browser.games, isComplete: settled) }
     .onChange(of: scenePhase) { _, phase in
       switch phase {
       case .active:

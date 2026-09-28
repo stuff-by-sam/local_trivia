@@ -206,6 +206,9 @@ final class HostedGame {
     endIfEveryoneAnswered()
   }
 
+  /// What every phone is told when the host closes the game.
+  nonisolated static let hostEnded = ServerEvent.kicked(Notice(code: "HOST_ENDED", message: "THE HOST ENDED THE GAME"))
+
   /// The host is leaving: tell everyone, so no phone waits on a game that's
   /// gone. (The host's own seat hears it too, harmlessly: by the time it's
   /// sent, the host's app has already let go of the game.)
@@ -213,7 +216,7 @@ final class HostedGame {
     cancelTimers()
     for player in connectedPlayers {
       if let connection = player.connection {
-        deliver(.kicked(Notice(code: "HOST_ENDED", message: "THE HOST ENDED THE GAME")), .connection(connection))
+        deliver(Self.hostEnded, .connection(connection))
       }
     }
   }

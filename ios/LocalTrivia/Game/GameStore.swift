@@ -98,7 +98,9 @@ final class GameStore {
 
   private(set) var phase: Phase = .join
   private(set) var connection: Connection = .idle
-  private(set) var server: GameServer?
+  private(set) var server: GameServer? {
+    didSet { if server?.url != oldValue?.url { sawAdvert = false } }
+  }
   /// The name the server accepted — may differ from the draft being edited.
   private(set) var playerName = ""
   private(set) var playerCount = 0
@@ -178,6 +180,9 @@ final class GameStore {
   /// Games that ended while we were in them. Their Bonjour adverts can linger
   /// a moment; until an advert is gone, discovery mustn't pick it back up.
   @ObservationIgnored private var endedGames: Set<URL> = []
+  /// The current game has been seen advertised since it was picked. If its
+  /// advert goes while it can't be reached, its host has stopped hosting it.
+  @ObservationIgnored private var sawAdvert = false
   @ObservationIgnored private var eligibleFrom = 0
   /// Observed: the progress chip ("Q 02/12") reads it between questions.
   private var lastQuestion: Question?
@@ -252,8 +257,10 @@ final class GameStore {
 
   /// Bonjour results changed. Picks a game for the player when that's
   /// unambiguous, and never pulls them away from one that's working — or from
-  /// one they chose themselves.
-  func discovered(_ found: [GameServer]) {
+  /// one they chose themselves. Lets go of one that's ended. `isComplete`
+  /// means the browser has looked long enough that `found` is every game
+  /// there is.
+  func discovered(_ found: [GameServer], isComplete: Bool = false) {
     // An ended game whose advert has gone is forgotten: if it reappears, it's new.
     endedGames.formIntersection(found.map(\.url))
     let games = found.filter { !endedGames.contains($0.url) }
@@ -264,11 +271,23 @@ final class GameStore {
       self.server = server.renamed(renamed.name)
       remember(self.server)
     }
+    if let server, games.contains(where: { $0.url == server.url }) { sawAdvert = true }
     guard phase == .join, connection != .online else { return }
     // Same host, new address (the network gave the host's phone a new IP).
     if let server, let moved = games.first(where: { $0.name == server.name && $0.url != server.url }) {
       select(moved)
       return
+    }
+    // A game that's over: it doesn't answer, and nobody's advertising it — its
+    // advert went, or (for one restored from last launch) the browser's looked
+    // everywhere. A game the player chose that was never advertised stays: a
+    // network that blocks Bonjour can still carry a game joined by its code.
+    if let server, connection.hasFailed, !games.contains(where: { $0.url == server.url }),
+      sawAdvert || (isComplete && !isPinned)
+    {
+      let hadSeat = token != nil
+      forgetGame()
+      if hadSeat { notice = String(localized: "That game has ended.") }
     }
     guard !isPinned, server == nil || connection.hasFailed,
       games.count == 1, let only = games.first, only != server

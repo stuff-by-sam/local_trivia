@@ -15,13 +15,26 @@ final class GameBrowser {
   /// is off for the app — so the join screen can say so instead of looking
   /// forever.
   private(set) var hasFailed = false
+  /// Looked long enough that a game missing from `games` isn't being
+  /// advertised: its host has stopped hosting it.
+  private(set) var hasSettled = false
   @ObservationIgnored private var browsing: Task<Void, Never>?
+  @ObservationIgnored private var settling: Task<Void, Never>?
+
+  /// Every host on the network has answered well within this.
+  nonisolated static let settleTime: Duration = .seconds(3)
 
   private static let log = Logger(subsystem: "com.stuffbysam.localtrivia", category: "discovery")
 
   func start() {
     guard browsing == nil else { return }
     hasFailed = false
+    hasSettled = false
+    settling = Task { [weak self] in
+      try? await Task.sleep(for: Self.settleTime)
+      guard !Task.isCancelled, let self, !self.hasFailed else { return }
+      self.hasSettled = true
+    }
     browsing = Task { [weak self] in
       let browser = NetworkBrowser(for: .bonjour(Self.serviceType, includeTxtRecord: true))
       do {
@@ -33,6 +46,7 @@ final class GameBrowser {
         guard !Task.isCancelled else { return }
         Self.log.error("browse failed: \(error.localizedDescription, privacy: .public)")
         self?.hasFailed = true
+        self?.hasSettled = false
       }
     }
   }
@@ -40,6 +54,9 @@ final class GameBrowser {
   func stop() {
     browsing?.cancel()
     browsing = nil
+    settling?.cancel()
+    settling = nil
+    hasSettled = false
   }
 
   /// A host on more than one interface advertises once per interface; the

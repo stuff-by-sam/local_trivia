@@ -214,6 +214,16 @@ and the server comes back on the same port when the app returns. If the host
 never does come back, players aren't stranded: once the link has failed, a
 leave button appears on every screen.
 
+A game that's over doesn't outlive its hosting. Stop Hosting tells every
+phone, closes every connection, stops listening and withdraws the Bonjour
+advert, and a stopped server can't be brought back. The same happens by
+itself when the host leaves the app at the podium and is still away when iOS
+is about to suspend it, when the app is quit while it hosts, and when the
+host comes back to an unfinished game after more than half an hour. A phone
+that missed the goodbye (it was locked, say) lets go of the game once it
+can't reach it and nobody is advertising it, and says the game has ended,
+rather than retrying it for good.
+
 ## Themes, icons and answer markers
 
 Optional, and out of the way: a **Themes & Icons** button in the join
@@ -374,7 +384,9 @@ Hosting is tested at three levels: scoring and CSV parsing against the
 JavaScript's own results (every bank in `questions/` must import cleanly), the
 engine's state machine driven directly, and the whole stack — a real
 `HostServer` with the host and a guest, each a full `GameStore` on a real
-socket, playing a game over loopback in one process.
+socket, playing a game over loopback in one process. The same stack checks
+that every way hosting ends — Stop Hosting, leaving at the podium, coming
+back too late, quitting the app — tells the guest and leaves the port closed.
 
 `LooksTests` checks that any theme or marker set goes on when it's picked
 and is still on at the next launch, that a saved pick this build doesn't

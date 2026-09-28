@@ -457,6 +457,98 @@ import Testing
     #expect(!host.isHosting)
   }
 
+  /// Nothing answers on `port`: no listener, no page, no game.
+  func isClosed(_ port: UInt16) async throws -> Bool {
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.timeoutIntervalForRequest = 2
+    let page = try #require(URL(string: "http://127.0.0.1:\(port)/"))
+    do {
+      _ = try await URLSession(configuration: configuration).data(from: page)
+      return false
+    } catch {
+      return true
+    }
+  }
+
+  /// A host and a guest in the lobby of a one-question game.
+  func lobby() async throws -> (host: HostController, hostPlayer: GameStore, guest: GameStore, port: UInt16)? {
+    let library = HostLibrary(fileURL: nil)
+    library.questions = [
+      HostQuestion(text: "Which planet has the most moons?", options: ["Jupiter", "Saturn", "Uranus", "Neptune"], correct: 1)
+    ]
+    let host = HostController(library: library, advertises: false)
+    let hostPlayer = player("Host")
+    await host.start(joining: hostPlayer)
+    guard case .live(let port) = host.status else {
+      Issue.record("didn't start: \(host.status)")
+      return nil
+    }
+    try await eventually("the host to take a seat") { hostPlayer.phase == .lobby }
+    let guest = player("Guest")
+    guest.join(try #require(GameServer(address: "127.0.0.1:\(port)")), pin: try #require(host.game?.pin))
+    try await eventually("the guest to join") { guest.phase == .lobby }
+    return (host, hostPlayer, guest, port)
+  }
+
+  /// A host who leaves the app once the game's over doesn't leave it running:
+  /// before iOS suspends the app, every phone is told and the server closes.
+  /// A game still to be played is only paused, to pick up when they're back.
+  @Test func endsAFinishedGameWhenTheHostLeavesTheApp() async throws {
+    guard let (host, hostPlayer, guest, port) = try await lobby() else { return }
+
+    await host.appWillSuspend()
+    #expect(host.isHosting, "a game still to play is paused, not ended")
+
+    host.perform(.start)
+    host.endGame()
+    try await eventually("the podium") { guest.phase.screen == .final }
+    await host.appWillSuspend()
+    try await eventually("the guest to hear the game ended") { guest.phase == .join }
+    #expect(guest.notice == "THE HOST ENDED THE GAME")
+    #expect(!host.isHosting)
+    #expect(hostPlayer.server == nil)
+    #expect(try await isClosed(port))
+  }
+
+  /// Back after a short absence, the game carries on. Back after a long one,
+  /// it's over: it ends rather than coming back to a room that's moved on.
+  @Test func endsAGameLeftTooLong() async throws {
+    guard let (host, _, guest, port) = try await lobby() else { return }
+
+    await host.resume(afterAway: .seconds(90))
+    #expect(host.isHosting)
+    #expect(guest.phase == .lobby)
+
+    await host.resume(afterAway: HostController.staleAfter)
+    try await eventually("the guest to hear the game ended") { guest.phase == .join }
+    #expect(!host.isHosting)
+    #expect(try await isClosed(port))
+  }
+
+  /// Quitting the app while it hosts tells every phone the game's over, even
+  /// though the main actor is busy quitting.
+  @Test func quittingTheAppEndsTheGameForEveryone() async throws {
+    guard let (host, hostPlayer, guest, port) = try await lobby() else { return }
+
+    host.appWillTerminate()
+    try await eventually("the guest to hear the game ended") { guest.phase == .join }
+    #expect(guest.notice == "THE HOST ENDED THE GAME")
+    #expect(try await isClosed(port))
+    await host.stop(leaving: hostPlayer)
+  }
+
+  /// Once stopped, a server can't be brought back — by the check the app
+  /// makes when it returns to the foreground, say — to advertise a game
+  /// that's over.
+  @Test func aStoppedServerStaysStopped() async throws {
+    let server = HostServer()
+    _ = try await server.start(name: "Stopped", lanAddress: nil, advertises: false)
+    #expect(await server.isListening)
+    await server.stop()
+    await server.ensureListening(lanAddress: "192.168.1.20")
+    #expect(await !server.isListening)
+  }
+
   /// A browser player is served the page in the host's theme, and follows
   /// the host if it changes.
   @Test func servesBrowsersThePageInTheHostsTheme() async throws {

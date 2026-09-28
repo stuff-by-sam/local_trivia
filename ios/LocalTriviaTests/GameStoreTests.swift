@@ -643,6 +643,78 @@ import Testing
     #expect(store.server == party)
   }
 
+  /// A relaunch back into a game whose host has stopped hosting it: once the
+  /// browser has looked everywhere and the game doesn't answer, it's over —
+  /// not "Host unreachable, retrying" for good.
+  @Test func letsGoOfARestoredGameNobodyHosts() {
+    do {
+      let (first, _) = makeStore()
+      first.connect(to: lan)
+      first.handle(.connected)
+      joinedLobby(first)
+    }
+    let (store, _) = makeStore()
+    store.start()
+    #expect(store.isRejoining)
+    store.handle(.connecting(attempt: 1))
+
+    store.discovered([], isComplete: false)
+    #expect(store.isRejoining, "the browser may just not have heard it yet")
+
+    store.discovered([], isComplete: true)
+    #expect(store.server == nil)
+    #expect(!store.isRejoining)
+    #expect(store.notice == "That game has ended.")
+    #expect(tokens.load() == nil)
+
+    let (relaunched, _) = makeStore()
+    #expect(relaunched.server == nil, "and it's not back on the next launch")
+  }
+
+  /// Still advertised means still hosted — a host who's switched away for a
+  /// moment. Keep trying.
+  @Test func waitsForAHostWhoseGameIsStillAdvertised() throws {
+    let party = try #require(GameServer(address: "10.0.0.8:3000", name: "FRIDAY QUIZ"))
+    do {
+      let (first, _) = makeStore()
+      first.connect(to: party)
+      first.handle(.connected)
+      joinedLobby(first)
+    }
+    let (store, _) = makeStore()
+    store.start()
+    store.handle(.connecting(attempt: 3))
+    store.discovered([party], isComplete: true)
+    #expect(store.server == party)
+    #expect(store.isRejoining)
+  }
+
+  /// A game seen on the network whose advert goes while it can't be reached
+  /// has ended, even before the browser's settled.
+  @Test func letsGoOfAGameWhenItsAdvertGoes() throws {
+    let (store, _) = makeStore()
+    let party = try #require(GameServer(address: "10.0.0.8:3000", name: "FRIDAY QUIZ"))
+    store.discovered([party])
+    store.handle(.connected)
+    store.discovered([party])
+
+    store.handle(.connecting(attempt: 1))
+    store.discovered([])
+    #expect(store.server == nil)
+    #expect(store.notice == nil, "there was no seat to lose")
+  }
+
+  /// A code scanned on a network that blocks Bonjour is never advertised, and
+  /// that's no sign the game is over.
+  @Test func keepsAChosenGameThatWasNeverAdvertised() throws {
+    let (store, _) = makeStore()
+    let scanned = try #require(GameServer(address: "192.168.1.50:3000"))
+    store.connect(to: scanned)
+    store.handle(.connecting(attempt: 2))
+    store.discovered([], isComplete: true)
+    #expect(store.server == scanned)
+  }
+
   @Test func neverPullsAPlayerOffAWorkingGame() throws {
     let (store, _) = makeStore()
     store.connect(to: lan)

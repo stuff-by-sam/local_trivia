@@ -56,6 +56,9 @@ actor HostServer {
   private var lanAddress: String?
   /// What the web player is served wearing: the host's accent (`WebPlayer`).
   private var webAccent: String?
+  /// Stopped for good. A server is used once: nothing brings it back, so a
+  /// game that's over can't linger on the network.
+  private var isStopped = false
 
   private static let log = Logger(subsystem: "com.stuffbysam.localtrivia", category: "host-server")
 
@@ -110,6 +113,9 @@ actor HostServer {
     throw .noFreePort
   }
 
+  /// Taking connections, and advertising the game if it advertises.
+  var isListening: Bool { listener != nil }
+
   /// Dresses the web player in the host's theme from the next page served.
   func setWebAccent(_ accent: String?) {
     webAccent = accent
@@ -121,7 +127,7 @@ actor HostServer {
   /// after hosting started, say — advertise the new one, or no other phone
   /// can find the game.
   func ensureListening(lanAddress: String?) async {
-    guard let port else { return }
+    guard !isStopped, let port else { return }
     let hasMoved = lanAddress != self.lanAddress
     self.lanAddress = lanAddress
     if listener?.state != .ready {
@@ -165,6 +171,12 @@ actor HostServer {
       }
       listener.start(queue: queue)
     }
+    // Stopped while this one was starting up (the actor took other calls
+    // while it waited): it mustn't outlive the stop.
+    guard !isStopped else {
+      listener.cancel()
+      throw CancellationError()
+    }
     self.listener = listener
   }
 
@@ -185,6 +197,7 @@ actor HostServer {
   /// goodbyes are out. Cancelling a connection can drop what's still queued
   /// on it, and a player who misses the goodbye waits on a game that's gone.
   func stop() async {
+    isStopped = true
     listener?.cancel()
     listener = nil
     let closing = Array(links.values)
@@ -209,6 +222,11 @@ actor HostServer {
   // MARK: - Connections
 
   private func accept(_ connection: NWConnection) {
+    // One that arrived as the server stopped.
+    guard !isStopped else {
+      connection.cancel()
+      return
+    }
     // Local network only: the same rule the app applies when joining.
     guard case .hostPort(let host, _) = connection.endpoint, Self.isLocal(host) else {
       Self.log.notice("refused a connection from beyond the local network")
