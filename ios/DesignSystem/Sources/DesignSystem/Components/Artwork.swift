@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// How each home screen icon is painted: the answer set on its ink, recoloured
-/// to match a theme. Mirrors each `AppIcon-*.icon` file's layers, so the shop
+/// to match a theme. Mirrors each `AppIcon-*.icon` file's layers, so the app
 /// can show them.
 nonisolated public enum IconDesign: String, CaseIterable, Sendable {
   case classic, amber, cobalt, synthwave, noir, gold, holographic, chalkboard, glass, titanium
@@ -163,5 +163,44 @@ public struct ThemeSwatch: View {
         shape.strokeBorder(isShown ? AnyShapeStyle(theme.accent) : AnyShapeStyle(.panelStroke), lineWidth: isShown ? 1.5 : 1)
       }
       .accessibilityHidden(true)
+  }
+}
+
+/// A set of answer markers as a swatch: its four shapes, two by two, in the
+/// answers' colours — the set's row in Themes & Icons.
+public struct MarkerSwatch: View {
+  let markers: AnswerMarkers
+  let isShown: Bool
+
+  public init(markers: AnswerMarkers, isShown: Bool) {
+    self.markers = markers
+    self.isShown = isShown
+  }
+
+  public var body: some View {
+    let shape = RoundedRectangle(cornerRadius: Radius.control / 2)
+    Grid(horizontalSpacing: Space.xxs, verticalSpacing: Space.xxs) {
+      GridRow {
+        glyph(.a)
+        glyph(.b)
+      }
+      GridRow {
+        glyph(.c)
+        glyph(.d)
+      }
+    }
+    .font(.system(size: Size.swatch / 3.5, weight: .bold))
+    .frame(width: Size.swatch, height: Size.swatch)
+    .background(.panel, in: shape)
+    .overlay {
+      shape.strokeBorder(isShown ? AnyShapeStyle(.themeAccent) : AnyShapeStyle(.panelStroke), lineWidth: isShown ? 1.5 : 1)
+    }
+    .accessibilityHidden(true)
+  }
+
+  private func glyph(_ style: AnswerStyle) -> some View {
+    Image(systemName: markers.symbol(for: style))
+      .foregroundStyle(style.color)
+      .frame(width: Size.swatch / 2.6, height: Size.swatch / 2.6)
   }
 }

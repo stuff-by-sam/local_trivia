@@ -5,7 +5,7 @@ import SwiftUI
 // Every screen in its main states, from models held in memory: a player's
 // store fed the events a host sends, with no socket behind it; the hosting
 // engine talking straight to the host's own store; a round that's never
-// saved; a shop that never asks the App Store. Nothing here touches the
+// saved; looks that never touch the real icon. Nothing here touches the
 // network.
 //
 // The screens' previews show these, and UI tests open one directly with
@@ -45,7 +45,7 @@ enum ScreenState: String, CaseIterable {
   case players
   case joinCode
   case tvGuide
-  case shop
+  case looks
   case tvIdle = "tv.idle"
   case tvLobby = "tv.lobby"
   case tvQuestion = "tv.question"
@@ -59,34 +59,39 @@ enum ScreenState: String, CaseIterable {
 struct ScreenPreview: View {
   let state: ScreenState
   let theme: Theme
+  let markers: AnswerMarkers
 
   @State private var models: PreviewModels
   @Namespace private var glass
 
   /// `chosen` is the answer a chosen question has picked, 0–3.
-  init(_ state: ScreenState, theme: Theme = .phosphor, chosen: Int = 1) {
+  init(_ state: ScreenState, theme: Theme = .phosphor, markers: AnswerMarkers = .classic, chosen: Int = 1) {
     self.state = state
     self.theme = theme
+    self.markers = markers
     _models = State(initialValue: PreviewModels(state, chosen: chosen))
   }
 
-  /// `-screen question.chosen -theme amber -chosen 3`: that screen, for a UI test.
+  /// `-screen question.chosen -theme amber -markers suits -chosen 3`: that
+  /// screen, for a UI test.
   static func fromLaunchArguments() -> ScreenPreview? {
     let defaults = UserDefaults.standard
     guard let name = defaults.string(forKey: "screen"), let state = ScreenState(rawValue: name) else { return nil }
     let theme = defaults.string(forKey: "theme").flatMap(Theme.init(rawValue:)) ?? .phosphor
+    let markers = defaults.string(forKey: "markers").flatMap(AnswerMarkers.init(rawValue:)) ?? .classic
     let chosen = defaults.object(forKey: "chosen") == nil ? 1 : defaults.integer(forKey: "chosen")
-    return ScreenPreview(state, theme: theme, chosen: chosen)
+    return ScreenPreview(state, theme: theme, markers: markers, chosen: chosen)
   }
 
   var body: some View {
     content
       .theme(theme)
+      .environment(\.answerMarkers, markers)
       .environment(models.store)
       .environment(models.browser)
       .environment(models.host)
       .environment(models.bigScreen)
-      .environment(models.shop)
+      .environment(models.looks)
   }
 
   @ViewBuilder
@@ -114,8 +119,8 @@ struct ScreenPreview: View {
       game(sheet: HostSheetView(sheet: .joinCode))
     case .tvGuide:
       game(sheet: HostSheetView(sheet: .tv))
-    case .shop:
-      over(ShopView())
+    case .looks:
+      over(LooksView())
     case .tvIdle, .tvLobby, .tvQuestion, .tvReveal, .tvStandings, .tvFinal:
       BigScreenView()
         .environment(\.backdropFollowsTilt, false)
@@ -186,7 +191,7 @@ final class PreviewModels {
   let host: HostController
   let browser = GameBrowser()
   let bigScreen = BigScreen()
-  let shop: Shop
+  let looks: Looks
 
   init(_ state: ScreenState, chosen: Int = 1) {
     let defaults = UserDefaults(suiteName: "previews") ?? .standard
@@ -194,7 +199,7 @@ final class PreviewModels {
     store = GameStore(defaults: defaults, tokens: PreviewTokens(), makeTransport: { _ in nil })
     store.nickname = Sample.player
     host = HostController(library: HostLibrary(fileURL: nil), advertises: false)
-    shop = Shop.preview(defaults: defaults)
+    looks = Looks.preview(defaults: defaults)
     put(in: state, chosen: chosen)
   }
 
@@ -278,7 +283,7 @@ final class PreviewModels {
       break
     case .round, .editorNew, .editorEdit, .drafting, .drafts:
       host.library.questions = Sample.round
-    case .scannerOff, .scannerRestricted, .shop:
+    case .scannerOff, .scannerRestricted, .looks:
       // Over a join screen still looking: the join screen's own sheets keep
       // its keyboard down, but these are presented from outside it.
       break

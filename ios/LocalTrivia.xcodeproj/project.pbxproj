@@ -65,7 +65,6 @@
 			membershipExceptions = (
 				Info.plist,
 				LocalTrivia.entitlements,
-				Store/Products.storekit,
 			);
 			target = 7263190658000769ED9F98CC /* LocalTrivia */;
 		};

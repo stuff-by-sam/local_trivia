@@ -49,8 +49,9 @@ this repo's player page itself, in the colour of the host's theme. Standings go 
 phone to a TV (AirPlay, or an HDMI adapter), the TV becomes the big screen: the
 join code, each question and its answers, the reveal and the standings.
 
-Optional themes and app icons are sold in the app, under **Themes & Icons**
-on the join screen; the game itself is free and complete without them.
+Themes, app icons and answer markers (other shapes in place of the circle,
+triangle, square and diamond) are free to pick, under **Themes & Icons** on the
+join screen.
 
 The laptop server above is for browser players; the app doesn't join it.
 

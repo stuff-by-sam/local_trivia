@@ -129,26 +129,17 @@ extension ShapeStyle where Self == PaletteRole {
 /// The four answer options: colour + shape + letter, never colour alone, so
 /// they stay distinguishable for colour-blind players.
 ///
-/// Same set, same order as the web game (`PAL` in public/shared/common.js), so
-/// "B, the cyan triangle" means the same thing wherever trivia is played. No
-/// theme changes them, and they appear only on answers.
+/// Same colours, same order as the web game (`PAL` in public/shared/common.js),
+/// so "B, the cyan one" means the same thing wherever trivia is played. No
+/// theme changes them, and they appear only on answers. The shapes are the
+/// phone's `AnswerMarkers`: the classic circle, triangle, square and diamond,
+/// or another set the player picks.
 nonisolated public enum AnswerStyle: Int, CaseIterable, Identifiable, Sendable {
   case a, b, c, d
 
   public var id: Int { rawValue }
 
   public var letter: String { ["A", "B", "C", "D"][rawValue] }
-
-  public var symbol: String { ["circle.fill", "triangle.fill", "square.fill", "diamond.fill"][rawValue] }
-
-  public var shapeName: LocalizedStringResource {
-    switch self {
-    case .a: "circle"
-    case .b: "triangle"
-    case .c: "square"
-    case .d: "diamond"
-    }
-  }
 
   public var color: Color {
     switch self {

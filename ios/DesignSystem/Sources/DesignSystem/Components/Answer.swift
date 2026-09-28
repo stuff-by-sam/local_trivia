@@ -7,6 +7,8 @@ public struct AnswerKey: View {
   /// Dark on light, for sitting on a lit surface.
   let isInverted: Bool
 
+  @Environment(\.answerMarkers) private var markers
+
   public init(style: AnswerStyle, isInverted: Bool = false) {
     self.style = style
     self.isInverted = isInverted
@@ -19,7 +21,7 @@ public struct AnswerKey: View {
   public var body: some View {
     let ink = isInverted ? Palette.onAccentInk : style.color
     HStack(spacing: Space.xs) {
-      Image(systemName: style.symbol)
+      Image(systemName: markers.symbol(for: style))
         .imageScale(.small)
       Text(verbatim: style.letter)
     }
@@ -59,6 +61,7 @@ public struct AnswerButton: View {
   let action: () -> Void
 
   @Environment(\.palette) private var palette
+  @Environment(\.answerMarkers) private var markers
 
   /// `longestOption` sizes the text, so all four answers match.
   public init(style: AnswerStyle, text: String, longestOption: Int, state: State, action: @escaping () -> Void) {
@@ -125,7 +128,7 @@ public struct AnswerButton: View {
     .motion(.snap, value: state)
     // Verbatim: its parts are localized already, and a key of only
     // punctuation can't become a string catalog symbol.
-    .accessibilityLabel(Text(verbatim: "\(style.letter), \(String(localized: style.shapeName)): \(text)"))
+    .accessibilityLabel(Text(verbatim: "\(style.letter), \(String(localized: markers.shapeName(for: style))): \(text)"))
     .accessibilityAddTraits(state == .chosen ? .isSelected : [])
   }
 

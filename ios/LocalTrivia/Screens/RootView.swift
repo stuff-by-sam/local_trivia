@@ -8,7 +8,7 @@ struct RootView: View {
   @Environment(GameStore.self) private var store
   @Environment(GameBrowser.self) private var browser
   @Environment(HostController.self) private var host
-  @Environment(Shop.self) private var shop
+  @Environment(Looks.self) private var looks
   @Environment(\.scenePhase) private var scenePhase
   @Namespace private var glass
 
@@ -34,9 +34,9 @@ struct RootView: View {
     .haptic(trigger: store.phase.screen) { _, _ in haptic }
     .task {
       store.start()
-      shop.start()
+      looks.start()
     }
-    .onChange(of: shop.theme, initial: true) { _, theme in host.theme = theme }
+    .onChange(of: looks.theme, initial: true) { _, theme in host.theme = theme }
     .onChange(of: browser.games) { _, games in store.discovered(games) }
     .onChange(of: store.connection) { _, _ in store.discovered(browser.games) }
     .onChange(of: scenePhase) { _, phase in

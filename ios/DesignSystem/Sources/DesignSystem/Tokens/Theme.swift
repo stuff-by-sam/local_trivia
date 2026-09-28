@@ -1,16 +1,17 @@
 import SwiftUI
 
 /// A look for the whole app: the accent, the ink behind the glass, and the
-/// texture the glass refracts. Phosphor is the game's own; the rest are sold
-/// in the app's shop.
+/// texture the glass refracts. Phosphor is the game's own; the rest are the
+/// player's to pick, in Themes & Icons.
 ///
 /// A theme is this phone's own: other phones with the app keep theirs. The
 /// one thing that leaves is the accent of a host's theme (`webAccent`), for
 /// the browser players in their game, who have no theme of their own — the
 /// laptop's web player dresses them in the operator's accent the same way.
-/// A theme never touches the answer set or the status colours. "B, the cyan
-/// triangle" has to mean the same thing on every phone in the room and on the
-/// TV, whoever's wearing what; green is still right and red still wrong.
+/// A theme never touches the answer colours or the status colours. "B, the
+/// cyan one" has to mean the same thing on every phone in the room and on the
+/// TV, whoever's wearing what; green is still right and red still wrong. (The
+/// shapes beside the letters are `AnswerMarkers`, chosen apart from the theme.)
 nonisolated public enum Theme: String, CaseIterable, Identifiable, Sendable {
   case phosphor, amber, cobalt, synthwave, noir, gold, holographic, chalkboard, glass, titanium
 

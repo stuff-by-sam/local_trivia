@@ -59,9 +59,9 @@ nonisolated public enum Size {
   /// The QR code on a card, and at full size.
   public static let qrCard: CGFloat = 112
   public static let qrFull: CGFloat = 240
-  /// A theme swatch in the shop.
+  /// A theme's (or a marker set's) swatch in Themes & Icons.
   public static let swatch: CGFloat = 52
-  /// An app icon tile in the shop.
+  /// An app icon tile in Themes & Icons.
   public static let iconTile: CGFloat = 64
   /// The widest a column of game gets, on iPad.
   public static let column: CGFloat = 540

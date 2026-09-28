@@ -30,10 +30,10 @@ struct ThemeTests {
     }
   }
 
-  /// Every theme for sale has a home screen icon to go with it.
+  /// Every theme has a home screen icon to go with it (Phosphor's is Classic).
   @Test func everyThemeHasAnIconToMatch() {
     let icons = Set(AppIcon.allCases.map(\.rawValue))
-    for theme in Theme.allCases where theme.productID != nil {
+    for theme in Theme.allCases where theme != .phosphor {
       #expect(icons.contains(theme.rawValue), "no \(theme.rawValue) icon")
     }
   }
@@ -52,5 +52,27 @@ struct ThemeTests {
       return c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4)
     }
     return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue)
+  }
+}
+
+/// What every set of answer markers has to keep, whoever adds the next one.
+struct AnswerMarkersTests {
+  /// Four shapes that exist, that differ, and that VoiceOver names apart —
+  /// the shapes are how a colour-blind player tells the answers apart.
+  @Test func everySetHasFourShapesToTellApart() {
+    for markers in AnswerMarkers.allCases {
+      let symbols = AnswerStyle.allCases.map { markers.symbol(for: $0) }
+      let names = AnswerStyle.allCases.map { String(localized: markers.shapeName(for: $0)) }
+      #expect(Set(symbols).count == 4, "\(markers.rawValue): \(symbols)")
+      #expect(Set(names).count == 4, "\(markers.rawValue): \(names)")
+      for symbol in symbols {
+        #expect(UIImage(systemName: symbol) != nil, "\(markers.rawValue): no symbol \(symbol)")
+      }
+    }
+  }
+
+  /// Classic is what the TV's web presenter and the web player draw.
+  @Test func classicIsTheWebGamesSet() {
+    #expect(AnswerStyle.allCases.map { AnswerMarkers.classic.symbol(for: $0) } == ["circle.fill", "triangle.fill", "square.fill", "diamond.fill"])
   }
 }
