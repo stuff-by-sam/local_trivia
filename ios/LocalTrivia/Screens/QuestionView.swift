@@ -179,8 +179,6 @@ private struct QuestionStatus: View {
         }
       } else if isOver {
         StatusLine("Time's up", isWaiting: false)
-      } else {
-        StatusLine("Faster answers score more", isWaiting: false)
       }
     }
     .frame(minHeight: Space.l + Space.xs)

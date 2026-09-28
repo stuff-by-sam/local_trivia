@@ -20,11 +20,28 @@ public struct AnswerSetMark: View {
 public struct Wordmark: View {
   public enum Scale: Sendable {
     case screen, showcase
+    /// The TV's idle board, on its 1920×1080 canvas.
+    case tv
 
     var size: CGFloat {
       switch self {
       case .screen: 46
       case .showcase: 34
+      case .tv: TVRole.wordmark.size
+      }
+    }
+
+    var tracking: CGFloat {
+      switch self {
+      case .screen, .showcase: size / 8
+      case .tv: TVRole.wordmark.tracking
+      }
+    }
+
+    var glow: Glow {
+      switch self {
+      case .screen, .showcase: .hero
+      case .tv: .tv
       }
     }
   }
@@ -37,17 +54,17 @@ public struct Wordmark: View {
 
   public var body: some View {
     Text(verbatim: "TRIVIA")
-      .tracking(scale.size / 8)
+      .tracking(scale.tracking)
       .overlay(alignment: .trailing) {
         BlinkingCursor(glyph: "█")
           .fixedSize()
           .alignmentGuide(.trailing) { $0[.leading] }
       }
       // Evens out tracking's trailing gap.
-      .offset(x: scale.size / 16)
+      .offset(x: scale.tracking / 2)
       .font(.system(size: scale.size, weight: .heavy, design: .monospaced))
       .foregroundStyle(.themeAccent)
-      .glow(.hero)
+      .glow(scale.glow)
       // A logo: the cursor follows the word in every language.
       .environment(\.layoutDirection, .leftToRight)
       .accessibilityElement(children: .ignore)

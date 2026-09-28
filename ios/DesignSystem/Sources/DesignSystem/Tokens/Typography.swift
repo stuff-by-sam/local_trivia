@@ -160,7 +160,7 @@ public enum TVRole: Sendable {
   case wordmark, masthead, stepLabel, pin, joinLabel, instruction, name, nameOverflow
   case question(length: Int), questionAtReveal, answerKey, answer, votes, footer, waiting
   case sectionTitle, rank, standingName, standingDelta, standingScore
-  case podiumName, podiumScore, podiumPlace, idleLine
+  case podiumName, podiumScore, podiumPlace
   /// Symbols: the answer set on the idle board, the trophy on the podium.
   case answerSet, trophy
 
@@ -195,7 +195,6 @@ public enum TVRole: Sendable {
     case .podiumName: 56
     case .podiumScore: 38
     case .podiumPlace: 56
-    case .idleLine: 44
     case .answerSet: 56
     case .trophy: 88
     }
@@ -205,7 +204,7 @@ public enum TVRole: Sendable {
     switch self {
     case .wordmark, .masthead, .pin, .sectionTitle, .rank, .votes, .podiumPlace: .heavy
     case .question, .answerKey, .waiting, .podiumName, .standingDelta: .bold
-    case .instruction, .idleLine: .medium
+    case .instruction: .medium
     case .answerSet, .trophy: .regular
     default: .semibold
     }
@@ -213,7 +212,7 @@ public enum TVRole: Sendable {
 
   var isMono: Bool {
     switch self {
-    case .question, .questionAtReveal, .answer, .instruction, .name, .standingName, .podiumName, .idleLine, .answerSet, .trophy: false
+    case .question, .questionAtReveal, .answer, .instruction, .name, .standingName, .podiumName, .answerSet, .trophy: false
     default: true
     }
   }

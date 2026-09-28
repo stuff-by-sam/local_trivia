@@ -232,7 +232,7 @@ touches the network.
 | `.scrollsWhenCrowded()` | centred when it fits, scrolling when it doesn't |
 | `StatusLine` | waiting (cursor), steady |
 | `StatusDot` | online, connecting (pulse), failed (pulse), idle |
-| `Wordmark`, `AnswerSetMark` | screen, showcase |
+| `Wordmark`, `AnswerSetMark` | screen, showcase, tv (the TV's idle board, previewed there) |
 | `RankFigure` | medal 1/2/3, other, unranked; compact |
 | `PodiumStep` | 1st/2nd/3rd, the player's own |
 | `Badge` | glass (verdict), drawn (waiting) |

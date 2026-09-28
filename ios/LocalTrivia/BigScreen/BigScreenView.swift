@@ -75,27 +75,14 @@ struct BigScreenView: View {
 
 // MARK: - Boards
 
-/// Before any game: what this screen is for.
+/// Before any game: the answer set and the wordmark, centred on the screen.
 private struct IdleBoard: View {
 
   var body: some View {
     VStack(spacing: TVMetrics.gap) {
       AnswerSetMark()
         .tvRole(.answerSet)
-
-      HStack(spacing: 0) {
-        Text(verbatim: "TRIVIA")
-        BlinkingCursor(glyph: "█")
-      }
-      // A logo: the cursor follows the word in every language.
-      .environment(\.layoutDirection, .leftToRight)
-      .tvRole(.wordmark)
-      .foregroundStyle(.themeAccent)
-      .glow(.tv)
-
-      Text("Host a game on your phone, and it shows up here.")
-        .tvRole(.idleLine)
-        .foregroundStyle(.secondary)
+      Wordmark(scale: .tv)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
   }

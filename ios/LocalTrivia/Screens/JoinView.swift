@@ -226,8 +226,6 @@ struct JoinView: View {
         FieldMessage(Text(error.message), kind: .error)
       } else if let notice = store.notice {
         FieldMessage(Text(notice), kind: .notice)
-      } else {
-        FieldMessage(Text("The PIN is on the host's phone"), kind: .hint)
       }
     }
     .transition(.opacity)
