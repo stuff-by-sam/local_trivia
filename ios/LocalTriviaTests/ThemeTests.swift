@@ -30,10 +30,10 @@ struct ThemeTests {
     }
   }
 
-  /// Every theme for sale has a home screen icon to go with it.
+  /// Every theme has a home screen icon to go with it (Phosphor's is Classic).
   @Test func everyThemeHasAnIconToMatch() {
     let icons = Set(AppIcon.allCases.map(\.rawValue))
-    for theme in Theme.allCases where theme.productID != nil {
+    for theme in Theme.allCases where theme != .phosphor {
       #expect(icons.contains(theme.rawValue), "no \(theme.rawValue) icon")
     }
   }
@@ -74,7 +74,5 @@ struct AnswerMarkersTests {
   /// Classic is what the TV's web presenter and the web player draw.
   @Test func classicIsTheWebGamesSet() {
     #expect(AnswerStyle.allCases.map { AnswerMarkers.classic.symbol(for: $0) } == ["circle.fill", "triangle.fill", "square.fill", "diamond.fill"])
-    #expect(AnswerMarkers.classic.productID == nil, "every phone has it")
-    #expect(AnswerMarkers.allCases.filter { $0 != .classic }.allSatisfy { $0.productID != nil })
   }
 }

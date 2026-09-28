@@ -28,7 +28,7 @@ struct LocalTriviaApp: App {
       .environment(models.browser)
       .environment(models.host)
       .environment(models.bigScreen)
-      .environment(models.shop)
+      .environment(models.looks)
   }
 }
 
@@ -42,7 +42,7 @@ final class AppModels {
   let browser = GameBrowser()
   let host = HostController()
   let bigScreen = BigScreen()
-  let shop = Shop()
+  let looks = Looks()
 }
 
 final class AppDelegate: NSObject, UIApplicationDelegate {

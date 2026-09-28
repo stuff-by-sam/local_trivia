@@ -133,7 +133,7 @@ extension ShapeStyle where Self == PaletteRole {
 /// so "B, the cyan one" means the same thing wherever trivia is played. No
 /// theme changes them, and they appear only on answers. The shapes are the
 /// phone's `AnswerMarkers`: the classic circle, triangle, square and diamond,
-/// or a set from the shop.
+/// or another set the player picks.
 nonisolated public enum AnswerStyle: Int, CaseIterable, Identifiable, Sendable {
   case a, b, c, d
 

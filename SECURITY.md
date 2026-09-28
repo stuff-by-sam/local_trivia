@@ -31,18 +31,15 @@ rules:
   never syncs through iCloud Keychain, and can't be restored onto another
   phone. iOS keeps Keychain items when an app is deleted; a reinstall discards
   the old token on its first launch.
-- **Nothing leaves for anywhere but the game — and the App Store, for
-  purchases.** No analytics, no accounts, no third-party SDKs or
-  dependencies. Drafting questions runs on the phone's own model. (A build
-  with Private Cloud Compute turned on — off by default, see ios/README.md —
-  sends the topic, and the drafts to check, to Apple's Private Cloud Compute
-  for that request only; it keeps nothing, and the draft sheet says so
-  first.) Optional themes, app icons and answer markers are bought through StoreKit;
-  the app sees only which ones the Apple Account owns, as signed
-  transactions it verifies. Preferences hold only the nickname draft, the last
-  game's address, the chosen theme and answer markers, and a cache of what's owned — replaced by
-  StoreKit's answer at every launch, so editing it unlocks nothing. The
-  privacy manifest declares exactly that.
+- **Nothing leaves for anywhere but the game.** No analytics, no accounts, no
+  in-app purchases, no third-party SDKs or dependencies. Drafting questions runs
+  on the phone's own model. (A build with Private Cloud Compute turned on — off
+  by default, see ios/README.md — sends the topic, and the drafts to check, to
+  Apple's Private Cloud Compute for that request only; it keeps nothing, and the
+  draft sheet says so first.) Themes, app icons and answer markers are free and
+  live on the phone. Preferences hold only the nickname draft, the last game's
+  address, and the chosen theme and answer markers. The privacy manifest
+  declares exactly that.
 - **Untrusted text is rendered as text.** Questions, answers and other players'
   nicknames are displayed verbatim — never interpreted as Markdown or links.
 

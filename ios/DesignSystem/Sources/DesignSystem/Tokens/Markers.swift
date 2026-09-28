@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The four shapes beside the answers' letters. Classic's — circle, triangle,
 /// square, diamond — are the game's own, and what the web game shows (`PAL`
-/// in public/shared/common.js); the rest are sold in the app's shop.
+/// in public/shared/common.js); the rest are the player's to pick.
 ///
 /// A set is this phone's, like a theme: it dresses this phone and any TV it
 /// puts the game on. It changes only the shapes. An answer's letter and

@@ -75,13 +75,13 @@ change: A `#56FF8A`, B `#55E6FF`, C `#FFB347`, D `#FF6AD5` — the web game's
 now gold, silver, bronze, so "third place" no longer reads as "B".)
 
 **The shapes** beside the letters are the phone's `AnswerMarkers`: Classic's
-circle, triangle, square and diamond (the web game's), or a set from the shop —
+circle, triangle, square and diamond (the web game's), or another set the player picks —
 Suits, Elements, Sky, Critters. A set dresses its phone and the TV that phone
 drives, and nothing else; the web game keeps Classic. Every set's four shapes
 differ in silhouette, not just colour, and have their own names for VoiceOver.
 A key is still colour + shape + letter, so no answer depends on colour alone.
 
-**Themes** (sold in the shop) change `accent`, `ink` and the backdrop texture
+**Themes** (picked in Themes & Icons) change `accent`, `ink` and the backdrop texture
 only. They never touch the answer colours, the shapes or the status colours. `ThemeTests` holds
 each theme's accent on its ink, and `onAccent` on its accent, to 7:1.
 
@@ -163,7 +163,7 @@ are ≥ 60 pt tall (`Size.answer`).
 | Backdrop (drawn) | behind every screen | glow only: no texture, no tilt | glow only: no texture, no vignette |
 
 Sheets use the system sheet material — they don't draw the backdrop. The
-one exception is the shop, whose job is showing a theme on its backdrop.
+one exception is Themes & Icons, whose job is showing a theme on its backdrop.
 
 The answer-to-verdict morph needs one `GlassEffectContainer` around the
 in-game screens. The join screen sits outside it: on iOS 27.0, glass buttons

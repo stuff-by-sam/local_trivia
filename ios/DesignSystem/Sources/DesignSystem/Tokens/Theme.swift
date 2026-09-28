@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// A look for the whole app: the accent, the ink behind the glass, and the
-/// texture the glass refracts. Phosphor is the game's own; the rest are sold
-/// in the app's shop.
+/// texture the glass refracts. Phosphor is the game's own; the rest are the
+/// player's to pick, in Themes & Icons.
 ///
 /// A theme is this phone's own: other phones with the app keep theirs. The
 /// one thing that leaves is the accent of a host's theme (`webAccent`), for

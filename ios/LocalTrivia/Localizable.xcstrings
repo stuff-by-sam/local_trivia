@@ -94,16 +94,6 @@
     "Adds or leaves out this question." : {
 
     },
-    "All ^[%lld theme](inflect: true), ^[%lld app icon](inflect: true) and ^[%lld set](inflect: true) of answer markers" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "All ^[%1$lld theme](inflect: true), ^[%2$lld app icon](inflect: true) and ^[%3$lld set](inflect: true) of answer markers"
-          }
-        }
-      }
-    },
     "Amber" : {
       "extractionState" : "manual"
     },
@@ -137,24 +127,11 @@
     "Away" : {
 
     },
-    "Bought them on another device, or reinstalled Trivia? Restoring brings back everything this Apple Account owns." : {
-
-    },
     "Brushed gold on black, for whoever keeps winning" : {
       "extractionState" : "manual"
     },
     "Brushed titanium: tilt it and the light moves" : {
       "extractionState" : "manual"
-    },
-    "Buy %@, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Buy %1$@, %2$@"
-          }
-        }
-      }
     },
     "Camera Is Off for Trivia" : {
 
@@ -163,9 +140,6 @@
 
     },
     "Can't look for games. Local Network may be off for Trivia." : {
-
-    },
-    "Can't reach the App Store. What you own still works offline." : {
 
     },
     "Cancel" : {
@@ -229,9 +203,6 @@
 
     },
     "Couldn't join that game." : {
-
-    },
-    "Couldn't reach the App Store. Check your internet connection and try again." : {
 
     },
     "Couldn't start hosting: %@" : {
@@ -303,9 +274,6 @@
     "Every player goes back to the join screen." : {
 
     },
-    "Everything" : {
-
-    },
     "Final Results" : {
 
     },
@@ -371,9 +339,6 @@
 
     },
     "In this round" : {
-
-    },
-    "In use" : {
 
     },
     "Iridescent foil that catches the light as you tilt it" : {
@@ -485,9 +450,6 @@
     "Noir" : {
       "extractionState" : "manual"
     },
-    "Not available right now" : {
-
-    },
     "Not quite" : {
 
     },
@@ -523,9 +485,6 @@
 
     },
     "Or go to %@" : {
-
-    },
-    "Owned" : {
 
     },
     "PIN" : {
@@ -608,9 +567,6 @@
 
     },
     "Removed by the host." : {
-
-    },
-    "Restore Purchases" : {
 
     },
     "Right in %llds: %@ pts · right at the buzzer: %@ · wrong: %@. Answers score more the faster they come in. The standings follow each reveal after 5 seconds; %@" : {
@@ -713,12 +669,6 @@
     "That topic can't be drafted. Try another." : {
 
     },
-    "The App Store couldn't complete that. Try again in a moment." : {
-
-    },
-    "The App Store couldn't confirm that purchase, so it hasn't been unlocked." : {
-
-    },
     "The TV shows the join code, each question with its clock and answers, the reveal and the standings. Your phone keeps the controls, and your own answers." : {
 
     },
@@ -741,9 +691,6 @@
 
     },
     "Themes & Icons" : {
-
-    },
-    "This Apple Account hasn't bought any themes, icons or markers yet." : {
 
     },
     "This iPhone doesn't allow the camera. Type the PIN from the host's phone instead." : {
@@ -782,30 +729,8 @@
     "Total" : {
 
     },
-    "Tries these markers on." : {
-
-    },
-    "Tries this theme on." : {
-
-    },
     "Trivia Night" : {
 
-    },
-    "Try Again" : {
-
-    },
-    "Trying on %@" : {
-
-    },
-    "Trying on %@ with %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Trying on %1$@ with %2$@"
-          }
-        }
-      }
     },
     "Turn on Wi-Fi or Personal Hotspot so others can join" : {
 
@@ -822,9 +747,6 @@
     "Violet on midnight, down to the horizon" : {
       "extractionState" : "manual"
     },
-    "Waiting for approval. It'll unlock here once it's approved." : {
-
-    },
     "Waiting for host" : {
 
     },
@@ -836,6 +758,16 @@
     },
     "Wearing %@" : {
 
+    },
+    "Wearing %@. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Wearing %1$@. %2$@"
+          }
+        }
+      }
     },
     "Wears this theme." : {
 
@@ -888,9 +820,6 @@
       }
     },
     "Your position: unranked, %lld points" : {
-
-    },
-    "Your themes, icons and markers are restored." : {
 
     },
     "^[%lld player](inflect: true)" : {

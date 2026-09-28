@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// How each home screen icon is painted: the answer set on its ink, recoloured
-/// to match a theme. Mirrors each `AppIcon-*.icon` file's layers, so the shop
+/// to match a theme. Mirrors each `AppIcon-*.icon` file's layers, so the app
 /// can show them.
 nonisolated public enum IconDesign: String, CaseIterable, Sendable {
   case classic, amber, cobalt, synthwave, noir, gold, holographic, chalkboard, glass, titanium
@@ -167,7 +167,7 @@ public struct ThemeSwatch: View {
 }
 
 /// A set of answer markers as a swatch: its four shapes, two by two, in the
-/// answers' colours — the set's row in the shop.
+/// answers' colours — the set's row in Themes & Icons.
 public struct MarkerSwatch: View {
   let markers: AnswerMarkers
   let isShown: Bool

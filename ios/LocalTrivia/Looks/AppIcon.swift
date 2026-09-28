@@ -2,8 +2,7 @@ import DesignSystem
 import SwiftUI
 
 /// The home screen icon: the answer set on its ink, as the classic icon has
-/// it, recoloured — one to match each theme. Classic is the app's own; the
-/// rest are sold in the shop.
+/// it, recoloured — one to match each theme. Classic is the app's own.
 ///
 /// Each alternate is an Icon Composer file beside the classic one
 /// (`AppIcon-Amber.icon`, …), named in the target's alternate app icon
@@ -37,11 +36,6 @@ enum AppIcon: String, CaseIterable, Identifiable, Sendable {
     }
   }
 
-  /// Nil for the one every phone has.
-  var productID: String? {
-    self == .classic ? nil : "com.stuffbysam.localtrivia.icon.\(rawValue)"
-  }
-
-  /// How it's painted, for drawing it in the shop.
+  /// How it's painted, for drawing it in Themes & Icons.
   var design: IconDesign { IconDesign(rawValue: rawValue) ?? .classic }
 }

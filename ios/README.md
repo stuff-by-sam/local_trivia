@@ -204,32 +204,37 @@ leave button appears on every screen.
 ## Themes, icons and answer markers
 
 Optional, and out of the way: a **Themes & Icons** button in the join
-screen's toolbar, and nowhere in a game. Everything is a one-time,
-non-consumable in-app purchase — each theme, icon and marker set on its own,
-or **Everything** in one go. Phosphor, the classic icon and the classic
-markers are free. The shop keeps each kind in a group of its own, closed
-until it's opened; a closed group says what's in use.
+screen's toolbar, and nowhere in a game. Every theme, marker set and icon is
+free: tapping one puts it on. The screen keeps each kind in a group of its
+own — themes, then answer markers, then app icons — closed until it's
+opened; a closed group says what's in use.
 
-- **Themes** — Amber, Cobalt, Synthwave, Noir, Gold, Holographic,
-  Chalkboard, Glass and Titanium. A theme is the accent, the ink behind the
-  glass, and the texture the glass refracts: Phosphor's scanlines, Cobalt's
-  vector grid, Synthwave's horizon, Noir's dot matrix, Gold's brushed metal,
-  Chalkboard's eraser smears and dust on slate. Three follow the phone's
-  tilt: Holographic's iridescent foil slides across the screen the way Apple
-  Card's does, Glass's pools of liquid colour run downhill under the glass
-  controls, and a band of light slides across Titanium's brushed metal.
-  These hold still while a question is up (the app still does no per-frame
-  work then), under Reduce Motion, on a TV, and in the background; Core
-  Motion runs only while one is following the phone, and needs no
-  permission.
-  Tapping one dresses the shop in it, so it's tried on before it's bought;
-  closing the shop takes it off. A theme dresses this phone and any TV it's
-  showing the game on, and, when this phone hosts, the browser players in
-  its game: they have no theme of their own, so the web player is served in
-  the host's accent (`Theme.webAccent`), as a laptop serves it in its
-  operator's. Other phones with the app keep their own theme. A theme never
-  touches the answer colours or the status colours: B is cyan on every
-  phone in the room, whoever's wearing what, and red is still wrong.
+- **Themes** — Phosphor (the game's own), Amber, Cobalt, Synthwave, Noir,
+  Gold, Holographic, Chalkboard, Glass and Titanium. A theme is the accent,
+  the ink behind the glass, and the texture the glass refracts: Phosphor's
+  scanlines, Cobalt's vector grid, Synthwave's horizon, Noir's dot matrix,
+  Gold's brushed metal, Chalkboard's eraser smears and dust on slate. Three
+  follow the phone's tilt: Holographic's iridescent foil slides across the
+  screen the way Apple Card's does, Glass's pools of liquid colour run
+  downhill under the glass controls, and a band of light slides across
+  Titanium's brushed metal. These hold still while a question is up (the app
+  still does no per-frame work then), under Reduce Motion, on a TV, and in
+  the background; Core Motion runs only while one is following the phone,
+  and needs no permission.
+  A theme dresses this phone and any TV it's showing the game on, and, when
+  this phone hosts, the browser players in its game: they have no theme of
+  their own, so the web player is served in the host's accent
+  (`Theme.webAccent`), as a laptop serves it in its operator's. Other phones
+  with the app keep their own theme. A theme never touches the answer
+  colours or the status colours: B is cyan on every phone in the room,
+  whoever's wearing what, and red is still wrong.
+- **Answer markers** — the shapes beside each answer's letter: Classic's
+  circle, triangle, square and diamond, or Suits (club, spade, heart,
+  diamond), Elements (leaf, water, fire, lightning), Sky (sun, moon, cloud,
+  star) and Critters (tortoise, fish, cat, bird). A set dresses this phone's
+  answers and any TV it puts the game on. Letters and colours don't change,
+  so B is cyan on every phone, and VoiceOver names the shape a set uses
+  ("B, spade: Saturn"). Browser players keep the classic shapes.
 - **App icons** — one to match every theme: the classic icon's four
   shapes, recoloured (Holographic's in foil, Chalkboard's in pastel chalk on
   slate, Titanium's in brushed metal). Glass's shapes are glass layers over
@@ -237,47 +242,22 @@ until it's opened; a closed group says what's in use.
   Composer file beside
   `AppIcon.icon`, named in the target's *Alternate App Icon Sets* build
   setting.
-- **Answer markers** — the shapes beside each answer's letter, in place of
-  the classic circle, triangle, square and diamond: Suits (club, spade,
-  heart, diamond), Elements (leaf, water, fire, lightning), Sky (sun, moon,
-  cloud, star) and Critters (tortoise, fish, cat, bird). A set is tried on
-  like a theme, and dresses this phone's answers and any TV it puts the game
-  on. Letters and colours don't change, so B is cyan on every phone, and
-  VoiceOver names the shape a set uses ("B, spade: Saturn"). Browser players
-  keep the classic shapes.
-- **Everything** — one product that unlocks every theme, icon and marker
-  set, including any added later: the app treats owning it as owning each of them. It's
-  offered until there's nothing left to buy. Refunding it takes back only
-  what came in it, not what was bought on its own.
-- **Restore Purchases** asks the App Store for everything the Apple Account
-  owns, for a new phone or a reinstall.
 
 How it's built:
 
-- `Shop` — StoreKit 2. Verified entitlements are the only record of what's
-  owned. They're cached in preferences so a bought theme is on screen from
-  the first frame, and checked again at every launch, so a refund takes a
-  theme (or icon, or marker set) back. A `Transaction.updates` listener picks up Ask to Buy
-  approvals, refunds and purchases made elsewhere. Entitlements live on the
-  device, so what's bought works offline; only buying and restoring need the
-  internet. What the player chose and what they own are kept apart, so a
-  theme that's taken back returns by itself if the purchase does.
+- `Looks` — the theme and marker set this phone wears, kept in preferences
+  so they're on screen from the first frame, and the icon, which iOS keeps
+  and the app reads at launch.
 - `Theme` — the catalog of looks, and the `theme` environment value the
   `Backdrop` draws from. Views keep reading `accent`, which follows it.
 - `AnswerMarkers` — the catalog of marker sets, and the `answerMarkers`
   environment value `AnswerKey`, `AnswerSetMark` and the TV's answers draw
   their shapes from.
-- `ShopView` — buys through SwiftUI's `purchase` action, which presents the
-  App Store's sheet over the right scene.
+- `LooksView` — Themes & Icons itself.
 
-For release, create the non-consumable products in App Store Connect with
-the IDs in `LocalTrivia/Store/Products.storekit`. That file is the local
-StoreKit configuration: the Run scheme uses it, so the shop works in the
-simulator with no App Store account, and the unit tests load it. It isn't
-copied into the app. To add a theme or icon, add its case, its product to the
-configuration (and App Store Connect), and for an icon, its `.icon` file and
-its name in the build setting; `ShopTests` fails if the code, the
-configuration and the built app disagree.
+To add a theme, marker set or icon, add its case; for an icon, add its
+`.icon` file and its name in the build setting too. `LooksTests` fails if an
+icon the code names isn't built into the app.
 
 ## Security and privacy
 
@@ -309,11 +289,9 @@ surface on the network: the host's controls act on the game in-process.
   on its port is the same player WebSocket the app uses. The one thing
   written into a file is the host's theme colour, into the player page's
   `<html data-accent>`, and only as a `#rrggbb`.
-- **Purchases go through StoreKit, and nothing else leaves.** The app learns
-  which themes, icons and marker sets the Apple Account owns, as signed transactions it
-  verifies, and nothing about the player. The owned list cached in
-  preferences is replaced by StoreKit's answer at every launch, so editing it
-  unlocks nothing.
+- **Nothing to buy, and no App Store traffic.** Themes, marker sets and
+  icons are all free and on the phone; the app has no in-app purchases and
+  doesn't use StoreKit.
 - **Untrusted strings render verbatim.** Server text reaches the screen only
   through `Text(verbatim:)` / `String` initialisers, or as an interpolated
   argument, never as a localized format string. So it can't inject Markdown or
@@ -347,15 +325,15 @@ LocalTrivia/
     BigScreen.swift         A connected TV gets its own scene (a scene accessory), not a mirror of the phone
     BigScreenView.swift     The game for the room: lobby, question, reveal, standings, podium
   Design/                   The in-game toolbar; screen states for previews; three prototype directions (debug builds)
-  Store/
-    Shop.swift              StoreKit 2: products, verified entitlements, buying, restoring
-    ShopView.swift          Themes & Icons: themes, icons and answer markers, each a group to open; try on, buy, wear
+  Looks/
+    Looks.swift             The theme, answer markers and icon this phone wears
+    LooksView.swift         Themes & Icons: themes, answer markers and app icons, each a group to open
     AppIcon.swift           The alternate app icons, and a drawing of each
-    Products.storekit       Local StoreKit configuration (Run scheme and tests; not in the app)
+    ChosenLooks.swift       Dresses a view in the phone's theme and markers
   Screens/                  One view per game phase, the launch, and the QR scanner
     Host/                   Round setup, question editor, host controls
-LocalTriviaTests/           Swift Testing: wire format, payloads, the full game loop, the shop
-LocalTriviaUITests/         Hosts a game in the simulator and plays it through; tries on a theme
+LocalTriviaTests/           Swift Testing: wire format, payloads, the full game loop, themes and icons
+LocalTriviaUITests/         Hosts a game in the simulator and plays it through; picks a theme and markers
 Web/socket.io/              The web player's Socket.IO client, for phone-hosted games
 ```
 
@@ -385,14 +363,13 @@ engine's state machine driven directly, and the whole stack — a real
 `HostServer` with the host and a guest, each a full `GameStore` on a real
 socket, playing a game over loopback in one process.
 
-The shop is tested against StoreKit's local test environment
-(`SKTestSession`), loaded from the same configuration the Run scheme uses:
-every product in the catalog is on sale, a theme has to be bought before
-it's worn, a refund takes a theme or icon back, the bundle unlocks
-everything and a refund of it keeps what was bought separately, Ask to Buy
-unlocks nothing until it's approved, a cancelled purchase says nothing and a
-failed one says why, the cached list gives way to StoreKit's, and every
-alternate icon is built into the app under the name the shop asks for.
+`LooksTests` checks that any theme or marker set goes on when it's picked
+and is still on at the next launch, that a saved pick this build doesn't
+know falls back to the game's own, that an icon change reaches the Home
+Screen (and says so when iOS refuses it), and that every alternate icon is
+built into the app under the name it's set by. `AnswerMarkersTests` holds
+every marker set to four distinct shapes that exist, with four names for
+VoiceOver.
 
 `StringCatalogTests` resolves every plural written with grammar agreement
 through the app's bundle, as the screens do, and fails if one no longer

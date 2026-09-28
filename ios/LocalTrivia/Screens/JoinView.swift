@@ -15,7 +15,7 @@ struct JoinView: View {
   @State private var rejectedPins = 0
   @State private var rejectedNicknames = 0
   @State private var isSettingUpHost = false
-  @State private var isShopping = false
+  @State private var isChoosingLooks = false
   @State private var undo: UndoItem?
   /// A few seconds without finding a game: time to say why, and offer the QR code.
   @State private var isStillLooking = false
@@ -65,7 +65,7 @@ struct JoinView: View {
     }
     .toolbar {
       ToolbarItem(placement: .topBarTrailing) {
-        Button("Themes & Icons", systemImage: "paintpalette") { isShopping = true }
+        Button("Themes & Icons", systemImage: "paintpalette") { isChoosingLooks = true }
       }
     }
     .sheet(isPresented: $isScanning) {
@@ -74,8 +74,8 @@ struct JoinView: View {
     .sheet(isPresented: $isSettingUpHost) {
       HostSetupView()
     }
-    .sheet(isPresented: $isShopping) {
-      ShopView()
+    .sheet(isPresented: $isChoosingLooks) {
+      LooksView()
     }
     // From a join link: fill the PIN in, and the form takes it from there.
     .onChange(of: store.pendingPIN, initial: true) { _, pending in
@@ -238,9 +238,9 @@ struct JoinView: View {
   }
 
   /// The cursor goes where the next keystroke will — unless a sheet is up,
-  /// where it would raise a keyboard over the shop or the round.
+  /// where it would raise a keyboard over the themes or the round.
   private func placeCursor() {
-    guard focus == nil, !isScanning, !isSettingUpHost, !isShopping else { return }
+    guard focus == nil, !isScanning, !isSettingUpHost, !isChoosingLooks else { return }
     focus = store.nicknameIsValid ? .pin : .nickname
   }
 }

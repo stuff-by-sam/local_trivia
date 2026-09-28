@@ -1,6 +1,6 @@
 import XCTest
 
-/// Every screen one phone can reach — joining, the shop, setting up a round,
+/// Every screen one phone can reach — joining, themes and icons, setting up a round,
 /// hosting it, playing it through and stopping — at the settings that
 /// stretch a layout most: the largest accessibility text size, Increase
 /// Contrast, and right-to-left. Each screen is attached as a screenshot and
@@ -47,7 +47,7 @@ final class AccessibilityUITests: XCTestCase {
 
     app.buttons["Themes & Icons"].tap()
     XCTAssertTrue(app.element(containing: "Wearing").waitForExistence(timeout: 5))
-    try screen.capture("Shop")
+    try screen.capture("Themes & Icons")
     app.buttons["Done"].tap()
 
     host.tap()

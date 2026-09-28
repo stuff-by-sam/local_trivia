@@ -36,7 +36,7 @@ extension View {
           .environment(\.backdropFollowsTilt, false)
           .environment(models.store)
           .environment(models.host)
-          .environment(models.shop)
+          .environment(models.looks)
       }
       .onAvailabilityChange { isAvailable in
         models.bigScreen.isConnected = isAvailable
