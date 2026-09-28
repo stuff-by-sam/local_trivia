@@ -63,6 +63,9 @@ nonisolated struct PlayerSnapshot: Codable, Equatable, Sendable {
   /// Only in the podium state: the final top three, for a phone that missed
   /// `gameOver` because it (re)connected afterwards.
   let podium: [Placing]?
+  /// The host's accent, `#rrggbb`, which the web player dresses itself in.
+  /// The app keeps its own theme.
+  var accent: String? = nil
 }
 
 nonisolated struct Reveal: Codable, Equatable, Sendable {
@@ -118,6 +121,12 @@ nonisolated struct Notice: Codable, Equatable, Sendable {
   let message: String?
 }
 
+/// `settingsChanged`: the host changed how the game looks. The laptop also
+/// sends its sound setting and bank name; a phone sends just its accent.
+nonisolated struct SettingsChange: Codable, Equatable, Sendable {
+  let accent: String?
+}
+
 /// Every event a host sends a player, decoded straight from the Socket.IO
 /// array `["name", payload]` in one pass — no intermediate dictionary.
 nonisolated enum ServerEvent: Codable, Equatable, Sendable {
@@ -136,6 +145,7 @@ nonisolated enum ServerEvent: Codable, Equatable, Sendable {
   case gameOver(GameOver)
   case leaderboard(Leaderboard)
   case answeredCount(AnsweredCount)
+  case settingsChanged(SettingsChange)
   /// An event this app doesn't know — from a newer host, say. Dropped, not fatal.
   case ignored(String)
 
@@ -166,6 +176,7 @@ nonisolated enum ServerEvent: Codable, Equatable, Sendable {
     case "gameOver": self = .gameOver(try body.decode(GameOver.self))
     case "leaderboard": self = .leaderboard(try body.decode(Leaderboard.self))
     case "answeredCount": self = .answeredCount(try body.decode(AnsweredCount.self))
+    case "settingsChanged": self = .settingsChanged(try body.decode(SettingsChange.self))
     default: self = .ignored(name)
     }
   }
@@ -188,6 +199,7 @@ nonisolated enum ServerEvent: Codable, Equatable, Sendable {
     case .gameOver(let result): try body.encode("gameOver"); try body.encode(result)
     case .leaderboard(let board): try body.encode("leaderboard"); try body.encode(board)
     case .answeredCount(let count): try body.encode("answeredCount"); try body.encode(count)
+    case .settingsChanged(let change): try body.encode("settingsChanged"); try body.encode(change)
     case .ignored(let name): try body.encode(name); try body.encode(Empty())
     }
   }

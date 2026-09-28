@@ -1,3 +1,4 @@
+import DesignSystem
 import Foundation
 import Testing
 
@@ -129,10 +130,26 @@ import Testing
     library.gameName = String(repeating: "🎉", count: 28)
     #expect(library.advertisedName.utf8.count <= HostLibrary.nameByteLimit)
     #expect(library.advertisedName.allSatisfy { $0 == "🎉" })
-    library.gameName = "  friday quiz "
-    #expect(library.advertisedName == "FRIDAY QUIZ")
+    library.gameName = "  Friday quiz "
+    #expect(library.advertisedName == "Friday quiz")
     library.gameName = "   "
     #expect(library.advertisedName == HostLibrary.defaultName)
+  }
+
+  /// Names keep the host's case now. A round saved with the old upper-cased
+  /// default takes the new one; one the host named keeps its name.
+  @Test func replacesTheOldUpperCasedDefaultName() {
+    let url = URL.temporaryDirectory.appending(path: "round-\(UUID().uuidString).json")
+    defer { try? FileManager.default.removeItem(at: url) }
+    func reopened(savedAs name: String) -> String {
+      let saving = HostLibrary(fileURL: url) { data, url in try data.write(to: url) }
+      saving.gameName = name
+      saving.flush(waiting: true)
+      return HostLibrary(fileURL: url) { _, _ in }.gameName
+    }
+    #expect(reopened(savedAs: "TRIVIA NIGHT") == HostLibrary.defaultName)
+    #expect(reopened(savedAs: "PUB QUIZ") == "PUB QUIZ")
+    #expect(reopened(savedAs: "Friday quiz") == "Friday quiz")
   }
 }
 
@@ -338,6 +355,22 @@ import Testing
     #expect(recorder.last(to: 6) == .resumeFailed)
   }
 
+  /// Browser players wear the host's accent: it's in every snapshot, and a
+  /// change goes to everyone, as the laptop's `settingsChanged` does.
+  @Test func dressesBrowserPlayersInTheHostsAccent() throws {
+    let changes = { recorder.all(to: .everyone).filter { if case .settingsChanged = $0 { true } else { false } } }
+    game.accent = "#ffb000"
+    #expect(changes() == [.settingsChanged(SettingsChange(accent: "#ffb000"))])
+    seat("Ada", on: 1)
+    guard case .joined(let snapshot)? = recorder.last(to: 1) else {
+      Issue.record("not seated")
+      return
+    }
+    #expect(snapshot.accent == "#ffb000")
+    game.accent = "#ffb000"
+    #expect(changes().count == 1, "an unchanged accent isn't sent again")
+  }
+
   @Test func tellsEveryoneWhenTheHostCloses() {
     seat("Host", on: 1)
     seat("Guest", on: 2)
@@ -366,8 +399,8 @@ import Testing
     return store
   }
 
-  func eventually(_ what: String, _ condition: () -> Bool) async throws {
-    let deadline = ContinuousClock.now + .seconds(5)
+  func eventually(_ what: String, within limit: Duration = .seconds(5), _ condition: () -> Bool) async throws {
+    let deadline = ContinuousClock.now + limit
     while !condition() {
       guard ContinuousClock.now < deadline else {
         Issue.record("timed out waiting for \(what)")
@@ -411,8 +444,10 @@ import Testing
     if case .result(let outcome) = hostPlayer.phase { #expect(!outcome.result.correct) }
     try await eventually("the room's answered count") { guest.answered?.answered == 2 || guest.answered == nil }
 
-    host.perform(.showStandings)
-    try await eventually("standings for everyone") { guest.leaderboard?.standings.count == 2 }
+    // No tap: the reveal moves to the standings by itself.
+    try await eventually("standings for everyone", within: HostedGame.revealHold + .seconds(3)) {
+      guest.leaderboard?.standings.count == 2
+    }
     #expect(guest.leaderboard?.standings.first?.nickname == "Guest")
 
     await host.stop(leaving: hostPlayer)
@@ -420,5 +455,85 @@ import Testing
     #expect(guest.notice == "THE HOST ENDED THE GAME")
     #expect(hostPlayer.server == nil)
     #expect(!host.isHosting)
+  }
+
+  /// A browser player is served the page in the host's theme, and follows
+  /// the host if it changes.
+  @Test func servesBrowsersThePageInTheHostsTheme() async throws {
+    let host = HostController(library: HostLibrary(fileURL: nil), advertises: false)
+    host.theme = .amber
+    let hostPlayer = player("Host")
+    await host.start(joining: hostPlayer)
+    guard case .live(let port) = host.status else {
+      Issue.record("didn't start: \(host.status)")
+      return
+    }
+    let page = try #require(URL(string: "http://127.0.0.1:\(port)/"))
+    let served = { String(decoding: try await URLSession.shared.data(from: page).0, as: UTF8.self) }
+    #expect(try await served().contains(##"<html data-accent="#ffb000""##))
+    #expect(host.game?.accent == "#ffb000")
+
+    host.theme = .cobalt
+    #expect(host.game?.accent == "#7c9dff", "players already in are told")
+    let cobalt = ##"<html data-accent="#7c9dff""##
+    let deadline = ContinuousClock.now + .seconds(5)
+    var html = try await served()
+    while !html.contains(cobalt), ContinuousClock.now < deadline {
+      try await Task.sleep(for: .milliseconds(20))
+      html = try await served()
+    }
+    #expect(html.contains(cobalt), "and the next page is served in it")
+
+    await host.stop(leaving: hostPlayer)
+  }
+
+  /// Leaving asks nothing first, because it can be undone: the host keeps a
+  /// dropped player's seat, and the guest's phone keeps its token long
+  /// enough to take it back — points and all.
+  @Test func aGuestWhoLeavesCanUndoItAndKeepTheirScore() async throws {
+    let library = HostLibrary(fileURL: nil)
+    library.questions = [
+      HostQuestion(text: "Which planet has the most moons?", options: ["Jupiter", "Saturn", "Uranus", "Neptune"], correct: 1),
+      HostQuestion(text: "What does LAN stand for?", options: ["Large", "Local Area Network", "Linked", "Long"], correct: 1),
+    ]
+    library.rules.shuffle = false
+    let host = HostController(library: library, advertises: false)
+    let hostPlayer = player("Host")
+    await host.start(joining: hostPlayer)
+    guard case .live(let port) = host.status else {
+      Issue.record("didn't start: \(host.status)")
+      return
+    }
+    try await eventually("the host to take a seat") { hostPlayer.phase == .lobby }
+    let guest = player("Guest")
+    guest.join(try #require(GameServer(address: "127.0.0.1:\(port)")), pin: try #require(host.game?.pin))
+    try await eventually("the guest to join") { guest.phase == .lobby }
+
+    host.perform(.start)
+    try await eventually("the first question") { guest.phase.screen == .question(1) && hostPlayer.phase.screen == .question(1) }
+    guest.choose(1)
+    hostPlayer.choose(0)
+    try await eventually("the reveal") { guest.phase.screen == .result }
+    let earned = guest.score
+    #expect(earned > 0, "the guest answered right")
+
+    guest.leave()
+    #expect(guest.phase == .join)
+    #expect(guest.leftGame != nil, "offers to undo")
+    try await eventually("the host to see the guest go") { host.game?.connectedPlayers.map(\.nickname) == ["Host"] }
+
+    guest.undoLeave()
+    try await eventually("the guest to be back in the game") { guest.isInGame }
+    #expect(guest.playerName == "Guest")
+    #expect(guest.score == earned)
+    #expect(host.game?.connectedPlayers.map(\.nickname) == ["Host", "Guest"])
+    #expect(host.game?.players.count == 2, "the same seat, not a new one")
+
+    // And the room's standings still count what the guest earned.
+    try await eventually("standings for everyone", within: HostedGame.revealHold + .seconds(3)) {
+      guest.leaderboard?.standings.contains { $0.nickname == "Guest" && $0.score == earned } == true
+    }
+
+    await host.stop(leaving: hostPlayer)
   }
 }

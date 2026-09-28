@@ -79,6 +79,14 @@ import Testing
         == .kicked(Notice(code: nil, message: "REMOVED BY THE HOST")))
   }
 
+  /// The host's accent, for browser players; the laptop's also carries its
+  /// sound setting and bank name.
+  @Test func decodesTheHostsAccent() throws {
+    #expect(
+      try decode(##"["settingsChanged",{"sound":true,"accent":"#ffb000","bankName":"QUIZ NIGHT"}]"##)
+        == .settingsChanged(SettingsChange(accent: "#ffb000")))
+  }
+
   /// A newer host may send events this build doesn't know. They're dropped,
   /// never an error.
   @Test func ignoresEventsItDoesntKnow() throws {
@@ -93,7 +101,7 @@ import Testing
     let result = AnswerResult(correct: true, points: 750, totalScore: 750, rank: 1, answered: true, chosenIndex: 1)
     let snapshot = PlayerSnapshot(
       token: "t", nickname: "Robin", state: .questionActive, score: 0, rank: 1, playerCount: 2, eligibleFrom: 0,
-      question: question, lockedIndex: nil, lastResult: nil, podium: nil)
+      question: question, lockedIndex: nil, lastResult: nil, podium: nil, accent: "#ffb000")
     let events: [ServerEvent] = [
       .joined(snapshot), .resumed(snapshot), .resumeFailed, .playerCount(3), .stateChange(.lobby),
       .joinError(Notice(code: "WRONG_PIN", message: "nope")), .kicked(Notice(code: nil, message: "bye")),
@@ -102,6 +110,7 @@ import Testing
       .leaderboard(Leaderboard(standings: [.init(rank: 1, nickname: "Robin", score: 750, delta: nil)], afterQuestion: 1, totalQuestions: 3, remaining: 2)),
       .answeredCount(AnsweredCount(answered: 1, total: 2)),
       .gameOver(GameOver(podium: [Placing(rank: 1, nickname: "Robin", score: 750)], standings: [])),
+      .settingsChanged(SettingsChange(accent: "#ffb000")),
     ]
     for event in events {
       #expect(try JSONDecoder().decode(ServerEvent.self, from: JSONEncoder().encode(event)) == event)

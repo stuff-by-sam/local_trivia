@@ -1,10 +1,11 @@
+import DesignSystem
 import StoreKit
 import SwiftUI
 
 /// Themes and app icons: try a theme on, buy it, wear it.
 ///
-/// Out of the way on purpose — a quiet link under Host a Game — because the
-/// game is the point. Tapping a theme this phone doesn't own dresses the
+/// Out of the way on purpose — a toolbar button on the join screen — because
+/// the game is the point. Tapping a theme this phone doesn't own dresses the
 /// shop in it, so it's tried on before it's bought; closing the shop takes
 /// it off again.
 struct ShopView: View {
@@ -34,7 +35,6 @@ struct ShopView: View {
           Section {
             EverythingOffer { buy(Shop.everythingID) }
           }
-          .listRowBackground(RowBackground())
         }
 
         themes
@@ -57,10 +57,10 @@ struct ShopView: View {
         } footer: {
           Text("Bought them on another device, or reinstalled Trivia? Restoring brings back everything this Apple Account owns.")
         }
-        .listRowBackground(RowBackground())
       }
+      // The one sheet that shows the backdrop: trying a theme on is the point.
       .scrollContentBackground(.hidden)
-      .background { Backdrop(mood: .idle, accent: shown.accent) }
+      .background { Backdrop(mood: .idle) }
       .navigationTitle("Themes & Icons")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -71,9 +71,8 @@ struct ShopView: View {
       }
     }
     .theme(shown)
-    .tint(shown.accent)
-    .animation(.smooth, value: shown)
-    .preferredColorScheme(.dark)
+    .motion(.settle, value: shown)
+    .task { await shop.loadProductsIfNeeded() }
     .onChange(of: shop.notice) { _, notice in
       guard let notice else { return }
       alert = notice
@@ -115,14 +114,13 @@ struct ShopView: View {
     } footer: {
       Text("A theme dresses this phone, and any TV it puts the game on. Answers keep their colours and shapes on every phone, so B is always the cyan triangle.")
     }
-    .listRowBackground(RowBackground())
   }
 
   // MARK: - Icons
 
   private var icons: some View {
     Section {
-      LazyVGrid(columns: [GridItem(.adaptive(minimum: typeSize.isAccessibilitySize ? 150 : 88), spacing: 12)], spacing: 18) {
+      LazyVGrid(columns: [GridItem(.adaptive(minimum: Size.iconTile * (typeSize.isAccessibilitySize ? 2.4 : 1.4)), spacing: Space.m)], spacing: Space.l) {
         ForEach(AppIcon.allCases) { icon in
           IconTile(icon: icon) {
             if shop.owns(icon) {
@@ -133,13 +131,12 @@ struct ShopView: View {
           }
         }
       }
-      .padding(.vertical, 10)
+      .padding(.vertical, Space.s)
     } header: {
       SectionHeader("App Icons")
     } footer: {
       Text("Changes Trivia's icon on your Home Screen.")
     }
-    .listRowBackground(RowBackground())
   }
 
   private func buy(_ productID: String?) {
@@ -154,47 +151,20 @@ private struct Showcase: View {
   let isTryingOn: Bool
 
   var body: some View {
-    VStack(spacing: 18) {
-      HStack(spacing: 14) {
-        ForEach(AnswerStyle.allCases) { style in
-          Image(systemName: style.symbol)
-            .foregroundStyle(style.color)
-        }
-      }
-      .font(.subheadline)
-      .padding(.horizontal, 16)
-      .padding(.vertical, 9)
-      .glassEffect(in: .capsule)
-
-      HStack(spacing: 0) {
-        Text(verbatim: "TRIVIA")
-          .tracking(5)
-        BlinkingCursor(glyph: "█")
-      }
-      .font(.mono(size: 34, weight: .heavy))
-      .foregroundStyle(theme.accent)
-      .shadow(color: theme.accent.opacity(0.45), radius: 12)
-
-      HStack(spacing: 10) {
-        Text("Join Game")
-        Image(systemName: "arrow.right")
-      }
-      .terminalStyle(.subheadline, weight: .bold)
-      .foregroundStyle(Color.broadcastInk)
-      .padding(.horizontal, 28)
-      .frame(minHeight: 44)
-      .glassEffect(.regular.tint(theme.accent), in: .capsule)
-
-      VStack(spacing: 6) {
+    VStack(spacing: Space.l) {
+      AnswerSetMark()
+        .font(.subheadline)
+      Wordmark(scale: .showcase)
+      VStack(spacing: Space.xs) {
         StatusLine(isTryingOn ? "Trying on \(String(localized: theme.name))" : "Wearing \(String(localized: theme.name))")
         Text(theme.tagline)
-          .font(.footnote)
+          .textRole(.detail)
           .foregroundStyle(.secondary)
           .multilineTextAlignment(.center)
       }
     }
     .frame(maxWidth: .infinity)
-    .padding(.vertical, 8)
+    .padding(.vertical, Space.s)
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(
       isTryingOn
@@ -215,14 +185,14 @@ private struct ThemeRow: View {
   var body: some View {
     OfferLayout(isStacked: typeSize.isAccessibilitySize) {
       Button(action: onSelect) {
-        HStack(spacing: 14) {
-          Swatch(theme: theme, isShown: isShown)
-          VStack(alignment: .leading, spacing: 3) {
+        HStack(spacing: Space.m) {
+          ThemeSwatch(theme: theme, isShown: isShown)
+          VStack(alignment: .leading, spacing: Space.xxs) {
             Text(theme.name)
-              .font(.body.weight(.semibold))
+              .textRole(.bodyEmphasis)
               .foregroundStyle(.primary)
             Text(theme.tagline)
-              .font(.footnote)
+              .textRole(.detail)
               .foregroundStyle(.secondary)
               .fixedSize(horizontal: false, vertical: true)
           }
@@ -235,18 +205,18 @@ private struct ThemeRow: View {
 
       if shop.theme == theme {
         Image(systemName: "checkmark")
-          .font(.body.weight(.bold))
+          .fontWeight(.bold)
           .foregroundStyle(theme.accent)
           .accessibilityLabel("In use")
       } else if shop.owns(theme) {
         Text("Owned")
-          .terminalStyle(.caption2)
+          .textRole(.labelSmall)
           .foregroundStyle(.secondary)
       } else if let productID = theme.productID {
         PriceButton(productID: productID, name: theme.name, action: onBuy)
       }
     }
-    .padding(.vertical, 4)
+    .padding(.vertical, Space.xs)
   }
 }
 
@@ -259,33 +229,9 @@ private struct OfferLayout<Content: View>: View {
 
   var body: some View {
     let layout = isStacked
-      ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10))
-      : AnyLayout(HStackLayout(spacing: 14))
+      ? AnyLayout(VStackLayout(alignment: .leading, spacing: Space.s))
+      : AnyLayout(HStackLayout(spacing: Space.m))
     layout { content }
-  }
-}
-
-/// A theme in miniature: its own backdrop, and its cursor.
-private struct Swatch: View {
-  let theme: Theme
-  let isShown: Bool
-
-  var body: some View {
-    Backdrop(mood: .idle, accent: theme.accent)
-      .theme(theme)
-      .overlay {
-        Text(verbatim: "█")
-          .font(.mono(size: 18, weight: .heavy))
-          .foregroundStyle(theme.accent)
-          .shadow(color: theme.accent.opacity(0.6), radius: 6)
-      }
-      .frame(width: 52, height: 52)
-      .clipShape(.rect(cornerRadius: 12))
-      .overlay {
-        RoundedRectangle(cornerRadius: 12)
-          .strokeBorder(isShown ? theme.accent.opacity(0.8) : .white.opacity(0.12), lineWidth: isShown ? 1.5 : 1)
-      }
-      .accessibilityHidden(true)
   }
 }
 
@@ -298,7 +244,6 @@ private struct PriceButton: View {
   let action: () -> Void
 
   @Environment(Shop.self) private var shop
-  @Environment(\.accent) private var accent
 
   var body: some View {
     Group {
@@ -307,15 +252,13 @@ private struct PriceButton: View {
       } else if let product = shop.products[productID] {
         let button = Button(action: action) {
           Text(verbatim: product.displayPrice)
-            .font(.mono(.subheadline, weight: .bold))
-            .foregroundStyle(isProminent ? Color.broadcastInk : accent)
+            .textRole(.figure)
+            .foregroundStyle(isProminent ? AnyShapeStyle(.onAccent) : AnyShapeStyle(.themeAccent))
         }
         .disabled(shop.purchasing != nil)
         .accessibilityLabel(Text("Buy \(String(localized: name)), \(product.displayPrice)"))
         if isProminent {
-          button
-            .buttonStyle(.glassProminent)
-            .tint(accent)
+          button.buttonStyle(.glassProminent)
         } else {
           button.buttonStyle(.glass)
         }
@@ -323,11 +266,11 @@ private struct PriceButton: View {
         ProgressView()
       } else {
         Image(systemName: "lock.fill")
-          .foregroundStyle(.tertiary)
+          .foregroundStyle(.secondary)
           .accessibilityLabel("Not available right now")
       }
     }
-    .frame(minWidth: 44, minHeight: 44)
+    .frame(minWidth: Size.target, minHeight: Size.target)
   }
 }
 
@@ -342,11 +285,11 @@ private struct EverythingOffer: View {
 
   var body: some View {
     OfferLayout(isStacked: typeSize.isAccessibilitySize) {
-      VStack(alignment: .leading, spacing: 3) {
+      VStack(alignment: .leading, spacing: Space.xxs) {
         Text("Everything")
-          .font(.body.weight(.semibold))
+          .textRole(.bodyEmphasis)
         Text("All ^[\(Self.themes) theme](inflect: true) and ^[\(Self.icons) app icon](inflect: true)")
-          .font(.footnote)
+          .textRole(.detail)
           .foregroundStyle(.secondary)
           .fixedSize(horizontal: false, vertical: true)
       }
@@ -355,7 +298,7 @@ private struct EverythingOffer: View {
 
       PriceButton(productID: Shop.everythingID, name: "Everything", isProminent: true, action: onBuy)
     }
-    .padding(.vertical, 4)
+    .padding(.vertical, Space.xs)
   }
 }
 
@@ -365,27 +308,27 @@ private struct IconTile: View {
   let action: () -> Void
 
   @Environment(Shop.self) private var shop
-  @Environment(\.accent) private var accent
 
   var body: some View {
     let isWorn = shop.icon == icon
     Button(action: action) {
-      VStack(spacing: 8) {
-        AppIcon.Artwork(icon: icon, size: 64)
+      VStack(spacing: Space.s) {
+        IconArtwork(icon.design)
           .overlay {
-            RoundedRectangle(cornerRadius: 64 * 0.225 + 4, style: .continuous)
-              .strokeBorder(accent, lineWidth: 2)
-              .padding(-4)
+            RoundedRectangle(cornerRadius: Size.iconTile * IconArtwork.cornerRatio + Space.xs, style: .continuous)
+              .strokeBorder(.themeAccent, lineWidth: 2)
+              .padding(-Space.xs)
               .opacity(isWorn ? 1 : 0)
           }
         Text(icon.name)
-          .font(.footnote.weight(.semibold))
+          .textRole(.detail)
+          .fontWeight(.semibold)
           .foregroundStyle(.primary)
           .lineLimit(1)
           .minimumScaleFactor(0.7)
         status
-          .font(.mono(.caption, weight: .bold))
-          .frame(minHeight: 16)
+          .textRole(.figureSmall)
+          .frame(minHeight: Space.l)
       }
       .frame(maxWidth: .infinity)
       .contentShape(.rect)
@@ -401,7 +344,7 @@ private struct IconTile: View {
   private var status: some View {
     if shop.icon == icon {
       Image(systemName: "checkmark")
-        .foregroundStyle(accent)
+        .foregroundStyle(.themeAccent)
     } else if shop.owns(icon) {
       Text("Owned")
         .textCase(.uppercase)
@@ -411,10 +354,10 @@ private struct IconTile: View {
         .controlSize(.mini)
     } else if let productID = icon.productID, let product = shop.products[productID] {
       Text(verbatim: product.displayPrice)
-        .foregroundStyle(accent)
+        .foregroundStyle(.themeAccent)
     } else {
       Image(systemName: "lock.fill")
-        .foregroundStyle(.tertiary)
+        .foregroundStyle(.secondary)
     }
   }
 
@@ -431,16 +374,22 @@ private struct StoreUnavailable: View {
   @Environment(Shop.self) private var shop
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
+    VStack(alignment: .leading, spacing: Space.s) {
       Label("Can't reach the App Store. What you own still works offline.", systemImage: "wifi.slash")
-        .font(.footnote)
-        .foregroundStyle(Color.broadcastGold)
+        .textRole(.detail)
+        .foregroundStyle(.warning)
       Button("Try Again") {
         Task { await shop.loadProducts() }
       }
-      .font(.footnote.weight(.semibold))
+      .textRole(.detail)
+      .fontWeight(.semibold)
       .buttonStyle(.borderless)
+      .frame(minHeight: Size.target)
     }
-    .padding(.vertical, 4)
+    .padding(.vertical, Space.xs)
   }
 }
+
+#if DEBUG
+#Preview("Shop") { ScreenPreview(.shop) }
+#endif

@@ -22,8 +22,17 @@ nonisolated struct HostQuestion: Codable, Identifiable, Hashable, Sendable {
     case missingText, missingOption, noCorrectAnswer, timeOutOfRange
   }
 
+  /// A new question has no right answer until the host picks one: a
+  /// default of A would be wrong three times in four, in front of the room.
   static func blank() -> HostQuestion {
-    HostQuestion(text: "", options: ["", "", "", ""], correct: 0)
+    HostQuestion(text: "", options: ["", "", "", ""], correct: -1)
+  }
+
+  /// Nothing typed and no answer picked: a new question that was never started.
+  var isUntouched: Bool {
+    text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      && options.allSatisfy { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+      && !(0...3).contains(correct)
   }
 
   var problem: Problem? {
@@ -109,14 +118,29 @@ final class HostLibrary {
   /// What a game started now would play, in order.
   var playable: [HostQuestion] { questions.filter(\.isPlayable) }
 
-  static let defaultName = "TRIVIA NIGHT"
+  static let defaultName = "Trivia Night"
+  /// The default from when names were upper-cased. A round saved with it
+  /// takes the new one; a name the host typed stays as it is.
+  static let oldDefaultName = "TRIVIA NIGHT"
   static let nameLimit = 28
   /// A Bonjour name is one DNS label, 63 bytes. Past that, hosting fails.
   static let nameByteLimit = 63
 
   @ObservationIgnored private let fileURL: URL?
   @ObservationIgnored private var isLoading = false
-  private static let log = Logger(subsystem: "com.stuffbysam.localtrivia", category: "hosting")
+  /// Edits since the last write.
+  @ObservationIgnored private var isDirty = false
+  @ObservationIgnored private var pendingSave: Task<Void, Never>?
+  @ObservationIgnored private let write: @Sendable (Data, URL) throws -> Void
+  /// Nonisolated: the write queue logs its failures.
+  nonisolated private static let log = Logger(subsystem: "com.stuffbysam.localtrivia", category: "hosting")
+
+  /// How long edits settle before they're written: typing a name or
+  /// dragging a slider is one write, not one per keystroke or step.
+  static let saveDelay: Duration = .milliseconds(500)
+
+  /// Writes happen off the main thread, one at a time, in order.
+  private static let writes = DispatchQueue(label: "com.stuffbysam.localtrivia.round", qos: .utility)
 
   private struct Stored: Codable {
     var gameName: String
@@ -125,11 +149,16 @@ final class HostLibrary {
   }
 
   /// `fileURL: nil` keeps everything in memory (tests, previews).
-  init(fileURL: URL? = HostLibrary.defaultFileURL) {
+  init(fileURL: URL? = HostLibrary.defaultFileURL, write: @escaping @Sendable (Data, URL) throws -> Void = HostLibrary.writeFile) {
     self.fileURL = fileURL
+    self.write = write
     let stored = fileURL.flatMap { try? Data(contentsOf: $0) }.flatMap { try? JSONDecoder().decode(Stored.self, from: $0) }
     isLoading = true
-    gameName = stored?.gameName ?? Self.defaultName
+    if let name = stored?.gameName, name != Self.oldDefaultName {
+      gameName = name
+    } else {
+      gameName = Self.defaultName
+    }
     questions = stored?.questions ?? []
     rules = stored?.rules.clamped() ?? HostRules()
     isLoading = false
@@ -144,7 +173,7 @@ final class HostLibrary {
     let trimmed = gameName.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return Self.defaultName }
     // 28 emoji are well past 63 bytes; drop whole characters until it fits.
-    var name = String(trimmed.prefix(Self.nameLimit)).uppercased()
+    var name = String(trimmed.prefix(Self.nameLimit))
     while name.utf8.count > Self.nameByteLimit { name.removeLast() }
     return name
   }
@@ -158,8 +187,22 @@ final class HostLibrary {
     }
   }
 
-  func delete(at offsets: IndexSet) {
+  /// Removes the questions at `offsets` and returns them with where they were,
+  /// so they can be put back (`reinsert`).
+  @discardableResult
+  func delete(at offsets: IndexSet) -> [(offset: Int, element: HostQuestion)] {
+    let removed = questions.enumerated().filter { offsets.contains($0.offset) }.map { (offset: $0.offset, element: $0.element) }
     questions = questions.enumerated().filter { !offsets.contains($0.offset) }.map(\.element)
+    return removed
+  }
+
+  /// Puts deleted questions back where they were, as near as the list now allows.
+  func reinsert(_ removed: [(offset: Int, element: HostQuestion)]) {
+    var restored = questions
+    for (offset, question) in removed.sorted(by: { $0.offset < $1.offset }) where !restored.contains(where: { $0.id == question.id }) {
+      restored.insert(question, at: min(offset, restored.count))
+    }
+    questions = restored
   }
 
   /// List reordering semantics: `destination` is an index in the list as it
@@ -179,14 +222,48 @@ final class HostLibrary {
     return result
   }
 
+  /// Schedules a write once the edits settle.
   private func save() {
-    guard !isLoading, let fileURL else { return }
-    do {
-      try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-      let data = try JSONEncoder().encode(Stored(gameName: gameName, questions: questions, rules: rules))
-      try data.write(to: fileURL, options: [.atomic, .completeFileProtection])
-    } catch {
-      Self.log.error("couldn't save the round: \(error.localizedDescription, privacy: .public)")
+    guard !isLoading, fileURL != nil else { return }
+    isDirty = true
+    pendingSave?.cancel()
+    pendingSave = Task { [weak self] in
+      try? await Task.sleep(for: Self.saveDelay)
+      guard !Task.isCancelled else { return }
+      self?.flush()
     }
+  }
+
+  /// Writes pending edits now — when the setup screen closes, or the app
+  /// goes to the background, where a delayed write might never run. Going
+  /// to the background, `waiting` holds on until the write is done: the app
+  /// can be suspended the moment this returns.
+  func flush(waiting: Bool = false) {
+    defer { if waiting { Self.writes.sync {} } }
+    pendingSave?.cancel()
+    pendingSave = nil
+    guard isDirty, let fileURL else { return }
+    isDirty = false
+    let data: Data
+    do {
+      data = try JSONEncoder().encode(Stored(gameName: gameName, questions: questions, rules: rules))
+    } catch {
+      Self.log.error("couldn't encode the round: \(error.localizedDescription, privacy: .public)")
+      return
+    }
+    let write = write
+    Self.writes.async {
+      do {
+        try write(data, fileURL)
+      } catch {
+        Self.log.error("couldn't save the round: \(error.localizedDescription, privacy: .public)")
+      }
+    }
+  }
+
+  /// The round holds the answer key, so it's encrypted whenever the phone is locked.
+  nonisolated static let writeFile: @Sendable (Data, URL) throws -> Void = { data, url in
+    try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try data.write(to: url, options: [.atomic, .completeFileProtection])
   }
 }

@@ -59,6 +59,11 @@ final class HostedGame {
   static let wrongPINLimit = 5
   static let wrongPINLockout: Duration = .seconds(60)
   static let autoAdvanceDelay: Duration = .seconds(5)
+  /// How long a reveal holds before the standings come up on their own —
+  /// long enough to take in your result and how the room voted. Unlike the
+  /// web game, which waits for the operator, a phone host is also playing,
+  /// so this step never asks them for a tap.
+  static let revealHold: Duration = .seconds(5)
 
   let pin: String
   private(set) var state: ServerState = .lobby
@@ -68,6 +73,15 @@ final class HostedGame {
   private(set) var questionIndex = -1
   private(set) var order: [HostQuestion] = []
   private(set) var answered = AnsweredCount(answered: 0, total: 0)
+  /// The host's accent, `#rrggbb`, for browser players to wear — they have
+  /// no theme of their own. The laptop's `settings.accent`, and sent the same
+  /// way: in every snapshot, and to everyone when it changes.
+  var accent: String? {
+    didSet {
+      guard accent != oldValue else { return }
+      deliver(.settingsChanged(SettingsChange(accent: accent)), .everyone)
+    }
+  }
 
   var connectedPlayers: [Player] { players.filter(\.isConnected) }
   var isLastQuestion: Bool { questionIndex + 1 >= order.count }
@@ -91,12 +105,14 @@ final class HostedGame {
 
   init(
     pin: String = HostedGame.randomPIN(),
+    accent: String? = nil,
     deliver: @escaping (ServerEvent, Audience) -> Void,
     uptime: @escaping () -> Duration = { let origin = ContinuousClock.now; return { ContinuousClock.now - origin } }()
   ) {
     self.pin = pin
     self.deliver = deliver
     self.uptime = uptime
+    self.accent = accent
   }
 
   nonisolated static func randomPIN() -> String {
@@ -352,7 +368,7 @@ final class HostedGame {
         deliver(.personalResult(result), .connection(connection))
       }
     }
-    scheduleAdvance { $0.showLeaderboard() }
+    scheduleAdvance(always: true, after: Self.revealHold) { $0.showLeaderboard() }
   }
 
   func showLeaderboard() {
@@ -389,10 +405,11 @@ final class HostedGame {
     }
   }
 
-  private func scheduleAdvance(_ step: @escaping (HostedGame) -> Void) {
-    guard rules.autoAdvance else { return }
+  /// Moves on after `delay` — only with auto-advance on, unless `always`.
+  private func scheduleAdvance(always: Bool = false, after delay: Duration = autoAdvanceDelay, _ step: @escaping (HostedGame) -> Void) {
+    guard always || rules.autoAdvance else { return }
     advanceTimer = Task { [weak self] in
-      try? await Task.sleep(for: Self.autoAdvanceDelay)
+      try? await Task.sleep(for: delay)
       guard !Task.isCancelled, let self else { return }
       step(self)
     }
@@ -455,7 +472,8 @@ final class HostedGame {
       question: state == .questionActive && isEligibleNow ? current.map { payload(for: $0, elapsedMs: elapsedMs) } : nil,
       lockedIndex: state == .questionActive ? player.pick?.option : nil,
       lastResult: state == .reveal && isEligibleNow ? player.lastResult : nil,
-      podium: state == .podium ? finalResult().podium : nil
+      podium: state == .podium ? finalResult().podium : nil,
+      accent: accent
     )
   }
 

@@ -12,8 +12,11 @@ import SwiftUI
 /// above is Phosphor, the game's own. Holographic's foil, Glass's liquid and
 /// Titanium's shine follow the phone's tilt — and hold still while a
 /// question is up.
-struct Backdrop: View {
-  enum Mood: Equatable {
+///
+/// Under Reduce Transparency or Increase Contrast it's the glow alone: no
+/// texture under text, and under Increase Contrast no vignette either.
+public struct Backdrop: View {
+  nonisolated public enum Mood: Hashable, Sendable {
     case idle
     case question
     case correct
@@ -24,7 +27,7 @@ struct Backdrop: View {
 
   /// What the glass has to bend. Each is drawn once and holds still, bar the
   /// three that follow the phone's tilt (`Textures.swift`).
-  enum Texture: Equatable {
+  nonisolated public enum Texture: Equatable, Sendable {
     case scanlines
     /// A vector display's graticule.
     case grid
@@ -47,13 +50,17 @@ struct Backdrop: View {
   }
 
   let mood: Mood
-  let accent: Color
 
   @Environment(\.theme) private var theme
+  @Environment(\.palette) private var palette
   @Environment(\.backdropFollowsTilt) private var followsTilt
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-  var body: some View {
+  public init(mood: Mood) {
+    self.mood = mood
+  }
+
+  public var body: some View {
     ZStack {
       MeshGradient(
         width: 3,
@@ -66,37 +73,46 @@ struct Backdrop: View {
         colors: colors,
         background: theme.ink
       )
-      texture
-      // Falls off toward the edges, like a tube.
-      RadialGradient(
-        colors: [.clear, .black.opacity(0.55)],
-        center: .center,
-        startRadius: 180,
-        endRadius: 700
-      )
+      if !isPlain {
+        texture
+      }
+      if !palette.isHighContrast {
+        // Falls off toward the edges, like a tube.
+        RadialGradient(
+          colors: [.clear, .black.opacity(0.55)],
+          center: .center,
+          startRadius: 180,
+          endRadius: 700
+        )
+      }
     }
     .ignoresSafeArea()
-    .animation(reduceMotion ? nil : .easeInOut(duration: 0.9), value: mood)
+    .motion(.mood, value: mood)
     .allowsHitTesting(false)
     .accessibilityHidden(true)
+  }
+
+  /// Nothing drawn under text but the glow itself.
+  private var isPlain: Bool {
+    palette.isHighContrast || palette.reducesTransparency
   }
 
   @ViewBuilder
   private var texture: some View {
     switch theme.texture {
     case .scanlines: Scanlines()
-    case .grid: Graticule(color: accent)
+    case .grid: Graticule(color: theme.accent)
     case .horizon:
       ZStack {
-        Horizon(color: accent)
+        Horizon(color: theme.accent)
         Scanlines()
       }
     case .dotMatrix: DotMatrix()
-    case .brushed: Brushed(color: accent)
+    case .brushed: Brushed(color: theme.accent)
     case .holofoil: Holofoil(followsTilt: movesWithTilt)
     case .chalk: ChalkDust()
     case .liquid: LiquidPools(followsTilt: movesWithTilt, isQuiet: mood == .question)
-    case .metal: BrushedMetal(color: accent, followsTilt: movesWithTilt)
+    case .metal: BrushedMetal(color: theme.accent, followsTilt: movesWithTilt)
     }
   }
 
@@ -108,11 +124,11 @@ struct Backdrop: View {
 
   private var glow: Color {
     switch mood {
-    case .idle, .question: accent
-    case .correct: .broadcastGreen
-    case .wrong: .broadcastRed
-    case .missed: Color(hex: 0x7D8BA0)
-    case .celebrate: .broadcastGold
+    case .idle, .question: theme.accent
+    case .correct: palette.success
+    case .wrong: palette.danger
+    case .missed: palette.neutral
+    case .celebrate: Medal.first.color
     }
   }
 
@@ -142,7 +158,7 @@ struct Backdrop: View {
 
 /// 1 pt lines on a 4 pt pitch — the texture of the TV's CRT theme, faint enough
 /// that it reads as grain under text and as structure under glass.
-private struct Scanlines: View {
+struct Scanlines: View {
   var body: some View {
     Canvas { context, size in
       var lines = Path()
@@ -156,8 +172,8 @@ private struct Scanlines: View {
   }
 }
 
-extension EnvironmentValues {
+nonisolated extension EnvironmentValues {
   /// Whether a backdrop that can follow the phone's tilt does. Off on a TV,
   /// which doesn't tilt.
-  @Entry var backdropFollowsTilt = true
+  @Entry public var backdropFollowsTilt = true
 }

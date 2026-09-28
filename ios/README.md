@@ -2,7 +2,8 @@
 
 The native app: SwiftUI, Liquid Glass, iOS 27. Every game it plays is hosted
 from a phone — one player taps **Host a Game**, and everyone else joins with
-the app. It doesn't join laptop-hosted games: the laptop server and its
+the app, or without it: the host's QR code opens the game in any phone's
+browser. The app doesn't join laptop-hosted games: the laptop server and its
 browser clients carry on without it.
 
 ## Build and run
@@ -10,9 +11,29 @@ browser clients carry on without it.
 Open `LocalTrivia.xcodeproj` in **Xcode 27** and run the `LocalTrivia` scheme.
 To install on a device, set a team under *Signing & Capabilities* first.
 
+Drafting questions runs on the phone's own model. It can use Apple's larger
+model on Private Cloud Compute instead, which gets far more trivia right, but
+that takes the `com.apple.developer.private-cloud-compute` entitlement, which
+Apple has to grant the team first — a profile without it won't sign a build
+that asks for it. Once the team has it, turn it on in two places:
+
+1. Add the entitlement to `LocalTrivia/LocalTrivia.entitlements` (or add the
+   Private Cloud Compute capability under *Signing & Capabilities*).
+2. Add `PRIVATE_CLOUD_COMPUTE` to the target's *Active Compilation
+   Conditions* (Build Settings), for Debug and Release.
+
+The app can't read its own entitlements on iOS, so the second step is what
+tells it the first was done.
+
 On one phone, tap **Host a Game**, write or import a round, and start hosting.
 On the others, the game shows up on the join screen by itself. Type the PIN
 from the host's phone; the fourth digit joins.
+
+Strings live in `LocalTrivia/Localizable.xcstrings`. Xcode adds new ones when
+it builds; command-line builds don't, so run `scripts/sync-strings.sh`, which
+extracts them from the app and the DesignSystem package the same way. Plurals
+use automatic grammar agreement (`^[3 question](inflect: true)`), not plural
+variants.
 
 ## What makes it fast
 
@@ -38,22 +59,21 @@ from the host's phone; the fourth digit joins.
 
 ## Design
 
-A broadcast terminal, built from native parts.
+A broadcast terminal, built from native parts. The full language — colour
+roles, type, space, motion, haptics, components — is in [DESIGN.md](DESIGN.md),
+and every screen is built from the `DesignSystem` package that codifies it.
 
 - **Two typefaces, with separate jobs.** SF Pro carries content: questions,
   answers, names. SF Mono is the game's own voice: labels, figures, the clock,
-  status lines (`Typography.swift`). That split makes it read as a terminal
+  status lines (`TextRole`). That split makes it read as a terminal
   without asking anyone to read a paragraph in mono.
-- **Glass is for the control layer.** Answers, inputs, buttons, and one top bar
-  whose chips keep their glass identity from screen to screen, so the leading
-  chip morphs from `● ROBIN` to `Q 01/12 · TECH` and back. Content goes in
-  hairline readout boxes rather than glass, which is Apple's guidance and what
-  keeps the glass meaningful.
-- **It opens in the dark.** The launch screen is plain black (the app is
-  dark-only, so it never flashes white), and the answer set dots on in the
-  middle — circle, triangle, square, diamond — before the game fades up.
-  That's an overlay, not a gate: the app is already finding games under it,
-  and it takes no touches.
+- **Glass is for the control layer.** Answers, inputs, buttons, and the
+  system toolbar: `● ROBIN` or `Q 01/12` on one side, the clock and the host's
+  menu on the other. Content goes in hairline readout boxes rather than
+  glass, which is Apple's guidance and what keeps the glass meaningful.
+- **It opens in the dark, and straight into the game.** The launch screen is
+  plain black (the app is dark-only, so it never flashes white), and the join
+  screen comes up under it with nothing in between.
 - **One light source.** The backdrop is near-black with a single phosphor glow
   and faint scanlines for the glass to refract. Its hue follows the game:
   the accent while playing, green or red at the reveal, gold on the podium.
@@ -74,10 +94,21 @@ A broadcast terminal, built from native parts.
   messages sit under the field they concern, where the keyboard can't hide them.
 - **Accessible by construction.** At
   accessibility text sizes the round becomes one scrolling column, readouts
-  stack their label above their value, and chrome stops growing at a sensible
-  cap. The lit answer switches to dark ink for contrast, results are announced
-  to VoiceOver, leaving asks for confirmation, and Reduce Motion stops the
-  cursor blinking and swaps blur transitions for cross-fades.
+  stack their label above their value, and any screen that no longer fits
+  scrolls rather than cutting text off; pinned bars stop growing at AX1 and
+  offer the Large Content Viewer instead. The lit answer switches to dark ink
+  for contrast; results and join errors are announced to VoiceOver, which
+  hears names as they're written, the clock's time, and a standing as one
+  sentence. Right-to-left mirrors everything but the wordmark and the answer
+  keys. If the camera's off for Trivia, the QR scanner says so and how to
+  turn it on, rather than disappearing. Increase
+  Contrast firms up every hairline and drops the backdrop's texture; Reduce
+  Transparency makes panels opaque; Reduce Motion stops the cursor blinking,
+  stills the shakes and swaps blur transitions for cross-fades.
+- **Undo, not "are you sure?"** Leaving a game, or deleting questions, happens
+  at once and offers Undo for a few seconds — leaving can be undone because
+  the host keeps a dropped player's seat. The one confirmation left is Stop
+  Hosting, which ends the game on every phone.
 
 ## Hosting from a phone
 
@@ -85,22 +116,29 @@ The only way to host: **Host a Game** on the join screen turns the phone into
 the server, and its owner plays too.
 
 - **Set up the round** — name the game, write questions (four answers, tap a
-  key to mark the right one, optional category and time limit) or import a CSV
-  in the web console's format, reorder and include/exclude, and set the
+  key to mark the right one — there's no default — optional category and time
+  limit; Return moves to the next field, and it saves as you go), draft them
+  with Apple Intelligence on phones that have it (see *Drafting* below), or
+  import a CSV in the web
+  console's format; reorder and include/exclude, and set the
   scoring: top points, time per question, a floor for slow correct answers,
   points for wrong answers, shuffle and auto-advance — with a live preview of
   what an answer earns. The round is kept on the phone between games.
-- **Run it** — the lobby shows the join code and a QR code; the action bar
-  offers the next move (Start Game, Show Standings, Next Question, Final
-  Results, Play Again); the menu has players (swipe to remove), the join code
+- **Run it** — the host's lobby leads with the join code and QR code, and
+  shows who's in; the action bar offers the next move (Start Game, Next
+  Question, Final Results, Play Again). The standings follow each reveal by
+  themselves after five seconds, so a round asks the host for one tap per
+  question. The menu has players (swipe to remove), the join code
   at full size, End Round / Skip / End Game, Edit Round between games, and
   Stop Hosting, which tells every phone the game is over. The game's name and
   the host's own name are fixed once hosting starts.
-- **Join** — other phones find the game over Bonjour, or scan
-  the QR code: in the app, or with the Camera, which opens the app straight
-  into the game with the PIN filled in. With no router, the host can turn on
-  Personal Hotspot and everyone joins that — turned on after hosting starts,
-  it's picked up when the host comes back to the app.
+- **Join** — other phones find the game over Bonjour, or scan the QR code.
+  It holds the game's own address with the PIN (`http://192.168.1.20:3000/?pin=4821`),
+  so any phone's camera opens the web player in its browser with the PIN
+  filled in — no app needed — and the app's scanner joins in the app. The
+  address is shown beside it for anyone who'd rather type it. With no router,
+  the host can turn on Personal Hotspot and everyone joins that — turned on
+  after hosting starts, it's picked up when the host comes back to the app.
 - **On a TV, if there is one** — mirror the phone to an Apple TV or any
   AirPlay TV (Control Center → Screen Mirroring), or plug in an HDMI adapter,
   and the TV becomes the big screen for the room: the join code and QR code,
@@ -111,6 +149,33 @@ the server, and its owner plays too.
 - **No TV needed** — the full standings and the live "3 of 5 answered" count
   go to every player's phone either way.
 
+Drafting with Apple Intelligence: name a topic, pick 5, 10 or 25, and the
+phone's own model writes that many for review. Each draft is written from a
+fact the model states first, then checked twice on its own (the options, and
+the question answered cold, with no options to lean on), and kept only when
+both agree with its key. It drafts in batches of four so the first questions
+show in about ten seconds, and keeps going for up to two minutes, or 12
+seconds a question for 25 (five minutes); on a topic it knows less well, it
+makes up the number with drafts only the cold answer doubted, marked
+**Double-check this answer**. Repeats of the round, or two drafts with one
+answer, are left out.
+
+A build with Private Cloud Compute turned on (see *Build and run*) drafts
+with Apple's larger model there instead, and the sheet says so before
+anything is sent. It checks each draft once — which of the four options are
+right — and keeps it only when that's just its key; a round is written in
+one request (up to 12 questions, so 25 takes at least three) and checked in one more,
+since Private Cloud Compute has a usage quota. With no internet, over the
+quota, or where it isn't offered, the phone's own model takes over.
+
+Measured and graded by hand: on Private Cloud Compute, 60 drafts over 5
+topics (capitals, 90s films, Star Wars, chemistry, Olympic sports) had 58 right
+and 2 with a second right answer, which its check left out — where the
+phone's model had 45% right on the same kind of test. On the phone, the
+fact-first prompt took that to 73%, and 93% of the drafts both checks
+confirmed on 10 fresh topics were right. Neither is every answer, so the host
+reviews each one before a draft joins the round.
+
 How it's built:
 
 - `HostedGame` — the game engine: `server/gameSession.js`, ported rule for
@@ -119,13 +184,18 @@ How it's built:
 - `HostServer` — an actor serving Socket.IO over WebSocket with `NWListener`,
   advertised over Bonjour. It speaks the laptop server's wire, so the Node
   test bots play against it too: `node scripts/loadtest.js <PIN> 3 http://<phone>:3000`.
+  The same port serves the web player (`WebPlayer`): the laptop's own
+  `public/play` page, copied into the app at build time, with a small
+  WebSocket-only Socket.IO client of its own (`ios/Web/socket.io`). A request
+  that asks to upgrade becomes a game connection; any other gets a file. The
+  HTTP and WebSocket framing is in `HTTP.swift`.
 - `HostController` — starts and stops hosting, bridges the two, and seats the
   host in their own game over loopback, so the host's player screens are
   everyone else's. The host's controls call the engine directly; nothing on
   the network can reach them.
 
-Limits: phone-hosted games are app-only (no browser players) and have no
-question images. iOS suspends a backgrounded app, so the host should keep
+Limits: phone-hosted games have no question images, and browser players get
+the laptop's web player, not the app's screens. iOS suspends a backgrounded app, so the host should keep
 Trivia open — a quick switch away is covered by a background grace period,
 and the server comes back on the same port when the app returns. If the host
 never does come back, players aren't stranded: once the link has failed, a
@@ -133,8 +203,8 @@ leave button appears on every screen.
 
 ## Themes and icons
 
-Optional, and out of the way: a quiet **Themes & Icons** link under Host a
-Game on the join screen, and nowhere in a game. Everything is a one-time,
+Optional, and out of the way: a **Themes & Icons** button in the join
+screen's toolbar, and nowhere in a game. Everything is a one-time,
 non-consumable in-app purchase — each theme and icon on its own, or
 **Everything** in one go. Phosphor and the classic icon are free.
 
@@ -152,9 +222,12 @@ non-consumable in-app purchase — each theme and icon on its own, or
   permission.
   Tapping one dresses the shop in it, so it's tried on before it's bought;
   closing the shop takes it off. A theme dresses this phone and any TV it's
-  showing the game on. It never crosses the network, and never touches the
-  answer set or the status colours: B is the cyan triangle on every phone in
-  the room, whoever's wearing what, and red is still wrong.
+  showing the game on, and, when this phone hosts, the browser players in
+  its game: they have no theme of their own, so the web player is served in
+  the host's accent (`Theme.webAccent`), as a laptop serves it in its
+  operator's. Other phones with the app keep their own theme. A theme never
+  touches the answer set or the status colours: B is the cyan triangle on
+  every phone in the room, whoever's wearing what, and red is still wrong.
 - **App icons** — one to match every theme: the classic icon's four
   shapes, recoloured (Holographic's in foil, Chalkboard's in pastel chalk on
   slate, Titanium's in brushed metal). Glass's shapes are glass layers over
@@ -210,6 +283,19 @@ surface on the network: the host's controls act on the game in-process.
   discards the old token on its first launch.
 - **No analytics, accounts, entitlements or third-party code.** Log lines
   record error kinds and codes, never tokens, PINs, nicknames or addresses.
+- **Drafting stays on the phone.** Questions drafted with Apple Intelligence
+  use the on-device model (`SystemLanguageModel`); the topic and the drafts
+  never leave the phone. A build with Private Cloud Compute turned on (*Build
+  and run*) sends the topic, and the drafts to check, to Apple's servers for
+  the request only — Private Cloud Compute doesn't keep them, and neither
+  Apple nor this app can read them — and the draft sheet says so before
+  anything is sent. The host reviews every answer key before a draft joins
+  the round.
+- **The web player is files, not an API.** A hosting phone serves only the
+  files bundled under `Web/`, by exact path, to GET and HEAD; everything else
+  on its port is the same player WebSocket the app uses. The one thing
+  written into a file is the host's theme colour, into the player page's
+  `<html data-accent>`, and only as a `#rrggbb`.
 - **Purchases go through StoreKit, and nothing else leaves.** The app learns
   which themes and icons the Apple Account owns, as signed transactions it
   verifies, and nothing about the player. The owned list cached in
@@ -223,6 +309,7 @@ surface on the network: the host's controls act on the game in-process.
 ## Layout
 
 ```
+DesignSystem/               The design language as a Swift package: tokens, backdrop, components, previews
 LocalTrivia/
   Networking/
     Wire.swift              Engine.IO v4 / Socket.IO v5 framing — pure, no I/O
@@ -235,15 +322,18 @@ LocalTrivia/
     TokenStore.swift        The resume token, in the Keychain
   Hosting/
     HostedGame.swift        The game engine — gameSession.js, ported
-    HostServer.swift        Socket.IO over WebSocket (NWListener) + Bonjour
+    HostServer.swift        Socket.IO over WebSocket (NWListener) + Bonjour, and the web player
+    HTTP.swift              HTTP/1.1 requests and WebSocket frames — pure, no I/O
+    WebPlayer.swift         The bundled web player, served to phones without the app
     HostController.swift    Hosting lifecycle, and the host's own seat
     HostModels.swift        The round: questions, rules, scoring, on-device storage
+    QuestionDrafter.swift   Questions drafted on a topic — the phone's model, or Private Cloud Compute — for review
     CSVImport.swift         public/shared/csv.js, ported
-    JoinLink.swift          localtrivia:// join links, QR codes, the LAN address
+    JoinLink.swift          Join links (http:// for the QR code, localtrivia://), QR codes, the LAN address
   BigScreen/
-    BigScreen.swift         A connected TV gets its own scene, not a mirror of the phone
+    BigScreen.swift         A connected TV gets its own scene (a scene accessory), not a mirror of the phone
     BigScreenView.swift     The game for the room: lobby, question, reveal, standings, podium
-  Design/                   Typography, answer palette, themes and their textures, backdrop, shared components
+  Design/                   The in-game toolbar; screen states for previews; three prototype directions (debug builds)
   Store/
     Shop.swift              StoreKit 2: products, verified entitlements, buying, restoring
     ShopView.swift          Themes & Icons: try on, buy, wear
@@ -253,7 +343,11 @@ LocalTrivia/
     Host/                   Round setup, question editor, host controls
 LocalTriviaTests/           Swift Testing: wire format, payloads, the full game loop, the shop
 LocalTriviaUITests/         Hosts a game in the simulator and plays it through; tries on a theme
+Web/socket.io/              The web player's Socket.IO client, for phone-hosted games
 ```
+
+The web player itself is `../public/play`, `shared` and `fonts`, copied into
+the app's `Web/` folder by the target's *Web Player* build phase.
 
 No third-party dependencies. Swift 6 with strict concurrency, main-actor
 isolation by default. The networking and protocol types are `nonisolated` and
@@ -287,6 +381,13 @@ unlocks nothing until it's approved, a cancelled purchase says nothing and a
 failed one says why, the cached list gives way to StoreKit's, and every
 alternate icon is built into the app under the name the shop asks for.
 
+`StringCatalogTests` resolves every plural written with grammar agreement
+through the app's bundle, as the screens do, and fails if one no longer
+agrees with its number.
+
+`DesignSystemLintTests` fails on any colour, size, radius, curve, haptic or
+shadow written into the app instead of taken from the `DesignSystem` package.
+
 `ThemeTests` holds every theme to WCAG AAA contrast — its accent on its
 ink, and dark text on a control lit with the accent — and checks each theme
 for sale has an icon to match.
@@ -295,6 +396,27 @@ for sale has an icon to match.
 question, start hosting, play it as the host, standings, podium, stop hosting.
 It needs nothing but the simulator, so it runs with everything else.
 Screenshots of every phase are attached to the test result.
+
+`GlassContrastUITests` measures, from the pixels on screen, the text on the
+glass a player needs most — each answer chosen, the primary action, the undo
+toast — against the glass behind it, in all ten themes, and fails below
+4.5:1. Glass also answers to the phone's Liquid Glass slider, Reduce
+Transparency and Increase Contrast, which a test can't set, so it measures
+under whatever the simulator is set to: run it once per setting.
+
+`AccessibilityUITests` walks every screen one phone can reach three times —
+at AX5, with Increase Contrast, and right-to-left — attaching a screenshot
+and the element tree VoiceOver reads for each, and fails on any clipped
+text, unlabelled element or undersized target the accessibility audit finds.
+UI tests can't open Settings, so `-increaseContrast YES` (debug builds) gives
+the app the trait Increase Contrast gives it.
+
+Every screen has previews of its main states — a chosen answer, a wrong
+PIN, the host's standings, a TV board — from in-memory models: a store fed
+the events a host sends, the engine talking straight to the host's own
+store, a round that's never saved (`Design/ScreenStates.swift`). A debug
+build opens any of them directly with `-screen <state>` (and `-theme
+<theme>`), for tests that need a screen a single phone can't hold still on.
 
 ## Protocol
 

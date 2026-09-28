@@ -10,7 +10,7 @@ const V = {
   state: 'LOBBY',
   pin: '····',
   joinUrl: '',
-  qrDataUrl: '',
+  qrSvg: '',        // the join QR code, coloured by present.css
   bankName: 'LOCAL BROADCAST', // operator-set label in the lobby header
   players: [],
   q: null,           // questionStart payload
@@ -49,7 +49,7 @@ socket.on('present:sync', snap => {
   V.state = snap.state;
   V.pin = snap.pin;
   if (snap.joinUrl) V.joinUrl = snap.joinUrl;
-  if (snap.qrDataUrl) V.qrDataUrl = snap.qrDataUrl;
+  if (snap.qrSvg) V.qrSvg = snap.qrSvg;
   V.players = snap.players || [];
   if (snap.bankName) V.bankName = snap.bankName;
   SFX.setEnabled(!!snap.sound);
@@ -174,7 +174,7 @@ function renderLobby() {
           </div>
         </div>
         <div class="qr-col">
-          ${V.qrDataUrl ? `<img class="qr-img" src="${V.qrDataUrl}" alt="QR">` : ''}
+          ${V.qrSvg ? `<div class="qr-img" role="img" aria-label="QR code to join">${V.qrSvg}</div>` : ''}
           <span class="qr-cap">SCAN TO JOIN</span>
         </div>
       </div>
