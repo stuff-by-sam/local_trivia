@@ -39,10 +39,10 @@
     "express": "^5.2.1",
     "multer": "^2.0.1",
     "qrcode": "^1.5.4",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.4"
   },
   "devDependencies": {
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.4"
   },
   "allowScripts": {
     "better-sqlite3@13.0.3": true
