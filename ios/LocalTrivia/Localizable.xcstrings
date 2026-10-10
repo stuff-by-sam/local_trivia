@@ -238,6 +238,9 @@
     "Draft with Apple Intelligence" : {
 
     },
+    "Drafted ^[%lld question](inflect: true)" : {
+
+    },
     "Drafting isn't available in this language yet." : {
 
     },
@@ -637,6 +640,9 @@
 
     },
     "Start Over" : {
+
+    },
+    "Stop Drafting" : {
 
     },
     "Stop Hosting" : {

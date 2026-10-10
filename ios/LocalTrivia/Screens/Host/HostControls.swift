@@ -88,16 +88,21 @@ private struct HostActionBar: View {
   @Environment(HostController.self) private var host
 
   var body: some View {
+    // Under a host sheet it's out of sight, and unlit: lit glass glows up
+    // through a sheet's glass, and an invisible button's still does.
+    let isCovered = host.sheet != nil
     VStack(spacing: Space.s) {
       if let error = host.actionError {
         FieldMessage(Text(error), kind: .error)
       }
-      ActionButton(title, systemImage: symbol, tapHaptic: .action) {
+      ActionButton(title, systemImage: symbol, prominence: isCovered ? .secondary : .primary, tapHaptic: .action) {
         host.perform(action)
       }
     }
     // Pinned to the bottom like any action bar, so it stops growing where one does.
     .dynamicTypeSize(...Size.barTypeLimit)
+    .opacity(isCovered ? 0 : 1)
+    .motion(.settle, value: isCovered)
   }
 
   private var title: LocalizedStringKey {
@@ -126,6 +131,7 @@ struct JoinCodeCard: View {
 
   @Environment(HostController.self) private var host
   @Environment(\.dynamicTypeSize) private var typeSize
+  @Environment(\.palette) private var palette
 
   var body: some View {
     if let game = host.game {
@@ -139,12 +145,14 @@ struct JoinCodeCard: View {
           Text("Join code")
             .textRole(.label)
             .foregroundStyle(.secondary)
-          Text(verbatim: game.pin)
-            .textRole(.display(isHero ? .pinLarge : .pin))
-            .foregroundStyle(.themeAccent)
-            .glow(isHero ? .hero : .figure)
-            .lineLimit(1)
-            .minimumScaleFactor(0.6)
+          GlassText(
+            verbatim: game.pin,
+            role: .display(isHero ? .pinLarge : .pin),
+            color: palette.accent,
+            depth: isHero ? .hero : .figure,
+            glow: isHero ? .hero : .figure
+          )
+          .minimumScaleFactor(0.6)
             .accessibilityLabel(Text("PIN \(game.pin.map(String.init).joined(separator: " "))"))
           Text(host.lanAddress == nil ? "Turn on Wi-Fi or Personal Hotspot so others can join" : "Scan with any phone's camera, or find \(host.gameName) in the Trivia app")
             .textRole(.labelSmall)
@@ -166,6 +174,7 @@ struct JoinCodeCard: View {
 /// The join code at full size, for holding the phone up to the room.
 private struct JoinCodeSheet: View {
   @Environment(HostController.self) private var host
+  @Environment(\.palette) private var palette
 
   var body: some View {
     VStack(spacing: Space.xl) {
@@ -181,10 +190,7 @@ private struct JoinCodeSheet: View {
         Text("PIN")
           .textRole(.label)
           .foregroundStyle(.secondary)
-        Text(verbatim: host.game?.pin ?? "")
-          .textRole(.display(.pinLarge))
-          .foregroundStyle(.themeAccent)
-          .glow(.hero)
+        GlassText(verbatim: host.game?.pin ?? "", role: .display(.pinLarge), color: palette.accent, depth: .hero, glow: .hero)
       }
       VStack(spacing: Space.xs) {
         Text("Scan with any phone's camera to play in the browser, or open Trivia on the same Wi-Fi.")
@@ -332,6 +338,7 @@ struct LeaderboardTable: View {
   let playerName: String
 
   @Environment(\.dynamicTypeSize) private var typeSize
+  @Environment(\.palette) private var palette
 
   private static let visibleRows = 5
 
@@ -395,9 +402,13 @@ struct LeaderboardTable: View {
   @ViewBuilder
   private func delta(_ row: Leaderboard.Row) -> some View {
     if let delta = row.delta, delta != 0 {
-      Text(verbatim: delta > 0 ? "▲\(delta)" : "▼\(-delta)")
-        .textRole(.figureSmall)
-        .foregroundStyle(delta > 0 ? AnyShapeStyle(.success) : AnyShapeStyle(.danger))
+      HStack(spacing: Space.xxs) {
+        GlassSymbol(delta > 0 ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill", color: delta > 0 ? palette.success : palette.danger)
+          .imageScale(.small)
+        Text(abs(delta), format: .number)
+      }
+      .textRole(.figureSmall)
+      .foregroundStyle(delta > 0 ? AnyShapeStyle(.success) : AnyShapeStyle(.danger))
     }
   }
 

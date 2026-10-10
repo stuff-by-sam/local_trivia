@@ -78,6 +78,8 @@ struct QuestionView: View {
     }
   }
 
+  /// The question on its own card of tinted glass: a layer between the
+  /// backdrop and the answers, dark enough that it reads at a glance.
   private var prompt: some View {
     VStack(spacing: Space.s) {
       if let category = question.category {
@@ -92,8 +94,9 @@ struct QuestionView: View {
         .accessibilityAddTraits(.isHeader)
         .accessibilityFocused($isQuestionFocused)
     }
-    .padding(.vertical, Space.m)
+    .padding(Space.inset)
     .frame(maxWidth: .infinity)
+    .panel()
   }
 
   // MARK: - Clock

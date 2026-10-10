@@ -13,8 +13,14 @@ Every screen, state and surface is built from the `DesignSystem` package
   `Size`, `Radius`, `TVMetrics`, `Motion`, `Haptic` and `.glow(_:)`.
 - **No tertiary text.** `.secondary` is the quietest text a player may need.
 - **System components first.** Toolbars, sheets, forms, menus and buttons are
-  the system's (`.glass`, `.glassProminent`, `ActionButton`). Custom glass
-  only where DESIGN.md allows it, never on content.
+  the system's (`.glass`, `.glassProminent`, `ActionButton`). Everything else
+  is layered glass, per DESIGN.md's "Layers": content sits on `.panel()` /
+  `.glassCard(in:)` (clear or tinted by the screen's `glassClarity`), and
+  display type and SF Symbol marks are glass characters (`GlassText`,
+  `GlassCounter`, `GlassSymbol`). Body text, questions, answers and what the
+  player types sit on glass; they're never made of it.
+- **SF Symbols for every icon.** No text glyphs as icons. App icons are the
+  exception: Apple's terms keep SF Symbols out of them.
 - **A new style is a new token.** Add it to the package, give it a preview in
   every state (`Previews/ComponentPreviews.swift`), and document it in
   DESIGN.md — then use it.

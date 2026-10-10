@@ -2,6 +2,12 @@ import SwiftUI
 
 /// An answer's key, like a keycap: its shape and letter in its colour — `▲ B`.
 /// Colour, shape and letter together, so no answer depends on colour alone.
+///
+/// Both are made of Liquid Glass, on a cap of their colour with a lit edge.
+/// The cap is drawn rather than the system's glass: it sits on glass already,
+/// an answer button or a card, and a third layer of glass that small only
+/// blurs. On a lit surface it inverts to plain dark ink, which reads best
+/// there.
 public struct AnswerKey: View {
   let style: AnswerStyle
   /// Dark on light, for sitting on a lit surface.
@@ -20,16 +26,28 @@ public struct AnswerKey: View {
 
   public var body: some View {
     let ink = isInverted ? Palette.onAccentInk : style.color
-    HStack(spacing: Space.xs) {
-      Image(systemName: markers.symbol(for: style))
-        .imageScale(.small)
-      Text(verbatim: style.letter)
+    let cap = RoundedRectangle(cornerRadius: Self.radius)
+    Group {
+      if isInverted {
+        HStack(spacing: Space.xs) {
+          Image(systemName: markers.symbol(for: style))
+            .imageScale(.small)
+          Text(verbatim: style.letter)
+        }
+        .foregroundStyle(ink)
+      } else {
+        HStack(spacing: Space.xs) {
+          AnswerGlyph(style: style)
+            .imageScale(.small)
+          GlassText(verbatim: style.letter, color: ink, depth: .mark)
+        }
+      }
     }
     .font(.mono(.subheadline, weight: .bold))
-    .foregroundStyle(ink)
     .padding(.horizontal, Space.keyInset)
     .padding(.vertical, Space.xs)
-    .background(ink.opacity(0.14), in: .rect(cornerRadius: Self.radius))
+    .background(ink.opacity(0.14), in: cap)
+    .glassRim(in: cap)
     .fixedSize()
     // One glyph, `▲ B`, as on the TV and the web: not mirrored.
     .environment(\.layoutDirection, .leftToRight)

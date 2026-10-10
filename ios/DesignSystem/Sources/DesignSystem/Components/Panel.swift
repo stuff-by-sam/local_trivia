@@ -1,17 +1,15 @@
 import SwiftUI
 
-// Content sits in drawn panels, not glass: glass is for what you touch. A
-// panel is a faint fill and a hairline border, both from the palette, so they
-// firm up under Increase Contrast and go opaque under Reduce Transparency.
+// Content sits on cards of glass: a layer between the backdrop and the
+// controls, as clear or as tinted as the screen's `glassClarity` — see-through
+// on menus, tinted toward the ink on game screens. The system firms the glass
+// up under Increase Contrast (where the card also keeps a hairline edge) and
+// frosts it under Reduce Transparency.
 
 extension View {
-  /// A drawn panel behind this content.
+  /// A card of glass behind this content.
   public func panel(radius: CGFloat = Radius.panel) -> some View {
-    background(.panel, in: .rect(cornerRadius: radius))
-      .overlay {
-        RoundedRectangle(cornerRadius: radius)
-          .strokeBorder(.panelStroke, lineWidth: 1)
-      }
+    glassCard(in: .rect(cornerRadius: radius))
   }
 
   /// Centred in the space it's given when it fits; scrolling when it

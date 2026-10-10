@@ -36,6 +36,14 @@ struct RootView: View {
       store.start()
       looks.start()
     }
+    // Every symbol the game makes of glass, traced in the background before
+    // it's needed — the worn markers first, then the reveal's — so none shows
+    // as a stand-in first. After the first launch they're all kept already.
+    .task(priority: .utility) {
+      let markers = AnswerMarkers.allSymbols(first: looks.markers)
+      let game = ResultView.Verdict.allCases.map(\.symbol) + ["trophy.fill", "arrowtriangle.up.fill", "arrowtriangle.down.fill", "hourglass"]
+      await GlassSymbol.prepare(Array(markers.prefix(AnswerStyle.allCases.count)) + game + markers.dropFirst(AnswerStyle.allCases.count))
+    }
     .onChange(of: looks.theme, initial: true) { _, theme in host.theme = theme }
     .onChange(of: browser.games) { _, games in store.discovered(games, isComplete: browser.hasSettled) }
     .onChange(of: store.connection) { _, _ in store.discovered(browser.games, isComplete: browser.hasSettled) }
@@ -70,6 +78,7 @@ struct RootView: View {
       .id(store.phase.screen)
       .screenTransition()
       .gameColumn()
+      .glassClarity(store.phase.glassClarity)
   }
 
   @ViewBuilder
@@ -147,6 +156,15 @@ extension GameStore.Phase {
     case .result: .result
     case .standings: .standings
     case .final: .final
+    }
+  }
+
+  /// Clear glass on the menus, where content is short and high-contrast;
+  /// tinted once the game is on, where it has to be read at a glance.
+  var glassClarity: GlassClarity {
+    switch self {
+    case .join, .lobby: .clear
+    case .spectating, .question, .result, .standings, .final: .tinted
     }
   }
 }

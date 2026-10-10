@@ -1,11 +1,14 @@
 # Trivia — design language
 
-**Broadcast.** The game is a late-night broadcast terminal on a phone:
-phosphor light on near-black, a monospaced voice that reports what the game
-is doing, and four answer keys — circle, triangle, square, diamond — that mean
-the same thing on every phone and on the TV. Everything you touch is the
-system's own Liquid Glass; everything the game *says* lives in the content
-under it. The brand is light and voice, not chrome.
+**Broadcast, in layered glass.** The game is a late-night broadcast terminal
+on a phone: phosphor light on near-black, a monospaced voice that reports what
+the game is doing, and four answer keys — circle, triangle, square, diamond —
+that mean the same thing on every phone and on the TV. As in iOS 27's icons,
+it's built in layers of glass: the backdrop at the bottom, cards of glass for
+what the game says, the system's glass controls on top — and every letter and
+mark the game shows made of Liquid Glass itself: the wordmark, the answer
+markers, the figures, the verdict, the places, the dots. The brand is light
+and voice; the glass is how it's held.
 
 *Nocturnal · terse · luminous · exact · fair.*
 
@@ -35,11 +38,23 @@ cut: tint is for selection and primary actions, and C tints everything.
 
 | Layer | What's in it | Rule |
 |---|---|---|
-| UI (glass) | Toolbar items, buttons, the answer buttons, input fields, sheets, menus | System components first (`.glass`, `.glassProminent`, `.toolbar`, `Form`, `.sheet`). Custom glass only for the answer buttons, PIN cells and the prompt field — each serves a top task — and never on content. |
-| Content (brand) | Backdrop, wordmark, question text, readouts, figures, status lines, podium, the TV board | Drawn, not glassed. Colour, type and motion from the tokens below. |
+| Controls (glass) | Toolbar items, buttons, the answer buttons, input fields, sheets, menus | System components first (`.glass`, `.glassProminent`, `.toolbar`, `Form`, `.sheet`). Custom glass for the answer buttons, PIN cells, the prompt field and the picker. |
+| Content (glass) | The question, readouts, the join code card, name chips, status lines, badges, podium steps; on the TV, answer tiles, standings rows, name capsules | Real glass (`.panel()`, `.glassCard(in:)`), as clear or tinted as the screen's `GlassClarity`. Text on it is never glass. |
+| Wordmark (glass letters) | "TRIVIA" and its block cursor | The system's glass, in the letters' own outlines (`Lettering`: the word set in Core Text and turned into a shape), tinted in the accent at 55 % over its own phosphor bloom. The cursor is a block of the same glass in the next character cell, as tall as the capitals and standing on their baseline. |
+| Glass characters | Display type: rank, points, join code, verdict, medals' places, an answer's letter; on the TV, the masthead, "Standings", the PIN. Marks: every answer marker, the verdict and waiting symbols, the trophy, a standing's arrow, status dots. Shapes: the theme swatch's cursor, the app icons' shapes in Themes & Icons | The system's glass in the character's own outline, tinted in its colour (`GlassDepth.tint`: 90 % for a dot, 85 % beside a letter, 75 % in a card, 65 % at hero and TV sizes) over a bloom of it. Text is set in the font SwiftUI resolved for it (`Font.resolve(in:)`, `Lettering`): `GlassText`, and `GlassCounter` for a number that counts. Symbols are traced from the system's own with Vision, once, off the main actor (`SymbolOutlines`): `GlassSymbol`, `AnswerGlyph`; nothing of a symbol ships in the app. The real text or symbol still lays each one out, hidden, so it keeps its size, baseline, Dynamic Type and shrink-to-fit. Each character's glass has its own container, so it never melts into the glass it sits on. A traced symbol is drawn glass for the moment before its trace is in; everything is flat colour under Increase Contrast. Only for display type and marks — never body text, a question, an answer or what the player types. |
+| Backdrop (drawn) | Ink, the glow, the theme's texture | What the glass refracts. Colour lives here. |
 
-Tint appears in exactly five places: the primary action, the chosen answer,
-the lit PIN cell, the low-time clock, and the accent on headings/cursor.
+**Clarity.** Menus — the join screen, the lobby, Themes & Icons, the TV while
+people arrive — use clear glass (`GlassClarity.clear`): their content is short
+and high-contrast, so the backdrop shows through. The game — the question,
+results, standings, the podium — uses glass tinted toward the ink
+(`.tinted`), so it's read at a glance whatever the backdrop is doing.
+`RootView` sets it by phase. Under Increase Contrast every card is the
+tinted, frosted kind, with a hairline edge.
+
+Tint appears in exactly six places: the primary action, the chosen answer,
+the lit PIN cell, the low-time clock, the viewer's own name chip, and the
+accent on headings/cursor.
 
 ## Colour
 
@@ -59,8 +74,8 @@ from the asset catalog's `AccentColor`.)
 | `onAccent` | `#04080A` | same | text/glyphs on any lit or tinted surface |
 | `ink` | theme ink (Phosphor `#04080A`) | same | the ground under everything |
 | `primary` / `secondary` text | system `.primary` / `.secondary` | system (raised) | content / labels. **`.tertiary` is never used for text a player needs.** |
-| `panel` | white 4 % | white 10 % | readout and card fills |
-| `panelStroke` | white 12 % | white 40 % | readout and card borders |
+| `panel` | white 4 % | white 10 % | a drawn fill, where glass can't go |
+| `panelStroke` | white 12 % | white 40 % | a card's edge under Increase Contrast; swatch and icon tile borders |
 | `hairline` | white 8 % | white 30 % | row dividers |
 | `slot` | white 14 % | white 40 % | an empty PIN cell's underscore |
 | `success` | `#56FF8A` | same | correct, online — always with ✓ or a dot and a word |
@@ -150,6 +165,13 @@ are ≥ 60 pt tall (`Size.answer`).
 **Glow** — the phosphor bloom behind a lit figure is `.glow(_:)`: `.edge` 6,
 `.figure` 10, `.hero` 14, `.medal` 18, `.tv` 30. Off under Increase Contrast.
 
+**Glass depth** — how big a glass character is (`GlassDepth`): its tint, its
+bloom's radius (unless it takes a `Glow`), and the room its glass's shadow
+needs (4 × the bloom). `.dot` 90 % / 3 (status dots), `.mark` 85 % / 1 (keys,
+swatches, arrows), `.figure` 75 % / 2.5 (the join code in a card, the
+verdict, places, the brand mark), `.hero` 65 % / 5 (rank, points, badge
+symbols, trophy), `.tv` 65 % / 10.
+
 ## Materials
 
 | Material | Where | Reduce Transparency | Increase Contrast |
@@ -159,11 +181,34 @@ are ≥ 60 pt tall (`Size.answer`).
 | `.regular.tint(answer, 9 %)` | an open answer | system | 18 % + answer-colour stroke |
 | `.glassProminent` in the answer's colour at 80 % | the chosen answer — the system's lit glass, which sets its label on the glass; custom tinted glass tints the label inside it too, and took the lit answer's ink to 3:1 | system | 90 % |
 | `.glassProminent` + `accent` | primary action | system | system |
-| Panel (drawn) | readouts, join code card | `ink` mixed 8 % white, opaque | `panel`/`panelStroke` IC values |
+| `Glass.clear` | content cards on menus (`GlassClarity.clear`) | system frosted | tinted instead |
+| `.regular.tint(ink, 50 %)` | content cards in the game (`.tinted`): the question, readouts, status lines | system frosted | 70 % + `panelStroke` edge |
+| `.regular.tint(colour, 20 %)` | podium steps (medal), the viewer's own name chip (accent), badges (verdict); on the TV, answer tiles (answer, 16 %; the right one 90 %) | system frosted | 30 % |
+| `.regular.tint(accent, 55 %)` in the letters' outlines | the wordmark and its cursor, over a bloom of the accent at the `Glow` radius | system frosted | solid accent, no bloom |
+| `.regular.tint(colour, 65–90 %)` in a character's outline | every other glass character (`GlassDepth`), over a bloom of its colour | system frosted | the text or symbol in flat colour |
+| `Glass.clear` in each shape's outline | the app icons in Themes & Icons, over each shape's own paint | system frosted | the paint alone |
 | Backdrop (drawn) | behind every screen | glow only: no texture, no tilt | glow only: no texture, no vignette |
 
+An answer's key is glass characters on a drawn cap with a lit edge
+(`glassRim`), not the system's glass: the cap sits on glass already, and a
+third layer of glass that small only blurs. On a lit answer it's plain dark
+ink, which reads best there; so is the chosen answer's checkmark.
+
+Glass inside a system `Menu`'s label doesn't draw, so the game picker's
+status mark is drawn over the menu, in the same place (`pickerMark(_:)`).
 Sheets use the system sheet material — they don't draw the backdrop. The
-one exception is Themes & Icons, whose job is showing a theme on its backdrop.
+one exception is Themes & Icons, whose job is showing a theme on its backdrop:
+its rows are clear glass over it.
+
+Lit glass glows up through a sheet's glass — even hidden, it still does. So
+while one of the host's sheets is up, the host's action button under it is
+unlit (secondary) as well as hidden; it keeps its size, so nothing moves when
+the sheet goes.
+
+A bar over scrolling content has a hard edge (`scrollEdgeEffectStyle(.hard)`)
+where text would otherwise show through the glass of its buttons: the host's
+setup and drafting sheets, and the join screen on a phone while the keyboard
+is up. Everywhere else it's soft, so the backdrop runs to the bottom.
 
 The answer-to-verdict morph needs one `GlassEffectContainer` around the
 in-game screens. The join screen sits outside it: on iOS 27.0, glass buttons
@@ -185,7 +230,9 @@ transitions become opacity, and the points don't wait.
 | `Motion.screen` | `.smooth(duration: 0.5)` | phase-to-phase screen change (blurReplace) |
 | `Motion.mood` | `.smooth(duration: 0.9)` | backdrop glow changing hue |
 | `Motion.pop` | `.spring(duration: 0.35, bounce: 0.45)` | verdict badge, rank on the podium |
-| `Motion.count` | `.snappy(duration: 0.6)` | points counting up, `pointsDelay` (0.22 s) after the verdict |
+| `Motion.count` | `.smooth(duration: 0.6)` — no bounce, so the count never passes the score | points counting up in glass (`GlassCounter`), `pointsDelay` (0.22 s) after the verdict |
+| `Motion.breathe` | `.smooth(duration: 0.8)`, back and forth | a glass mark waiting: the hourglass, a connecting dot (`.glassPulse`); steady under Reduce Motion |
+| `.glassBounce(trigger:)` | spring keyframes 1 → 1.2 → 0.94 → 1 | a glass verdict or trophy landing — SF Symbols' bounce doesn't reach glass; still under Reduce Motion |
 | `Motion.reject` | keyframes −14 → 12 → −8 → 0 over 0.3 s | wrong PIN / taken name (off under Reduce Motion) |
 
 Signature motion: the chosen answer's glass flows into the verdict badge
@@ -208,13 +255,22 @@ Only through `Haptic`; one per event, never on scroll or incidental change.
 
 ## Symbols
 
-SF Symbols only. Weight follows the adjacent text's weight; scale `.medium`,
-`.small` inside keys. Monochrome by default; the answer shapes (`circle.fill`,
-`triangle.fill`, `square.fill`, `diamond.fill`) are monochrome in their answer
-colour. Direction uses `.forward`/`.backward` variants so RTL mirrors; the
-wordmark and the answer keys (`▲ B`) are glyphs, and never mirror. Effects:
-`.bounce` for a verdict or first place, `.pulse` for waiting, `.appear` for a
-checkmark — all system, all quieted by Reduce Motion.
+SF Symbols for every icon in the app — no icon is a text glyph (a standing's
+move is `arrowtriangle.up.fill` / `.down.fill` and its number, not `▲2`).
+Weight follows the adjacent text's weight; scale `.medium`, `.small` inside
+keys. Monochrome by default. The answer markers — every set's, from
+`circle.fill` to `bird.fill` — are Liquid Glass in their answer colour, cut to
+the symbol's traced outline (`AnswerGlyph`), as are the verdict, the trophy,
+the waiting hourglass and a standing's arrows (`GlassSymbol`). Direction uses
+`.forward`/`.backward` variants so RTL mirrors; the wordmark and the answer
+keys (`▲ B`) never mirror. Effects: a glass verdict or first place hops
+(`.glassBounce`) and a waiting one breathes (`.glassPulse`) — SF Symbols' own
+effects don't reach glass — and a checkmark `.appear`s; all quieted by Reduce
+Motion.
+
+The app icons are the exception: Apple's terms don't allow SF Symbols, or
+look-alikes, in app icons or logos, so the icons' shapes are their own
+drawings.
 
 ## Components
 
@@ -237,13 +293,15 @@ touches the network.
 | `LabeledField`, `SectionHeader`, `DividerLabel` | — |
 | `Readout` / `ReadoutRow`, `.panel()` | inline, stacked (long value or AX size), empty; IC; RT |
 | `.scrollsWhenCrowded()` | centred when it fits, scrolling when it doesn't |
-| `StatusLine` | waiting (cursor), steady |
-| `StatusDot` | online, connecting (pulse), failed (pulse), idle |
+| `StatusLine` | waiting (cursor), steady; on a glass capsule (a rounded rectangle at AX sizes) |
+| `StatusDot` | online, connecting (breathes), failed (breathes), idle; a glass bead |
 | `Wordmark`, `AnswerSetMark` | screen, showcase, tv (the TV's idle board, previewed there) |
 | `RankFigure` | medal 1/2/3, other, unranked; compact |
 | `PodiumStep` | 1st/2nd/3rd, the player's own |
-| `Badge` | glass (verdict), drawn (waiting) |
-| `NameChips` (`FlowLayout`) | names, the viewer's own, a long name wrapping; read as one list |
+| `Badge` | verdict (tinted in its colour), waiting |
+| `.panel()`, `.glassCard(in:tint:)` | clear, tinted, coloured; IC; RT |
+| `GlassText`, `GlassCounter`, `GlassSymbol`, `AnswerGlyph`, `glassRim` | each `GlassDepth`; with a `Glow`; IC (flat) |
+| `NameChips` (`FlowLayout`) | names, the viewer's own (accent glass), a long name wrapping; read as one list |
 | `UndoToast` (`.undoToast`) | shown, counting down, undone |
 | `ThemeSwatch`, `IconArtwork`, `MarkerSwatch` | every theme, icon and marker set; shown |
 | `Backdrop` | moods idle/question/correct/wrong/missed/celebrate × 10 textures × RT/IC/RM |
@@ -264,13 +322,34 @@ touches the network.
 - **Undo, not "Are you sure?"** Confirmation is kept only for Stop Hosting,
   which ends the game on every phone and can't be undone.
 
+## Waiting
+
+Every wait says what's happening, in the game's voice, and has a way on. No
+spinner stands in for a button that can't be pressed.
+
+| Wait | What it shows | The way on |
+|---|---|---|
+| Finding games | A spinner in the picker, `JOIN THE HOST'S WI-FI`; after 6 s, why, and the QR code | Scan QR Code, Local Network Settings |
+| Joining | The Join button's spinner; after 5 s, *The game didn't answer. Try again.* | Join again |
+| Rejoining | `REJOINING YOUR GAME_` (or *Host unreachable, retrying*) | Start Over |
+| Starting to host | The Start Hosting button's spinner; the reason, if it fails | Start Hosting again |
+| Drafting | *Writing and checking 3 of 10…* under the drafts so far; VoiceOver hears when it's done | Stop Drafting (keeps what's drafted), Add, Cancel |
+| Between moments | A status capsule ending in the cursor; the hourglass breathing while spectating | The host's next move |
+| Reconnecting | The toolbar's *Reconnecting*, its dot breathing | Leave, once the host has gone quiet |
+
+**Glass at launch.** Every symbol the game makes of glass is traced in the
+background as the app starts — the worn markers first, then the reveal's —
+and kept on the device, so after the first launch each draws as glass from
+its first frame. One shown before its trace is in (the first launch only) is
+drawn glass until then, and cross-fades; text is set as glass at once.
+
 ## Surfaces
 
 | Surface | Treatment |
 |---|---|
-| App icon ×10 | Icon Composer, answer set on ink; checked in Default, Dark, Clear Light/Dark, Tinted Light/Dark |
+| App icon ×10 | Icon Composer: the answer set on ink, each shape its own glass layer (four groups, front to back circle, triangle, square, diamond), 272 pt across on a 2 × 2 grid centred at 320/704 of 1024. Checked with iOS 27's renderer (`ictool --design-generation 27`) in Default, Dark, Clear Light/Dark, Tinted Light/Dark. `IconArtwork` draws the same layers in the app. |
 | Launch | Plain black (`LaunchBackground`), straight into the game — no overlay |
-| TV (external display) | `BigScreenView`, same tokens at `TVType` sizes |
+| TV (external display) | `BigScreenView`, same tokens and the same glass at `TVType` sizes; clear while people arrive, tinted once the game's on |
 | Sheets, alerts, menus | System, with `accent` tint |
 | Empty / loading / error | Content-layer voice over system components |
 | Widgets, Live Activities, notifications | **None, by decision.** A phone-hosted game has no server to update them, and nothing to show between games. |

@@ -56,15 +56,45 @@ nonisolated public enum IconDesign: String, CaseIterable, Sendable {
   }
 }
 
-/// An icon as the home screen shows it, near enough: its layers on a 1024 pt
-/// canvas, scaled to `size`. The system's glass isn't reproduced.
+/// An icon as the home screen shows it, near enough: its four layers on a
+/// 1024 pt canvas, scaled to `size` — each shape in its own paint, with its
+/// shadow, under a pane of the system's glass in its outline, as Icon
+/// Composer builds it. Under Increase Contrast, the paint alone.
 public struct IconArtwork: View {
   let design: IconDesign
   let size: CGFloat
 
+  @Environment(\.palette) private var palette
+
   public init(_ design: IconDesign, size: CGFloat = Size.iconTile) {
     self.design = design
     self.size = size
+  }
+
+  /// Where each shape sits, in the `AppIcon-*.icon` files: a 2 × 2 grid with
+  /// room between, each shape 272 pt across.
+  private static let layout: (low: CGFloat, high: CGFloat, scale: CGFloat) = (320, 704, 272.0 / 316)
+
+  /// The four shapes — circle, triangle, square, diamond — on a canvas
+  /// `side` across.
+  nonisolated static func outlines(side: CGFloat) -> [Path] {
+    let s = side / 1024
+    let (low, high, k) = (CGFloat(320), CGFloat(704), CGFloat(272.0 / 316))
+    /// A shape's points around its centre, at the icon's scale.
+    func polygon(_ points: [(CGFloat, CGFloat)], around centre: (CGFloat, CGFloat)) -> Path {
+      var path = Path()
+      path.addLines(points.map { CGPoint(x: (centre.0 + $0.0 * k) * s, y: (centre.1 + $0.1 * k) * s) })
+      path.closeSubpath()
+      // Its corners rounded as the SVG's stroke rounds them.
+      return path.union(path.strokedPath(StrokeStyle(lineWidth: 28 * k * s, lineJoin: .round)))
+    }
+    let half = 144 * k * s
+    return [
+      Path(ellipseIn: CGRect(x: (low - 158 * k) * s, y: (low - 158 * k) * s, width: 316 * k * s, height: 316 * k * s)),
+      polygon([(0, -158), (168, 158), (-168, 158)], around: (high, low)),
+      Path(roundedRect: CGRect(x: low * s - half, y: high * s - half, width: 2 * half, height: 2 * half), cornerRadius: 28 * k * s),
+      polygon([(0, -168), (168, 0), (0, 168), (-168, 0)], around: (high, high)),
+    ]
   }
 
   /// Which way a sweep runs across each shape, as in the SVG layers.
@@ -83,15 +113,6 @@ public struct IconArtwork: View {
     let sweepDirections = Self.sweepDirections
     Canvas { context, canvas in
       let s = canvas.width / 1024
-      func rect(_ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat) -> CGRect {
-        CGRect(x: x * s, y: y * s, width: width * s, height: height * s)
-      }
-      func polygon(_ points: [(CGFloat, CGFloat)]) -> Path {
-        var path = Path()
-        path.addLines(points.map { CGPoint(x: $0.0 * s, y: $0.1 * s) })
-        path.closeSubpath()
-        return path
-      }
       func shading(_ shape: Int, over bounds: CGRect) -> GraphicsContext.Shading {
         switch paint {
         case .flat(let colors):
@@ -109,23 +130,26 @@ public struct IconArtwork: View {
             endPoint: CGPoint(x: bounds.midX, y: bounds.maxY))
         }
       }
-      let rounded = StrokeStyle(lineWidth: 28 * s, lineJoin: .round)
-
-      let circleBounds = rect(172, 172, 316, 316)
-      context.fill(Path(ellipseIn: circleBounds), with: shading(0, over: circleBounds))
-
-      let triangle = polygon([(694, 162), (862, 478), (526, 478)])
-      let triangleShading = shading(1, over: triangle.boundingRect)
-      context.fill(triangle, with: triangleShading)
-      context.stroke(triangle, with: triangleShading, style: rounded)
-
-      let squareBounds = rect(186, 550, 288, 288)
-      context.fill(Path(roundedRect: squareBounds, cornerRadius: 28 * s), with: shading(2, over: squareBounds))
-
-      let diamond = polygon([(694, 526), (862, 694), (694, 862), (526, 694)])
-      let diamondShading = shading(3, over: diamond.boundingRect)
-      context.fill(diamond, with: diamondShading)
-      context.stroke(diamond, with: diamondShading, style: rounded)
+      // Each shape is its own layer: its shadow falls on what's behind it.
+      for (index, outline) in Self.outlines(side: canvas.width).enumerated() {
+        context.drawLayer { layer in
+          layer.addFilter(.shadow(color: .black.opacity(0.5), radius: 16 * s, y: 10 * s))
+          layer.fill(outline, with: shading(index, over: outline.boundingRect))
+        }
+      }
+    }
+    .overlay {
+      // The glass over each shape's paint, bending it and catching the light.
+      if !palette.isHighContrast {
+        GlassEffectContainer(spacing: 0) {
+          ZStack {
+            ForEach(0..<4, id: \.self) { index in
+              Color.clear
+                .glassEffect(.clear, in: IconLayer(index: index))
+            }
+          }
+        }
+      }
     }
     .frame(width: size, height: size)
     .background(LinearGradient(colors: design.background, startPoint: .top, endPoint: .bottom))
@@ -138,7 +162,16 @@ public struct IconArtwork: View {
   }
 }
 
-/// A theme in miniature: its own backdrop, and its cursor.
+/// One of an icon's four shapes, on the frame it's given.
+nonisolated private struct IconLayer: Shape {
+  let index: Int
+
+  func path(in rect: CGRect) -> Path {
+    IconArtwork.outlines(side: rect.width)[index].offsetBy(dx: rect.minX, dy: rect.minY)
+  }
+}
+
+/// A theme in miniature: its own backdrop, and its cursor in glass.
 public struct ThemeSwatch: View {
   let theme: Theme
   let isShown: Bool
@@ -150,11 +183,12 @@ public struct ThemeSwatch: View {
 
   public var body: some View {
     let shape = RoundedRectangle(cornerRadius: Radius.control / 2)
+    // The wordmark's block, at the swatch's size: as tall as a capital.
+    let block = Lettering("", size: Size.swatch / 3, weight: .heavy, tracking: 0).cursor
     Backdrop(mood: .idle)
       .overlay {
-        Text(verbatim: "█")
-          .font(.system(size: Size.swatch / 3, weight: .heavy, design: .monospaced))
-          .foregroundStyle(theme.accent)
+        GlassCharacter(shape: RoundedRectangle(cornerRadius: block.width / 24), color: theme.accent, depth: .mark)
+          .frame(width: block.width, height: block.height)
       }
       .theme(theme)
       .frame(width: Size.swatch, height: Size.swatch)
@@ -167,7 +201,8 @@ public struct ThemeSwatch: View {
 }
 
 /// A set of answer markers as a swatch: its four shapes, two by two, in the
-/// answers' colours — the set's row in Themes & Icons.
+/// answers' colours and drawn in glass, on a tile of glass — the set's row in
+/// Themes & Icons.
 public struct MarkerSwatch: View {
   let markers: AnswerMarkers
   let isShown: Bool
@@ -191,16 +226,16 @@ public struct MarkerSwatch: View {
     }
     .font(.system(size: Size.swatch / 3.5, weight: .bold))
     .frame(width: Size.swatch, height: Size.swatch)
-    .background(.panel, in: shape)
+    .glassCard(in: shape)
     .overlay {
       shape.strokeBorder(isShown ? AnyShapeStyle(.themeAccent) : AnyShapeStyle(.panelStroke), lineWidth: isShown ? 1.5 : 1)
     }
+    .environment(\.answerMarkers, markers)
     .accessibilityHidden(true)
   }
 
   private func glyph(_ style: AnswerStyle) -> some View {
-    Image(systemName: markers.symbol(for: style))
-      .foregroundStyle(style.color)
+    AnswerGlyph(style: style)
       .frame(width: Size.swatch / 2.6, height: Size.swatch / 2.6)
   }
 }

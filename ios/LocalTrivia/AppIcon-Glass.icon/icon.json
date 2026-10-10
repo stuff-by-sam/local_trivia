@@ -19,90 +19,148 @@
     {
       "layers" : [
         {
+          "fill" : {
+            "linear-gradient" : [
+              "srgb:1.00000,1.00000,1.00000,0.92000",
+              "srgb:1.00000,1.00000,1.00000,0.55000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0.0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 1.0
+              }
+            }
+          },
+          "glass" : true,
           "image-name" : "circle.svg",
-          "name" : "circle",
-          "glass" : true,
-          "fill" : {
-            "linear-gradient" : [
-              "srgb:1.00000,1.00000,1.00000,0.92000",
-              "srgb:1.00000,1.00000,1.00000,0.55000"
-            ],
-            "orientation" : {
-              "start" : {
-                "x" : 0.5,
-                "y" : 0.0
-              },
-              "stop" : {
-                "x" : 0.5,
-                "y" : 1.0
-              }
-            }
-          }
-        },
-        {
-          "image-name" : "triangle.svg",
-          "name" : "triangle",
-          "glass" : true,
-          "fill" : {
-            "linear-gradient" : [
-              "srgb:1.00000,1.00000,1.00000,0.92000",
-              "srgb:1.00000,1.00000,1.00000,0.55000"
-            ],
-            "orientation" : {
-              "start" : {
-                "x" : 0.5,
-                "y" : 0.0
-              },
-              "stop" : {
-                "x" : 0.5,
-                "y" : 1.0
-              }
-            }
-          }
-        },
-        {
-          "image-name" : "square.svg",
-          "name" : "square",
-          "glass" : true,
-          "fill" : {
-            "linear-gradient" : [
-              "srgb:1.00000,1.00000,1.00000,0.92000",
-              "srgb:1.00000,1.00000,1.00000,0.55000"
-            ],
-            "orientation" : {
-              "start" : {
-                "x" : 0.5,
-                "y" : 0.0
-              },
-              "stop" : {
-                "x" : 0.5,
-                "y" : 1.0
-              }
-            }
-          }
-        },
-        {
-          "image-name" : "diamond.svg",
-          "name" : "diamond",
-          "glass" : true,
-          "fill" : {
-            "linear-gradient" : [
-              "srgb:1.00000,1.00000,1.00000,0.92000",
-              "srgb:1.00000,1.00000,1.00000,0.55000"
-            ],
-            "orientation" : {
-              "start" : {
-                "x" : 0.5,
-                "y" : 0.0
-              },
-              "stop" : {
-                "x" : 0.5,
-                "y" : 1.0
-              }
-            }
-          }
+          "name" : "circle"
         }
       ],
+      "name" : "Circle",
+      "refractivity" : {
+        "depth" : 0.14,
+        "enabled" : true,
+        "strength" : 0.45
+      },
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.45
+      },
+      "specular" : "outside",
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.55
+      }
+    },
+    {
+      "layers" : [
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "srgb:1.00000,1.00000,1.00000,0.92000",
+              "srgb:1.00000,1.00000,1.00000,0.55000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0.0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 1.0
+              }
+            }
+          },
+          "glass" : true,
+          "image-name" : "triangle.svg",
+          "name" : "triangle"
+        }
+      ],
+      "name" : "Triangle",
+      "refractivity" : {
+        "depth" : 0.14,
+        "enabled" : true,
+        "strength" : 0.45
+      },
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.45
+      },
+      "specular" : "outside",
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.55
+      }
+    },
+    {
+      "layers" : [
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "srgb:1.00000,1.00000,1.00000,0.92000",
+              "srgb:1.00000,1.00000,1.00000,0.55000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0.0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 1.0
+              }
+            }
+          },
+          "glass" : true,
+          "image-name" : "square.svg",
+          "name" : "square"
+        }
+      ],
+      "name" : "Square",
+      "refractivity" : {
+        "depth" : 0.14,
+        "enabled" : true,
+        "strength" : 0.45
+      },
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.45
+      },
+      "specular" : "outside",
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.55
+      }
+    },
+    {
+      "layers" : [
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "srgb:1.00000,1.00000,1.00000,0.92000",
+              "srgb:1.00000,1.00000,1.00000,0.55000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0.0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 1.0
+              }
+            }
+          },
+          "glass" : true,
+          "image-name" : "diamond.svg",
+          "name" : "diamond"
+        }
+      ],
+      "name" : "Diamond",
       "refractivity" : {
         "depth" : 0.14,
         "enabled" : true,

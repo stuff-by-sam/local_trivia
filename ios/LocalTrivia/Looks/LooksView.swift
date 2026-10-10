@@ -28,16 +28,21 @@ struct LooksView: View {
         }
         .listRowBackground(Color.clear)
 
-        themes
-        markers
+        Group {
+          themes
+          markers
 
-        if looks.canChangeIcon {
-          icons
+          if looks.canChangeIcon {
+            icons
+          }
         }
+        // Clear glass over the backdrop: the theme shows through every row.
+        .listRowBackground(Rectangle().fill(.clear).glassCard(in: .rect))
       }
       // The one sheet that shows the backdrop: showing a theme is the point.
       .scrollContentBackground(.hidden)
       .background { Backdrop(mood: .idle) }
+      .glassClarity(.clear)
       .navigationTitle("Themes & Icons")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -126,7 +131,7 @@ private struct Showcase: View {
 
   var body: some View {
     VStack(spacing: Space.l) {
-      AnswerSetMark()
+      AnswerSetMark(depth: .mark)
         .font(.subheadline)
       Wordmark(scale: .showcase)
       VStack(spacing: Space.xs) {

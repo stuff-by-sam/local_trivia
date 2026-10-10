@@ -73,6 +73,16 @@ nonisolated public enum AnswerMarkers: String, CaseIterable, Identifiable, Senda
   }
 }
 
+extension AnswerMarkers {
+  /// Every set's symbols, `first`'s before the rest: what a launch traces
+  /// for glass (`GlassSymbol.prepare(_:)`).
+  public static func allSymbols(first: AnswerMarkers) -> [String] {
+    ([first] + allCases.filter { $0 != first }).flatMap { markers in
+      AnswerStyle.allCases.map(markers.symbol(for:))
+    }
+  }
+}
+
 nonisolated extension EnvironmentValues {
   /// The shapes the answers inside are drawn with.
   @Entry public var answerMarkers: AnswerMarkers = .classic

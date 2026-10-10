@@ -9,6 +9,7 @@ import SwiftUI
 struct JoinView: View {
   @Environment(GameStore.self) private var store
   @Environment(GameBrowser.self) private var browser
+  @Environment(\.horizontalSizeClass) private var sizeClass
 
   @State private var pin = ""
   @State private var isScanning = false
@@ -55,6 +56,12 @@ struct JoinView: View {
       .scrollDismissesKeyboard(.interactively)
       .scrollBounceBehavior(.basedOnSize)
       .safeAreaBar(edge: .bottom) { actions }
+      // On a phone with the keyboard up the form runs under the bar, and the
+      // nickname would show through the glass of a disabled Join button: a
+      // hard edge then. Otherwise soft, so the backdrop runs to the bottom —
+      // and on iPad, where the form never reaches the bar, and a hard edge
+      // would only box in the column's button.
+      .scrollEdgeEffectStyle(focus != nil && sizeClass == .compact ? .hard : .soft, for: .bottom)
       // Moving from the PIN to the name swaps the number pad for a taller
       // keyboard, which would cover the field. Centre it — and anything said
       // about it — in what's left.
@@ -303,6 +310,7 @@ private struct DiscoveryHelp: View {
 private struct GamePicker: View {
   @Environment(GameStore.self) private var store
   @Environment(GameBrowser.self) private var browser
+  @Environment(\.horizontalSizeClass) private var sizeClass
   @Binding var isScanning: Bool
 
   var body: some View {
@@ -327,9 +335,11 @@ private struct GamePicker: View {
         }
       }
     } label: {
-      PickerRow(title: title, detail: detail) { status }
+      PickerRow(title: title, detail: detail)
     }
     .buttonStyle(.plain)
+    // Over the menu, not in its label, where its glass wouldn't draw.
+    .pickerMark { status }
     .accessibilityLabel(Text("Game: \(title). \(detail)"))
     .accessibilityHint("Choose a different game.")
   }

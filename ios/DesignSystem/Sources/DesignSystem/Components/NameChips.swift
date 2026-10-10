@@ -63,10 +63,13 @@ public struct FlowLayout: Layout {
 }
 
 /// Everyone in the game, as name chips that wrap: the host sees who's in at
-/// a glance. `highlighted` is the viewer's own name.
+/// a glance. `highlighted` is the viewer's own name. Each chip is glass; the
+/// viewer's is tinted in the accent.
 public struct NameChips: View {
   let names: [String]
   let highlighted: String?
+
+  @Environment(\.palette) private var palette
 
   public init(names: [String], highlighted: String? = nil) {
     self.names = names
@@ -85,8 +88,7 @@ public struct NameChips: View {
           .padding(.horizontal, Space.capsuleInset)
           .padding(.vertical, Space.xs)
           .frame(minHeight: Size.target - Space.s)
-          .background(.panel, in: shape)
-          .overlay { shape.strokeBorder(.panelStroke, lineWidth: 1) }
+          .glassCard(in: shape, tint: isViewer(name) ? palette.accent : nil)
           .transition(.scale.combined(with: .opacity))
       }
     }

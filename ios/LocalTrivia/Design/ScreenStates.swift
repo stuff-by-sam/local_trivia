@@ -77,8 +77,11 @@ struct ScreenPreview: View {
   static func fromLaunchArguments() -> ScreenPreview? {
     let defaults = UserDefaults.standard
     guard let name = defaults.string(forKey: "screen"), let state = ScreenState(rawValue: name) else { return nil }
-    let theme = defaults.string(forKey: "theme").flatMap(Theme.init(rawValue:)) ?? .phosphor
-    let markers = defaults.string(forKey: "markers").flatMap(AnswerMarkers.init(rawValue:)) ?? .classic
+    // From the launch arguments only: the app saves the theme and markers it's
+    // wearing under the same keys, which would otherwise dress every fixture.
+    let arguments = defaults.volatileDomain(forName: UserDefaults.argumentDomain)
+    let theme = (arguments["theme"] as? String).flatMap(Theme.init(rawValue:)) ?? .phosphor
+    let markers = (arguments["markers"] as? String).flatMap(AnswerMarkers.init(rawValue:)) ?? .classic
     let chosen = defaults.object(forKey: "chosen") == nil ? 1 : defaults.integer(forKey: "chosen")
     return ScreenPreview(state, theme: theme, markers: markers, chosen: chosen)
   }
@@ -114,11 +117,11 @@ struct ScreenPreview: View {
     case .scannerRestricted:
       over(QRScannerSheet(access: .restricted) { _ in })
     case .players:
-      game(sheet: HostSheetView(sheet: .players))
+      game(hostSheet: .players)
     case .joinCode:
-      game(sheet: HostSheetView(sheet: .joinCode))
+      game(hostSheet: .joinCode)
     case .tvGuide:
-      game(sheet: HostSheetView(sheet: .tv))
+      game(hostSheet: .tv)
     case .looks:
       over(LooksView())
     case .tvIdle, .tvLobby, .tvQuestion, .tvReveal, .tvStandings, .tvFinal:
@@ -139,14 +142,18 @@ struct ScreenPreview: View {
           screen.gameColumn()
         }
       }
+      .glassClarity(models.store.phase.glassClarity)
       .containerBackground(for: .navigation) { Backdrop(mood: mood) }
     }
   }
 
-  /// A host sheet, over the screen it opens from.
-  private func game(sheet: some View) -> some View {
-    game(glassContainer: true)
-      .sheet(isPresented: .constant(true)) { sheet }
+  /// A host sheet, over the screen it opens from — opened as `RootView`
+  /// opens it, so the screen under it knows it's there.
+  private func game(hostSheet: HostController.Sheet) -> some View {
+    @Bindable var host = models.host
+    return game(glassContainer: true)
+      .sheet(item: $host.sheet) { HostSheetView(sheet: $0) }
+      .onAppear { models.host.sheet = hostSheet }
   }
 
   /// A sheet, over the join screen it opens from.
