@@ -83,8 +83,8 @@ Claim only what's been tested on a device:
 > HOST FROM YOUR PHONE
 > • Write a round in minutes: a question, four answers, tap the right one.
 > Add categories and time limits, or import a CSV.
-> • On iPhones with Apple Intelligence, name a topic and draft questions on
-> the device, then review every answer before it goes in.
+> • On an iPhone or iPad with Apple Intelligence, name a topic and draft
+> questions on the device, then review every answer before it goes in.
 > • Set the scoring (points, time per question, shuffle and auto-advance),
 > with a live preview of what an answer earns.
 > • The host plays too.
