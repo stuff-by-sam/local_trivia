@@ -113,7 +113,7 @@ enum QuestionDrafter {
     /// phone, so the host never sees this.
     case cloudUnreachable
 
-    var message: String {
+    @MainActor var message: String {
       switch self {
       case .unavailable where UIDevice.current.userInterfaceIdiom == .pad:
         String(localized: "Apple Intelligence isn't available on this iPad right now.")
