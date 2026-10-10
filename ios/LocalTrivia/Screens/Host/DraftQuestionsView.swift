@@ -64,6 +64,8 @@ struct DraftQuestionsView: View {
               .foregroundStyle(.danger)
           } else if engine == .cloud {
             Text("Apple Intelligence drafts these with Private Cloud Compute: your topic goes to Apple to write them, and isn't kept.")
+          } else if UIDevice.current.userInterfaceIdiom == .pad {
+            Text("Apple Intelligence drafts these on this iPad.")
           } else {
             Text("Apple Intelligence drafts these on this iPhone.")
           }

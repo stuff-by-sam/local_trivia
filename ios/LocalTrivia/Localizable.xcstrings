@@ -115,10 +115,16 @@
     "App Icons" : {
 
     },
+    "Apple Intelligence drafts these on this iPad." : {
+
+    },
     "Apple Intelligence drafts these on this iPhone." : {
 
     },
     "Apple Intelligence drafts these with Private Cloud Compute: your topic goes to Apple to write them, and isn't kept." : {
+
+    },
+    "Apple Intelligence isn't available on this iPad right now." : {
 
     },
     "Apple Intelligence isn't available on this iPhone right now." : {
@@ -700,6 +706,9 @@
 
     },
     "Themes & Icons" : {
+
+    },
+    "This iPad doesn't allow the camera. Type the PIN from the host's phone instead." : {
 
     },
     "This iPhone doesn't allow the camera. Type the PIN from the host's phone instead." : {
