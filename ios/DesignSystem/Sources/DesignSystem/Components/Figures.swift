@@ -228,7 +228,7 @@ public struct PodiumStep: View {
 /// tinted in its colour — the chosen answer's glass flows into the verdict's —
 /// with its symbol made of glass on it. The symbol hops when `bounce` changes,
 /// and breathes while `isWaiting`.
-public struct Badge<Bounce: Equatable>: View {
+public struct Badge<Bounce: Equatable & Sendable>: View {
   let symbol: String
   let color: Color
   let bounce: Bounce

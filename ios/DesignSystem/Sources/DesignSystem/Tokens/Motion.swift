@@ -73,7 +73,7 @@ extension View {
   /// A hop when `trigger` changes — a verdict landing, first place — for
   /// glass, which SF Symbols' own bounce doesn't reach. Still under Reduce
   /// Motion.
-  public func glassBounce(trigger: some Equatable) -> some View {
+  public func glassBounce(trigger: some Equatable & Sendable) -> some View {
     modifier(GlassBounce(trigger: trigger))
   }
 
@@ -84,7 +84,7 @@ extension View {
   }
 }
 
-private struct GlassBounce<Trigger: Equatable>: ViewModifier {
+private struct GlassBounce<Trigger: Equatable & Sendable>: ViewModifier {
   let trigger: Trigger
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
