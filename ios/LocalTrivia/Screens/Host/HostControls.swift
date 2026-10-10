@@ -232,13 +232,21 @@ private struct BigScreenGuide: View {
           }
           .motion(.settle, value: bigScreen.isConnected)
         } footer: {
-          Text("The TV shows the join code, each question with its clock and answers, the reveal and the standings. Your phone keeps the controls, and your own answers.")
+          if UIDevice.current.userInterfaceIdiom == .pad {
+            Text("The TV shows the join code, each question with its clock and answers, the reveal and the standings. Your iPad keeps the controls, and your own answers.")
+          } else {
+            Text("The TV shows the join code, each question with its clock and answers, the reveal and the standings. Your phone keeps the controls, and your own answers.")
+          }
         }
 
         Section {
           Label("Open Control Center and tap Screen Mirroring.", systemImage: "rectangle.on.rectangle")
           Label("Choose your Apple TV, or a TV with AirPlay.", systemImage: "appletv")
-          Label("Or connect the phone to a TV with an HDMI adapter.", systemImage: "cable.connector")
+          if UIDevice.current.userInterfaceIdiom == .pad {
+            Label("Or connect the iPad to a TV with an HDMI adapter.", systemImage: "cable.connector")
+          } else {
+            Label("Or connect the phone to a TV with an HDMI adapter.", systemImage: "cable.connector")
+          }
         } header: {
           SectionHeader("Connect a TV")
         }

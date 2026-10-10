@@ -78,7 +78,11 @@ struct LooksView: View {
         }
       }
     } footer: {
-      Text("A theme dresses this phone, any TV it puts the game on, and the browsers in a game it hosts.")
+      if UIDevice.current.userInterfaceIdiom == .pad {
+        Text("A theme dresses this iPad, any TV it puts the game on, and the browsers in a game it hosts.")
+      } else {
+        Text("A theme dresses this phone, any TV it puts the game on, and the browsers in a game it hosts.")
+      }
     }
   }
 
@@ -96,7 +100,11 @@ struct LooksView: View {
         }
       }
     } footer: {
-      Text("The shapes beside each answer's letter, on this phone and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan.")
+      if UIDevice.current.userInterfaceIdiom == .pad {
+        Text("The shapes beside each answer's letter, on this iPad and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan.")
+      } else {
+        Text("The shapes beside each answer's letter, on this phone and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan.")
+      }
     }
   }
 

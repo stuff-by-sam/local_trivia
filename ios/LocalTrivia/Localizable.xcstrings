@@ -73,6 +73,9 @@
     "A monochrome tube, warm as an old terminal" : {
       "extractionState" : "manual"
     },
+    "A theme dresses this iPad, any TV it puts the game on, and the browsers in a game it hosts." : {
+
+    },
     "A theme dresses this phone, any TV it puts the game on, and the browsers in a game it hosts." : {
 
     },
@@ -490,6 +493,9 @@
     "Open Settings" : {
 
     },
+    "Or connect the iPad to a TV with an HDMI adapter." : {
+
+    },
     "Or connect the phone to a TV with an HDMI adapter." : {
 
     },
@@ -684,6 +690,9 @@
     "That topic can't be drafted. Try another." : {
 
     },
+    "The TV shows the join code, each question with its clock and answers, the reveal and the standings. Your iPad keeps the controls, and your own answers." : {
+
+    },
     "The TV shows the join code, each question with its clock and answers, the reveal and the standings. Your phone keeps the controls, and your own answers." : {
 
     },
@@ -697,6 +706,9 @@
 
     },
     "The game is on the TV" : {
+
+    },
+    "The shapes beside each answer's letter, on this iPad and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan." : {
 
     },
     "The shapes beside each answer's letter, on this phone and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan." : {
