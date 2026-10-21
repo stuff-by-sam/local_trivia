@@ -29,11 +29,12 @@ nonisolated public enum AnswerMarkers: String, CaseIterable, Identifiable, Senda
     case .suits: "Clubs, spades, hearts and diamonds, from the card table"
     case .elements: "Leaf, water, fire and lightning"
     case .sky: "Sun, moon, cloud and star"
-    case .critters: "A tortoise, a fish, a cat and a bird"
+    case .critters: "A turtle, a fish, a fox and a dog"
     }
   }
 
-  /// The SF Symbol drawn beside `style`'s letter.
+  /// The SF Symbol drawn beside `style`'s letter. (The fox is the design
+  /// system's own, drawn as an SF Symbol: see `Symbols`.)
   public func symbol(for style: AnswerStyle) -> String {
     let symbols = switch self {
     case .classic: ["circle.fill", "triangle.fill", "square.fill", "diamond.fill"]
@@ -41,7 +42,8 @@ nonisolated public enum AnswerMarkers: String, CaseIterable, Identifiable, Senda
     // Each where its colour puts it: a green leaf, cyan water, amber fire.
     case .elements: ["leaf.fill", "drop.fill", "flame.fill", "bolt.fill"]
     case .sky: ["sun.max.fill", "moon.fill", "cloud.fill", "star.fill"]
-    case .critters: ["tortoise.fill", "fish.fill", "cat.fill", "bird.fill"]
+    // Each in its colour too: a green turtle, a cyan fish, an amber fox.
+    case .critters: ["tortoise.fill", "fish.fill", "fox.fill", "dog.fill"]
     }
     return symbols[style.rawValue]
   }
@@ -65,15 +67,20 @@ nonisolated public enum AnswerMarkers: String, CaseIterable, Identifiable, Senda
     case (.sky, .b): "moon"
     case (.sky, .c): "cloud"
     case (.sky, .d): "star"
-    case (.critters, .a): "tortoise"
+    case (.critters, .a): "turtle"
     case (.critters, .b): "fish"
-    case (.critters, .c): "cat"
-    case (.critters, .d): "bird"
+    case (.critters, .c): "fox"
+    case (.critters, .d): "dog"
     }
   }
 }
 
 extension AnswerMarkers {
+  /// `style`'s symbol as an image, sized by the font around it.
+  public func image(for style: AnswerStyle) -> Image {
+    Symbols.image(symbol(for: style))
+  }
+
   /// Every set's symbols, `first`'s before the rest: what a launch traces
   /// for glass (`GlassSymbol.prepare(_:)`).
   public static func allSymbols(first: AnswerMarkers) -> [String] {

@@ -30,7 +30,8 @@ public struct AnswerKey: View {
     Group {
       if isInverted {
         HStack(spacing: Space.xs) {
-          Image(systemName: markers.symbol(for: style))
+          markers.image(for: style)
+            .markerSlot(markers)
             .imageScale(.small)
           Text(verbatim: style.letter)
         }

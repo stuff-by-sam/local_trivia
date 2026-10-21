@@ -175,7 +175,8 @@ public struct GlassCounter: View, Animatable {
 }
 
 /// An SF Symbol made of Liquid Glass, traced from the system's own
-/// (`SymbolOutlines`). Sized by the font and image scale around it. If it's
+/// (`SymbolOutlines`). Sized by the font and image scale around it — or, with
+/// `fitsFrame`, scaled to fit the frame it's given, keeping its shape. If it's
 /// shown before its trace is in — the first launch, before `prepare(_:)` has
 /// reached it — it's drawn glass until then, and cross-fades.
 public struct GlassSymbol: View {
@@ -183,24 +184,36 @@ public struct GlassSymbol: View {
   let color: Color
   let depth: GlassDepth
   let glow: Glow?
+  let fitsFrame: Bool
 
   @Environment(\.palette) private var palette
   /// The last trace this symbol waited for: what redraws it once it's in.
   @State private var traced: (name: String, path: Path)?
 
-  public init(_ name: String, color: Color, depth: GlassDepth = .mark, glow: Glow? = nil) {
+  public init(_ name: String, color: Color, depth: GlassDepth = .mark, glow: Glow? = nil, fitsFrame: Bool = false) {
     self.name = name
     self.color = color
     self.depth = depth
     self.glow = glow
+    self.fitsFrame = fitsFrame
   }
 
   public var body: some View {
-    let image = Image(systemName: name)
+    let image = Symbols.image(name)
     Group {
-      if palette.isHighContrast {
+      if fitsFrame {
+        let fitted = image.resizable().scaledToFit()
+        if palette.isHighContrast {
+          fitted.foregroundStyle(color)
+        } else if let outline {
+          GlassCharacter(
+            shape: AspectFitOutline(path: outline, aspectRatio: Symbols.aspectRatio(name)), color: color, depth: depth, bloom: glow?.radius)
+        } else {
+          fitted.glassSymbol(color, depth: depth)
+        }
+      } else if palette.isHighContrast {
         image.foregroundStyle(color)
-      } else if let outline = SymbolOutlines.cached(name) ?? (traced?.name == name ? traced?.path : nil) {
+      } else if let outline {
         image
           .hidden()
           .overlay {
@@ -218,6 +231,10 @@ public struct GlassSymbol: View {
     .accessibilityHidden(true)
   }
 
+  private var outline: Path? {
+    SymbolOutlines.cached(name) ?? (traced?.name == name ? traced?.path : nil)
+  }
+
   /// Traces `names` for their glass ahead of time, off the main actor, so
   /// none has to be drawn glass first: every symbol the app makes of glass,
   /// at launch. Traces are kept on the device, so after the first launch this
@@ -229,18 +246,58 @@ public struct GlassSymbol: View {
 
 /// An answer's marker in Liquid Glass: the SF Symbol from the player's set,
 /// in its answer's colour.
+///
+/// Every marker of a set takes the same room — as wide and tall as the set's
+/// largest — with its own symbol centred in it. A turtle is wider than a
+/// fox, but the four keys still match, and the answers' text lines up after
+/// them. With `fitsFrame`, it's scaled to fit the frame it's given instead.
 public struct AnswerGlyph: View {
   let style: AnswerStyle
   let depth: GlassDepth
+  let fitsFrame: Bool
 
   @Environment(\.answerMarkers) private var markers
 
-  public init(style: AnswerStyle, depth: GlassDepth = .mark) {
+  public init(style: AnswerStyle, depth: GlassDepth = .mark, fitsFrame: Bool = false) {
     self.style = style
     self.depth = depth
+    self.fitsFrame = fitsFrame
   }
 
   public var body: some View {
-    GlassSymbol(markers.symbol(for: style), color: style.color, depth: depth)
+    let glyph = GlassSymbol(markers.symbol(for: style), color: style.color, depth: depth, fitsFrame: fitsFrame)
+    if fitsFrame {
+      glyph
+    } else {
+      glyph.markerSlot(markers)
+    }
+  }
+}
+
+extension View {
+  /// The room a marker of `markers` takes: the set's four symbols, unseen,
+  /// with this centred over them. For a marker drawn as a plain image, so it
+  /// takes the room its glass would.
+  public func markerSlot(_ markers: AnswerMarkers) -> some View {
+    ZStack {
+      ForEach(AnswerStyle.allCases) { markers.image(for: $0).hidden() }
+      self
+    }
+  }
+}
+
+/// A unit-square outline drawn at its own aspect ratio, as large as fits the
+/// frame it's given and centred in it.
+nonisolated struct AspectFitOutline: Shape {
+  let path: Path
+  let aspectRatio: CGFloat
+
+  func path(in rect: CGRect) -> Path {
+    guard aspectRatio > 0, rect.width > 0, rect.height > 0 else { return Path() }
+    let width = min(rect.width, rect.height * aspectRatio)
+    let height = width / aspectRatio
+    let x = rect.midX - width / 2
+    let y = rect.midY - height / 2
+    return path.applying(CGAffineTransform(a: width, b: 0, c: 0, d: height, tx: x, ty: y))
   }
 }

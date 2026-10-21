@@ -234,8 +234,11 @@ public struct MarkerSwatch: View {
     .accessibilityHidden(true)
   }
 
+  /// Each in a cell of its own, scaled to fit it: a turtle or a fish is
+  /// wider than a circle, and must stay clear of its neighbours.
   private func glyph(_ style: AnswerStyle) -> some View {
-    AnswerGlyph(style: style)
+    AnswerGlyph(style: style, fitsFrame: true)
+      .frame(width: Size.swatch / 2.9, height: Size.swatch / 2.9)
       .frame(width: Size.swatch / 2.6, height: Size.swatch / 2.6)
   }
 }

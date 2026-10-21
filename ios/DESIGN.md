@@ -258,10 +258,16 @@ Only through `Haptic`; one per event, never on scroll or incidental change.
 SF Symbols for every icon in the app — no icon is a text glyph (a standing's
 move is `arrowtriangle.up.fill` / `.down.fill` and its number, not `▲2`).
 Weight follows the adjacent text's weight; scale `.medium`, `.small` inside
-keys. Monochrome by default. The answer markers — every set's, from
-`circle.fill` to `bird.fill` — are Liquid Glass in their answer colour, cut to
-the symbol's traced outline (`AnswerGlyph`), as are the verdict, the trophy,
-the waiting hourglass and a standing's arrows (`GlassSymbol`). Direction uses
+keys. Monochrome by default. Where SF Symbols has no symbol for a mark, the
+design system draws one as an SF Symbol template (`Resources/Symbols.xcassets`,
+named in `Symbols.custom`) — the Critters' fox — so it sizes and weighs like
+the rest. The answer markers — every set's, from `circle.fill` to `dog.fill` —
+are Liquid Glass in their answer colour, cut to the symbol's traced outline
+(`AnswerGlyph`). Every marker of a set takes the room of the set's largest
+(`markerSlot`), so a set's four keys match and the answers line up after them;
+a swatch scales each to fit its cell (`fitsFrame`). The verdict, the trophy,
+the waiting hourglass and a standing's arrows are the same glass
+(`GlassSymbol`). Direction uses
 `.forward`/`.backward` variants so RTL mirrors; the wordmark and the answer
 keys (`▲ B`) never mirror. Effects: a glass verdict or first place hops
 (`.glassBounce`) and a waiting one breathes (`.glassPulse`) — SF Symbols' own

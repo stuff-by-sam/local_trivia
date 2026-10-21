@@ -131,7 +131,7 @@ nonisolated enum SymbolOutlines {
   private static func trace(_ name: String) -> Path? {
     // Large enough that the contours' pixel steps vanish at any size it's drawn.
     let configuration = UIImage.SymbolConfiguration(pointSize: 200, weight: .semibold)
-    guard let symbol = UIImage(systemName: name, withConfiguration: configuration) else { return nil }
+    guard let symbol = Symbols.uiImage(name, configuration: configuration) else { return nil }
     let size = symbol.size
     // Whole pixels, all of them white: a part-pixel edge left unfilled reads
     // as a dark sliver, and Vision would trace it.
@@ -175,12 +175,14 @@ nonisolated enum SymbolOutlines {
   }
 
   /// The traces kept on the device between launches: in Caches, so the
-  /// system may clear them, and per OS build, whose symbols may differ.
+  /// system may clear them; per OS build, whose symbols may differ, and per
+  /// app build, whose own symbols (`Symbols.custom`) may.
   private enum Saved {
     static var url: URL? {
       let build = ProcessInfo.processInfo.operatingSystemVersionString.filter { $0.isLetter || $0.isNumber }
+      let app = (Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "").filter { $0.isLetter || $0.isNumber }
       return FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?
-        .appending(path: "GlassOutlines-1-\(build).plist")
+        .appending(path: "GlassOutlines-2-\(build)-\(app).plist")
     }
 
     static func load() -> [String: Path] {
