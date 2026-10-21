@@ -3,11 +3,12 @@ import SwiftUI
 
 // The system toolbar every in-game screen shares. Leading: who you are, or
 // where the game is — replaced by "Reconnecting" while the link is down.
-// Trailing: the clock or progress, then the host's menu or a way out.
+// Trailing: the clock or progress, then the host's menu or the player's:
+// report, block, or leave.
 
 extension View {
-  func gameToolbar(_ leading: GameToolbar.Leading, status: GameToolbar.Status = .none, controls: GameToolbar.Controls = .whenNeeded) -> some View {
-    modifier(GameToolbar(leading: leading, status: status, controls: controls))
+  func gameToolbar(_ leading: GameToolbar.Leading, status: GameToolbar.Status = .none) -> some View {
+    modifier(GameToolbar(leading: leading, status: status))
   }
 }
 
@@ -27,18 +28,8 @@ struct GameToolbar: ViewModifier {
     case clock(ClosedRange<Date>, isRunningLow: Bool)
   }
 
-  enum Controls {
-    /// The host's menu, or Leave: in the lobby and after the game.
-    case always
-    /// The host's menu, or Leave only once the host has gone quiet — a
-    /// player mustn't be stuck on a frozen screen, nor tempted out of a
-    /// working game.
-    case whenNeeded
-  }
-
   let leading: Leading
   let status: Status
-  let controls: Controls
 
   @Environment(GameStore.self) private var store
   @Environment(HostController.self) private var host
@@ -71,11 +62,12 @@ struct GameToolbar: ViewModifier {
           QuestionNumber(number: progress.number, total: progress.total)
         }
       }
-      if showsControls {
-        ToolbarSpacer(.fixed, placement: .topBarTrailing)
-        ToolbarItem(placement: .topBarTrailing) {
-          if host.isHosting { HostMenu() } else { LeaveButton() }
-        }
+      // Always there: the host's controls, and a player's way to report,
+      // block or leave — reporting can't wait for a pause, and Leave inside
+      // a menu doesn't tempt anyone out of a working game.
+      ToolbarSpacer(.fixed, placement: .topBarTrailing)
+      ToolbarItem(placement: .topBarTrailing) {
+        if host.isHosting { HostMenu() } else { PlayerMenu() }
       }
     }
   }
@@ -85,13 +77,6 @@ struct GameToolbar: ViewModifier {
     switch leading {
     case .player: PlayerLabel()
     case .question(let number, let total): QuestionNumber(number: number, total: total)
-    }
-  }
-
-  private var showsControls: Bool {
-    switch controls {
-    case .always: true
-    case .whenNeeded: host.isHosting || store.connection.hasFailed
     }
   }
 }
@@ -163,16 +148,6 @@ private struct QuestionClock: View {
     .accessibilityValue(Text(timerInterval: window, countsDown: true, showsHours: false))
     .accessibilityAddTraits(.updatesFrequently)
     .accessibilityShowsLargeContentViewer()
-  }
-}
-
-/// Leaves at once. The join screen offers Undo for a few seconds, which takes
-/// the seat back, score and all — so there's nothing to ask first.
-struct LeaveButton: View {
-  @Environment(GameStore.self) private var store
-
-  var body: some View {
-    Button("Leave Game", systemImage: "xmark") { store.leave() }
   }
 }
 

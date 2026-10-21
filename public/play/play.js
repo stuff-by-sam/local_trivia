@@ -12,8 +12,22 @@ const store = {
   get token() { return localStorage.getItem('trivia_token') || ''; },
   set token(v) { v ? localStorage.setItem('trivia_token', v) : localStorage.removeItem('trivia_token'); },
   get nickDraft() { return localStorage.getItem('trivia_nick') || ''; },
-  set nickDraft(v) { localStorage.setItem('trivia_nick', v); }
+  set nickDraft(v) { localStorage.setItem('trivia_nick', v); },
+  get agreed() { return localStorage.getItem('trivia_terms') === '1'; },
+  set agreed(v) { v ? localStorage.setItem('trivia_terms', '1') : localStorage.removeItem('trivia_terms'); },
+  // A random id for this browser, so a host who blocks it can keep it out.
+  get device() {
+    let id = localStorage.getItem('trivia_device');
+    if (!id) {
+      id = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
+      localStorage.setItem('trivia_device', id);
+    }
+    return id;
+  }
 };
+
+// Where reports go: the app's developer, by the player's own email.
+const REPORT_ADDRESS = 'report@local-trivia.com';
 
 const STATUS_LOCKED = 'ANSWER LOCKED ▸ WAITING FOR ROOM';
 const STATUS_OPEN = 'TAP AN ANSWER — FAST = MORE PTS';
@@ -44,10 +58,39 @@ if (linkedPin && /^\d{4,6}$/.test(linkedPin)) {
 
 // ---- join ----
 
-$('btn-join').addEventListener('click', () => {
-  $('join-err').hidden = true;
-  socket.emit('join', { pin: $('in-pin').value.trim(), nickname: $('in-nick').value.trim() });
+// Nobody joins before agreeing to the Terms of Use.
+$('in-agree').checked = store.agreed;
+$('btn-join').disabled = !store.agreed;
+$('in-agree').addEventListener('change', e => {
+  store.agreed = e.target.checked;
+  $('btn-join').disabled = !e.target.checked;
 });
+
+$('btn-join').addEventListener('click', () => {
+  if (!store.agreed) return;
+  $('join-err').hidden = true;
+  socket.emit('join', { pin: $('in-pin').value.trim(), nickname: $('in-nick').value.trim(), device: store.device });
+});
+
+// ---- report ----
+
+// An email to the developer, written out for the player to send: what was
+// on screen, and where.
+function report(kind) {
+  const lines = ['Local Trivia report (browser player)', ''];
+  if (kind === 'question' && question) {
+    lines.push('Reported: a question' + (question.category ? ' (' + question.category + ')' : ''));
+    lines.push('Content:', '  ' + question.text);
+    question.options.forEach((text, i) => lines.push('  ' + 'ABCD'[i] + ': ' + text));
+  } else {
+    lines.push('Reported: a game and its host');
+  }
+  lines.push('Game: ' + location.host, 'Player: ' + (me.nickname || '-'), 'Reason: ', 'Details: ', '', 'Sent: ' + new Date().toISOString());
+  const subject = kind === 'question' ? 'Local Trivia report: question' : 'Local Trivia report: game host';
+  location.href = 'mailto:' + REPORT_ADDRESS + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(lines.join('\n'));
+}
+document.querySelectorAll('[data-report]').forEach(link =>
+  link.addEventListener('click', e => { e.preventDefault(); report(link.dataset.report); }));
 [$('in-pin'), $('in-nick')].forEach(el =>
   el.addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-join').click(); }));
 

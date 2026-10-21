@@ -261,10 +261,12 @@ private struct BigScreenGuide: View {
   }
 }
 
-/// Everyone in the game, with the host's power to remove them.
+/// Everyone in the game, with the host's power to remove, block and report
+/// them: swipe a row, or touch and hold it.
 private struct PlayersSheet: View {
   @Environment(HostController.self) private var host
   @Environment(\.dismiss) private var dismiss
+  @State private var report: Report?
 
   var body: some View {
     NavigationStack {
@@ -274,7 +276,18 @@ private struct PlayersSheet: View {
             PlayerRow(player: player, isHost: host.isHost(player))
               .swipeActions {
                 if !host.isHost(player) {
-                  Button("Remove", systemImage: "person.fill.xmark", role: .destructive) { host.kick(player) }
+                  Button("Block", systemImage: "hand.raised", role: .destructive) { report = host.block(player) }
+                  Button("Remove", systemImage: "person.fill.xmark") { host.kick(player) }
+                    .tint(Palette.warning)
+                }
+              }
+              .contextMenu {
+                if !host.isHost(player) {
+                  Button("Report \(player.nickname)…", systemImage: "exclamationmark.bubble") {
+                    report = Report(.player(nickname: player.nickname), gameName: host.gameName, isHost: true)
+                  }
+                  Button("Remove", systemImage: "person.fill.xmark") { host.kick(player) }
+                  Button("Block and Report", systemImage: "hand.raised", role: .destructive) { report = host.block(player) }
                 }
               }
           }
@@ -290,6 +303,14 @@ private struct PlayersSheet: View {
       .toolbar {
         ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
       }
+      .safeAreaInset(edge: .bottom) {
+        if host.game?.players.contains(where: { !host.isHost($0) }) == true {
+          FieldMessage(Text("Swipe a player to remove or block them; touch and hold to report. A blocked player can't join your games again."), kind: .hint)
+            .padding(.horizontal, Space.screen)
+            .padding(.bottom, Space.s)
+        }
+      }
+      .reportSheet($report)
     }
   }
 }
@@ -347,6 +368,7 @@ struct LeaderboardTable: View {
 
   @Environment(\.dynamicTypeSize) private var typeSize
   @Environment(\.palette) private var palette
+  @Environment(Safety.self) private var safety
 
   private static let visibleRows = 5
 
@@ -384,12 +406,13 @@ struct LeaderboardTable: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(spoken(row, isPlayer: isPlayer))
+        .nameActions(row.nickname)
       }
     }
   }
 
   private func spoken(_ row: Leaderboard.Row, isPlayer: Bool) -> Text {
-    let name = isPlayer ? String(localized: "\(row.nickname) (you)") : row.nickname
+    let name = isPlayer ? String(localized: "\(row.nickname) (you)") : safety.shown(row.nickname)
     let standing = String(localized: "\(row.rank), \(name), \(row.score) points")
     guard let delta = row.delta, delta != 0 else { return Text(verbatim: standing) }
     return Text(verbatim: standing + ", " + (delta > 0 ? String(localized: "up \(delta)") : String(localized: "down \(-delta)")))
@@ -402,9 +425,9 @@ struct LeaderboardTable: View {
   }
 
   private func name(_ row: Leaderboard.Row, isPlayer: Bool) -> some View {
-    Text(verbatim: row.nickname)
+    Text(verbatim: safety.shown(row.nickname))
       .textRole(isPlayer ? .bodyEmphasis : .body)
-      .foregroundStyle(isPlayer ? AnyShapeStyle(.themeAccent) : AnyShapeStyle(.primary))
+      .foregroundStyle(isPlayer ? AnyShapeStyle(.themeAccent) : safety.isHidden(row.nickname) ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
   }
 
   @ViewBuilder

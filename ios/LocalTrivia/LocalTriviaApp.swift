@@ -29,6 +29,7 @@ struct LocalTriviaApp: App {
       .environment(models.host)
       .environment(models.bigScreen)
       .environment(models.looks)
+      .environment(models.safety)
   }
 }
 
@@ -38,11 +39,17 @@ struct LocalTriviaApp: App {
 final class AppModels {
   static let shared = AppModels()
 
+  let safety = Safety()
   let store = GameStore()
   let browser = GameBrowser()
-  let host = HostController()
+  let host: HostController
   let bigScreen = BigScreen()
   let looks = Looks()
+
+  private init() {
+    host = HostController(safety: safety)
+    store.deviceID = safety.installID
+  }
 }
 
 final class AppDelegate: NSObject, UIApplicationDelegate {

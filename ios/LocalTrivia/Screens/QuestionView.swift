@@ -97,6 +97,7 @@ struct QuestionView: View {
     .padding(Space.inset)
     .frame(maxWidth: .infinity)
     .panel()
+    .questionActions(question)
   }
 
   // MARK: - Clock

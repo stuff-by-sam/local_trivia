@@ -13,7 +13,7 @@ final class HostAGameUITests: XCTestCase {
   func testHostsAndPlaysAGame() throws {
     let app = XCUIApplication()
     // Argument-domain defaults: sets the remembered nickname for this launch only.
-    app.launchArguments += ["-nickname", "UITest"]
+    app.launchArguments += ["-nickname", "UITest", "-termsAccepted", "1"]
     app.launch()
     allowLocalNetworkIfAsked()
 

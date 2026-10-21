@@ -150,7 +150,15 @@ final class GameStore {
 
   var trimmedNickname: String { nickname.trimmingCharacters(in: .whitespacesAndNewlines) }
 
-  var nicknameIsValid: Bool { (1...Self.nicknameLimit).contains(trimmedNickname.utf16.count) }
+  var nicknameIsValid: Bool { (1...Self.nicknameLimit).contains(trimmedNickname.utf16.count) && nicknameIsAllowed }
+
+  /// No objectionable word in it (`ContentFilter`): the host would turn it
+  /// away, so the join screen says so first.
+  var nicknameIsAllowed: Bool { ContentFilter.allows(trimmedNickname, as: .name) }
+
+  /// The id this phone joins with (`Safety.installID`), so a host who blocks
+  /// it can keep it out.
+  @ObservationIgnored var deviceID: String?
 
   var canJoin: Bool { connection == .online && !isJoining && nicknameIsValid }
 
@@ -316,7 +324,7 @@ final class GameStore {
     isJoining = true
     joinError = nil
     notice = nil
-    send(.join(pin: pin, nickname: trimmedNickname))
+    send(.join(pin: pin, nickname: trimmedNickname, device: deviceID))
     joinDeadline?.cancel()
     joinDeadline = Task { [weak self] in
       try? await Task.sleep(for: .seconds(5))
@@ -368,6 +376,18 @@ final class GameStore {
     isPinned = false
     server = nil
     remember(nil)
+  }
+
+  /// A join link to a host this player has blocked: say why nothing happens.
+  func noteBlockedHost() {
+    notice = String(localized: "You blocked this game's host.")
+  }
+
+  /// Leaves a game whose host this player has blocked: for good, with no
+  /// seat kept to undo into.
+  func leaveBlockedGame() {
+    forgetGame()
+    notice = String(localized: "You blocked this game's host. Their games won't be listed on this phone.")
   }
 
   /// The server has no "leave" event — a player leaves by disconnecting. So
@@ -492,6 +512,8 @@ final class GameStore {
   // MARK: - Server events
 
   func apply(_ event: ServerEvent) {
+    // A host this app isn't running on may not filter what it sends.
+    let event = event.masked()
     switch event {
     case .joined(let snapshot):
       joinDeadline?.cancel()

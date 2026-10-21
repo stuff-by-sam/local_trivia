@@ -19,7 +19,8 @@
     <div id="kicked-msg" class="kicked ui" hidden></div>
     <input id="in-pin" placeholder="GAME PIN" maxlength="6" inputmode="numeric" autocomplete="off">
     <input id="in-nick" placeholder="NICKNAME" maxlength="20" autocomplete="off">
-    <button id="btn-join">JOIN ▸</button>
+    <label class="agree ui"><input type="checkbox" id="in-agree"> <span>I AGREE TO THE <a href="/play/terms.html" target="_blank" rel="noopener">TERMS OF USE</a>: NO OBJECTIONABLE CONTENT, NO ABUSIVE PLAYERS</span></label>
+    <button id="btn-join" disabled>JOIN ▸</button>
     <div id="join-err" class="join-err ui" hidden></div>
     <div id="join-foot" class="join-foot ui">PIN IS ON THE BIG SCREEN</div>
   </section>
@@ -29,6 +30,7 @@
     <div id="lb-name" class="you-name"></div>
     <div id="lb-count" class="soft-16"></div>
     <div class="waiting">WAITING FOR HOST<span class="blink">_</span></div>
+    <a class="report-link ui" href="#" data-report="game">REPORT THIS GAME</a>
   </section>
 
   <section id="s-wait" class="scr center" hidden>
@@ -46,6 +48,7 @@
     <div id="q-text" class="q-text"></div>
     <div id="q-opts" class="q-opts"></div>
     <div id="q-status" class="q-status ui"></div>
+    <a class="report-link ui" href="#" data-report="question">REPORT QUESTION</a>
   </section>
 
   <section id="s-result" class="scr center" hidden>

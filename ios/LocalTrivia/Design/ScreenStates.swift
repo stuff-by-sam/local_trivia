@@ -52,6 +52,10 @@ enum ScreenState: String, CaseIterable {
   case tvReveal = "tv.reveal"
   case tvStandings = "tv.standings"
   case tvFinal = "tv.final"
+  case terms
+  case safety
+  case report
+  case reportBlocked = "report.blocked"
 }
 
 /// A screen state as the app would show it: in its navigation stack, over
@@ -95,6 +99,9 @@ struct ScreenPreview: View {
       .environment(models.host)
       .environment(models.bigScreen)
       .environment(models.looks)
+      .environment(models.safety)
+      // As `RootView` shows a report: over the screen.
+      .reportSheet(Binding { models.safety.report } set: { models.safety.report = $0 })
   }
 
   @ViewBuilder
@@ -124,6 +131,14 @@ struct ScreenPreview: View {
       game(hostSheet: .tv)
     case .looks:
       over(LooksView())
+    case .terms:
+      over(TermsView(isAgreeing: true))
+    case .safety:
+      over(SafetyView())
+    case .report:
+      over(ReportSheet(report: Report(.question(text: Sample.question(elapsed: 0).text, options: Sample.question(elapsed: 0).options, category: "SPACE"), gameName: Sample.game.name, isHost: false)))
+    case .reportBlocked:
+      over(ReportSheet(report: Report(.host(gameName: Sample.game.name), gameName: Sample.game.name, isHost: false, blocked: "This player blocked the host and left the game. The host's games are hidden on their phone.")))
     case .tvIdle, .tvLobby, .tvQuestion, .tvReveal, .tvStandings, .tvFinal:
       BigScreenView()
         .environment(\.backdropFollowsTilt, false)
@@ -199,13 +214,14 @@ final class PreviewModels {
   let browser = GameBrowser()
   let bigScreen = BigScreen()
   let looks: Looks
+  let safety = Safety(defaults: nil)
 
   init(_ state: ScreenState, chosen: Int = 1) {
     let defaults = UserDefaults(suiteName: "previews") ?? .standard
     defaults.removePersistentDomain(forName: "previews")
     store = GameStore(defaults: defaults, tokens: PreviewTokens(), makeTransport: { _ in nil })
     store.nickname = Sample.player
-    host = HostController(library: HostLibrary(fileURL: nil), advertises: false)
+    host = HostController(library: HostLibrary(fileURL: nil), advertises: false, safety: safety)
     looks = Looks.preview(defaults: defaults)
     put(in: state, chosen: chosen)
   }
@@ -290,7 +306,7 @@ final class PreviewModels {
       break
     case .round, .editorNew, .editorEdit, .drafting, .drafts:
       host.library.questions = Sample.round
-    case .scannerOff, .scannerRestricted, .looks:
+    case .scannerOff, .scannerRestricted, .looks, .terms, .safety, .report, .reportBlocked:
       // Over a join screen still looking: the join screen's own sheets keep
       // its keyboard down, but these are presented from outside it.
       break

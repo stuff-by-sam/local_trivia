@@ -348,13 +348,15 @@ private struct StandingsBoard: View {
 private struct StandingRow: View {
   let row: Leaderboard.Row
 
+  @Environment(Safety.self) private var safety
+
   var body: some View {
     HStack(spacing: TVMetrics.gap) {
       Text(verbatim: row.rank.twoDigits)
         .tvRole(.rank)
         .foregroundStyle(Medal(rank: row.rank).map { AnyShapeStyle($0.color) } ?? AnyShapeStyle(.secondary))
         .frame(width: TVMetrics.rankWidth, alignment: .leading)
-      Text(verbatim: row.nickname)
+      Text(verbatim: safety.shown(row.nickname))
         .tvRole(.standingName)
         .lineLimit(1)
       if let delta = row.delta, delta != 0 {
@@ -411,13 +413,15 @@ private struct TVPodiumStep: View {
   /// Which step, whatever ties did to `placing.rank`.
   let medal: Medal
 
+  @Environment(Safety.self) private var safety
+
   var body: some View {
     VStack(spacing: TVMetrics.rowGap * 2) {
       if medal == .first {
         GlassSymbol("trophy.fill", color: medal.color, depth: .tv, glow: .tv)
           .tvRole(.trophy)
       }
-      Text(verbatim: placing.nickname)
+      Text(verbatim: safety.shown(placing.nickname))
         .tvRole(.podiumName)
         .lineLimit(1)
         .minimumScaleFactor(0.5)
@@ -559,7 +563,8 @@ private struct AnswerTile: View {
       Group {
         if state == .correct {
           HStack(spacing: TVMetrics.rowGap) {
-            Image(systemName: markers.symbol(for: style))
+            markers.image(for: style)
+              .markerSlot(markers)
               .imageScale(.small)
             Text(verbatim: style.letter)
           }

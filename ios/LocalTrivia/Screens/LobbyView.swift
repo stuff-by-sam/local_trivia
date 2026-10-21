@@ -15,7 +15,7 @@ struct LobbyView: View {
       }
     }
     .screenPadding()
-    .gameToolbar(.player, controls: .always)
+    .gameToolbar(.player)
   }
 }
 

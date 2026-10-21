@@ -99,6 +99,18 @@ body {
   box-shadow: 0 0 12px rgba(var(--c-green-rgb), .25);
 }
 #btn-join:active { filter: brightness(1.25); }
+#btn-join:disabled { opacity: .45; cursor: default; box-shadow: none; }
+
+.agree {
+  display: flex; gap: 8px; align-items: flex-start;
+  font-size: 10px; line-height: 1.5; letter-spacing: .5px; color: var(--c-text-soft);
+}
+.agree input { margin-top: 2px; accent-color: var(--c-green); width: 16px; height: 16px; flex: none; }
+.agree a, .report-link { color: var(--c-green); }
+.report-link {
+  display: block; margin-top: 18px; text-align: center;
+  font-size: 10px; letter-spacing: 1px; text-decoration: underline;
+}
 
 /* ---- LOBBY / WAIT ---- */
 .mini-label { font-size: 15px; color: var(--c-dim); letter-spacing: 2px; }

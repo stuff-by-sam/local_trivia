@@ -9,7 +9,9 @@ import Foundation
 ///
 /// It tolerates the shapes real exports come in — a title line above the
 /// header, no header at all, answer keys as A–D, 1–4, 0–3 or the option's
-/// text — and reports bad rows by line number instead of failing.
+/// text — and an AI chat's reply pasted whole, the CSV in a code block with
+/// words around it (`AIPrompt`). It reports bad rows by line number instead
+/// of failing.
 nonisolated enum CSVImport {
   struct Result: Equatable, Sendable {
     var questions: [HostQuestion]
@@ -18,7 +20,7 @@ nonisolated enum CSVImport {
   }
 
   static func parse(_ text: String) -> Result {
-    let rows = splitRows(text)
+    let rows = splitRows(codeBlock(in: text) ?? text)
     let start = firstDataRow(rows)
     let dataRows = rows.dropFirst(start).map { $0.map(trimmed) }
     let base = numericBase(dataRows)
@@ -62,6 +64,20 @@ nonisolated enum CSVImport {
   }
 
   // MARK: - Reading
+
+  /// What's inside the first Markdown code block — ```csv … ``` — if the
+  /// text has one: an AI chat's CSV, without the chat around it.
+  static func codeBlock(in text: String) -> String? {
+    let lines = text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
+    guard let open = lines.firstIndex(where: isFence) else { return nil }
+    let rest = lines[(open + 1)...]
+    let close = rest.firstIndex(where: isFence) ?? rest.endIndex
+    return rest[..<close].joined(separator: "\n")
+  }
+
+  private static func isFence(_ line: Substring) -> Bool {
+    line.trimmingCharacters(in: .whitespaces).hasPrefix("```")
+  }
 
   /// RFC 4180-ish: quoted fields, escaped `""`, CR, LF or CRLF line ends.
   /// Walks Unicode scalars, not Characters: Swift treats CRLF as a single

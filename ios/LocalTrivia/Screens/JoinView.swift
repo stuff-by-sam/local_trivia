@@ -9,6 +9,7 @@ import SwiftUI
 struct JoinView: View {
   @Environment(GameStore.self) private var store
   @Environment(GameBrowser.self) private var browser
+  @Environment(Safety.self) private var safety
   @Environment(\.horizontalSizeClass) private var sizeClass
 
   @State private var pin = ""
@@ -17,6 +18,7 @@ struct JoinView: View {
   @State private var rejectedNicknames = 0
   @State private var isSettingUpHost = false
   @State private var isChoosingLooks = false
+  @State private var isShowingSafety = false
   @State private var undo: UndoItem?
   /// A few seconds without finding a game: time to say why, and offer the QR code.
   @State private var isStillLooking = false
@@ -71,12 +73,24 @@ struct JoinView: View {
       }
     }
     .toolbar {
+      ToolbarItem(placement: .topBarLeading) {
+        Button("Safety", systemImage: "hand.raised") { isShowingSafety = true }
+      }
       ToolbarItem(placement: .topBarTrailing) {
         Button("Themes & Icons", systemImage: "paintpalette") { isChoosingLooks = true }
       }
     }
     .sheet(isPresented: $isScanning) {
-      QRScannerSheet { store.join($0.server, pin: $0.pin) }
+      QRScannerSheet { link in
+        if safety.isBlocked(link.server, hostID: browser.hostIDs[link.server.url]) {
+          store.noteBlockedHost()
+        } else {
+          store.join(link.server, pin: link.pin)
+        }
+      }
+    }
+    .sheet(isPresented: $isShowingSafety) {
+      SafetyView()
     }
     .sheet(isPresented: $isSettingUpHost) {
       HostSetupView()
@@ -169,6 +183,9 @@ struct JoinView: View {
           if let error = store.joinError, error.field == .nickname {
             FieldMessage(Text(error.message), kind: .error)
               .transition(.opacity)
+          } else if !store.nicknameIsAllowed {
+            FieldMessage(Text("That nickname isn't allowed. Pick another."), kind: .error)
+              .transition(.opacity)
           }
         }
         .id(JoinField.nickname)
@@ -247,7 +264,7 @@ struct JoinView: View {
   /// The cursor goes where the next keystroke will — unless a sheet is up,
   /// where it would raise a keyboard over the themes or the round.
   private func placeCursor() {
-    guard focus == nil, !isScanning, !isSettingUpHost, !isChoosingLooks else { return }
+    guard focus == nil, !isScanning, !isSettingUpHost, !isChoosingLooks, !isShowingSafety, safety.hasAcceptedTerms else { return }
     focus = store.nicknameIsValid ? .pin : .nickname
   }
 }
@@ -310,17 +327,18 @@ private struct DiscoveryHelp: View {
 private struct GamePicker: View {
   @Environment(GameStore.self) private var store
   @Environment(GameBrowser.self) private var browser
+  @Environment(Safety.self) private var safety
   @Environment(\.horizontalSizeClass) private var sizeClass
   @Binding var isScanning: Bool
 
   var body: some View {
     Menu {
-      if browser.games.isEmpty {
+      if games.isEmpty {
         // Never an empty menu, even where there's no camera to scan with.
         Text("No games on this network yet")
       } else {
         Section("On This Network") {
-          ForEach(browser.games, id: \.self) { game in
+          ForEach(games, id: \.self) { game in
             Button {
               store.connect(to: game)
             } label: {
@@ -342,6 +360,11 @@ private struct GamePicker: View {
     .pickerMark { status }
     .accessibilityLabel(Text("Game: \(title). \(detail)"))
     .accessibilityHint("Choose a different game.")
+  }
+
+  /// Less those of hosts this phone has blocked.
+  private var games: [GameServer] {
+    browser.games.filter { !safety.isBlocked($0, hostID: browser.hostIDs[$0.url]) }
   }
 
   @ViewBuilder

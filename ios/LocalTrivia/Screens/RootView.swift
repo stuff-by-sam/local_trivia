@@ -9,6 +9,7 @@ struct RootView: View {
   @Environment(GameBrowser.self) private var browser
   @Environment(HostController.self) private var host
   @Environment(Looks.self) private var looks
+  @Environment(Safety.self) private var safety
   @Environment(\.scenePhase) private var scenePhase
   @Namespace private var glass
 
@@ -30,6 +31,12 @@ struct RootView: View {
       .containerBackground(for: .navigation) { Backdrop(mood: mood) }
     }
     .sheet(item: $host.sheet) { HostSheetView(sheet: $0) }
+    // Over whatever's on screen: a block can end the game under it.
+    .reportSheet(Binding { safety.report } set: { safety.report = $0 })
+    // Nobody hosts or joins before agreeing to the terms.
+    .fullScreenCover(isPresented: Binding { !safety.hasAcceptedTerms } set: { _ in }) {
+      TermsView(isAgreeing: true)
+    }
     .motion(.screen, value: store.phase.screen)
     .haptic(trigger: store.phase.screen) { _, _ in haptic }
     .task {
@@ -45,9 +52,10 @@ struct RootView: View {
       await GlassSymbol.prepare(Array(markers.prefix(AnswerStyle.allCases.count)) + game + markers.dropFirst(AnswerStyle.allCases.count))
     }
     .onChange(of: looks.theme, initial: true) { _, theme in host.theme = theme }
-    .onChange(of: browser.games) { _, games in store.discovered(games, isComplete: browser.hasSettled) }
-    .onChange(of: store.connection) { _, _ in store.discovered(browser.games, isComplete: browser.hasSettled) }
-    .onChange(of: browser.hasSettled) { _, settled in store.discovered(browser.games, isComplete: settled) }
+    .onChange(of: browser.games) { _, _ in store.discovered(listedGames, isComplete: browser.hasSettled) }
+    .onChange(of: store.connection) { _, _ in store.discovered(listedGames, isComplete: browser.hasSettled) }
+    .onChange(of: browser.hasSettled) { _, settled in store.discovered(listedGames, isComplete: settled) }
+    .onChange(of: safety.blockedHosts) { _, _ in store.discovered(listedGames, isComplete: browser.hasSettled) }
     .onChange(of: scenePhase) { _, phase in
       switch phase {
       case .active:
@@ -61,7 +69,12 @@ struct RootView: View {
     }
     // A host's QR code, scanned with the Camera: straight into their game.
     .onOpenURL { url in
-      guard let link = JoinLink(url: url), !host.isHosting, !store.isInGame || store.server == link.server else { return }
+      guard safety.hasAcceptedTerms, let link = JoinLink(url: url), !host.isHosting, !store.isInGame || store.server == link.server
+      else { return }
+      guard !safety.isBlocked(link.server, hostID: browser.hostIDs[link.server.url]) else {
+        store.noteBlockedHost()
+        return
+      }
       store.join(link.server, pin: link.pin)
     }
     .onChange(of: store.isInGame, initial: true) { _, inGame in
@@ -71,6 +84,11 @@ struct RootView: View {
       // until the player's back at the join screen.
       if inGame { browser.stop() } else { browser.start() }
     }
+  }
+
+  /// The games on the network, less those of hosts this phone has blocked.
+  private var listedGames: [GameServer] {
+    browser.games.filter { !safety.isBlocked($0, hostID: browser.hostIDs[$0.url]) }
   }
 
   private var column: some View {
