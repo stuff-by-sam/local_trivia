@@ -28,16 +28,21 @@ struct LooksView: View {
         }
         .listRowBackground(Color.clear)
 
-        themes
-        markers
+        Group {
+          themes
+          markers
 
-        if looks.canChangeIcon {
-          icons
+          if looks.canChangeIcon {
+            icons
+          }
         }
+        // Clear glass over the backdrop: the theme shows through every row.
+        .listRowBackground(Rectangle().fill(.clear).glassCard(in: .rect))
       }
       // The one sheet that shows the backdrop: showing a theme is the point.
       .scrollContentBackground(.hidden)
       .background { Backdrop(mood: .idle) }
+      .glassClarity(.clear)
       .navigationTitle("Themes & Icons")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -73,7 +78,11 @@ struct LooksView: View {
         }
       }
     } footer: {
-      Text("A theme dresses this phone, any TV it puts the game on, and the browsers in a game it hosts.")
+      if UIDevice.current.userInterfaceIdiom == .pad {
+        Text("A theme dresses this iPad, any TV it puts the game on, and the browsers in a game it hosts.")
+      } else {
+        Text("A theme dresses this phone, any TV it puts the game on, and the browsers in a game it hosts.")
+      }
     }
   }
 
@@ -91,7 +100,11 @@ struct LooksView: View {
         }
       }
     } footer: {
-      Text("The shapes beside each answer's letter, on this phone and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan.")
+      if UIDevice.current.userInterfaceIdiom == .pad {
+        Text("The shapes beside each answer's letter, on this iPad and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan.")
+      } else {
+        Text("The shapes beside each answer's letter, on this phone and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan.")
+      }
     }
   }
 
@@ -126,7 +139,7 @@ private struct Showcase: View {
 
   var body: some View {
     VStack(spacing: Space.l) {
-      AnswerSetMark()
+      AnswerSetMark(depth: .mark)
         .font(.subheadline)
       Wordmark(scale: .showcase)
       VStack(spacing: Space.xs) {

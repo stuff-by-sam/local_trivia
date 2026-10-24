@@ -207,11 +207,18 @@ nonisolated enum ServerEvent: Codable, Equatable, Sendable {
 
 /// Everything a player can send. Encodes as the Socket.IO array `["name", payload]`.
 nonisolated enum ClientEvent: Codable, Equatable, Sendable {
-  case join(pin: String, nickname: String)
+  /// `device` is the random id the phone or browser keeps for itself
+  /// (`Safety.installID`), so a host who blocks it can keep it out. Optional:
+  /// the laptop server's players don't send one, and it ignores it.
+  case join(pin: String, nickname: String, device: String? = nil)
   case resume(token: String)
   case submitAnswer(questionId: Int, optionIndex: Int)
 
-  private struct Join: Codable { let pin: LenientString; let nickname: String }
+  private struct Join: Codable {
+    let pin: LenientString
+    let nickname: String
+    var device: String?
+  }
   private struct Resume: Codable { let token: String }
   private struct Answer: Codable { let questionId: Int; let optionIndex: Int }
 
@@ -224,7 +231,9 @@ nonisolated enum ClientEvent: Codable, Equatable, Sendable {
     switch name {
     case "join":
       let join = try body.decode(Join.self)
-      self = .join(pin: join.pin.value, nickname: join.nickname)
+      // Only an id that could be one: anything else is as good as none.
+      let device = join.device.flatMap { $0.count <= 64 && !$0.isEmpty ? $0 : nil }
+      self = .join(pin: join.pin.value, nickname: join.nickname, device: device)
     case "resume":
       self = .resume(token: try body.decode(Resume.self).token)
     case "submitAnswer":
@@ -238,9 +247,9 @@ nonisolated enum ClientEvent: Codable, Equatable, Sendable {
   func encode(to encoder: any Encoder) throws {
     var body = encoder.unkeyedContainer()
     switch self {
-    case .join(let pin, let nickname):
+    case .join(let pin, let nickname, let device):
       try body.encode("join")
-      try body.encode(Join(pin: LenientString(pin), nickname: nickname))
+      try body.encode(Join(pin: LenientString(pin), nickname: nickname, device: device))
     case .resume(let token):
       try body.encode("resume")
       try body.encode(Resume(token: token))

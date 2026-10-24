@@ -15,6 +15,8 @@ let package = Package(
   targets: [
     .target(
       name: "DesignSystem",
+      // Symbols SF Symbols hasn't got, drawn as SF Symbol templates.
+      resources: [.process("Resources")],
       swiftSettings: [
         .defaultIsolation(MainActor.self),
         .enableUpcomingFeature("MemberImportVisibility"),

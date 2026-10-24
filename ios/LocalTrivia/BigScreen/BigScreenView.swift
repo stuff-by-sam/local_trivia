@@ -26,6 +26,7 @@ struct BigScreenView: View {
         .frame(width: proxy.size.width, height: proxy.size.height)
     }
     .background { Backdrop(mood: mood) }
+    .glassClarity(clarity)
     .motion(.screen, value: boardID)
   }
 
@@ -71,6 +72,15 @@ struct BigScreenView: View {
     case .reveal, .standings, .lobby, nil: .idle
     }
   }
+
+  /// Clear glass while people arrive; tinted once the game is on, where the
+  /// room reads it from across the room.
+  private var clarity: GlassClarity {
+    switch store.broadcast {
+    case .lobby, nil: .clear
+    case .question, .reveal, .standings, .final: .tinted
+    }
+  }
 }
 
 // MARK: - Boards
@@ -80,7 +90,7 @@ private struct IdleBoard: View {
 
   var body: some View {
     VStack(spacing: TVMetrics.gap) {
-      AnswerSetMark()
+      AnswerSetMark(depth: .tv)
         .tvRole(.answerSet)
       Wordmark(scale: .tv)
     }
@@ -94,6 +104,7 @@ private struct LobbyBoard: View {
 
   @Environment(GameStore.self) private var store
   @Environment(HostController.self) private var host
+  @Environment(\.palette) private var palette
 
   private static let shownNames = 24
 
@@ -112,10 +123,7 @@ private struct LobbyBoard: View {
             Text("Join code")
               .tvRole(.joinLabel)
               .foregroundStyle(.secondary)
-            Text(verbatim: game.pin)
-              .tvRole(.pin)
-              .foregroundStyle(.themeAccent)
-              .glow(.tv)
+            GlassText(verbatim: game.pin, tvRole: .pin, color: palette.accent, glow: .tv)
             Group {
               Text("Scan with your phone's camera, or open Trivia on this Wi-Fi and type the code.")
               if let link = host.joinLink {
@@ -132,6 +140,8 @@ private struct LobbyBoard: View {
               .frame(width: TVMetrics.qr, height: TVMetrics.qr)
           }
         }
+        .padding(TVMetrics.inset)
+        .glassCard(in: .rect(cornerRadius: TVMetrics.tileRadius))
       } else {
         WaitingLine("Waiting for the host to start")
       }
@@ -161,7 +171,7 @@ private struct LobbyBoard: View {
             .minimumScaleFactor(0.6)
             .padding(.horizontal, TVMetrics.nameInset)
             .frame(maxWidth: .infinity, minHeight: TVMetrics.nameHeight)
-            .background(.panel, in: .capsule)
+            .glassCard(in: .capsule)
         }
       }
       if players.count > shown.count {
@@ -219,6 +229,8 @@ private struct QuestionBoard: View {
         .multilineTextAlignment(.center)
         .minimumScaleFactor(0.6)
         .frame(maxWidth: TVMetrics.textWidth)
+        .padding(TVMetrics.inset)
+        .glassCard(in: .rect(cornerRadius: TVMetrics.tileRadius))
 
       Spacer(minLength: 0)
 
@@ -235,6 +247,7 @@ private struct QuestionBoard: View {
       .foregroundStyle(.secondary)
       .contentTransition(.numericText())
       .motion(.snap, value: answered)
+      .tvPill()
     }
     .task(id: question.questionId) { await runClock() }
   }
@@ -270,6 +283,8 @@ private struct RevealBoard: View {
         .minimumScaleFactor(0.6)
         .foregroundStyle(.secondary)
         .frame(maxWidth: TVMetrics.textWidth)
+        .padding(TVMetrics.inset)
+        .glassCard(in: .rect(cornerRadius: TVMetrics.tileRadius))
 
       Spacer(minLength: 0)
 
@@ -278,6 +293,7 @@ private struct RevealBoard: View {
       Text(summary)
         .tvRole(.footer)
         .foregroundStyle(.secondary)
+        .tvPill()
     }
   }
 
@@ -293,6 +309,8 @@ private struct StandingsBoard: View {
   let gameName: String
   let board: Leaderboard
 
+  @Environment(\.palette) private var palette
+
   private static let shownRows = 8
 
   var body: some View {
@@ -302,9 +320,7 @@ private struct StandingsBoard: View {
           .foregroundStyle(.secondary)
       }
 
-      Text("Standings")
-        .tvRole(.sectionTitle)
-        .foregroundStyle(.themeAccent)
+      GlassText("Standings", tvRole: .sectionTitle, color: palette.accent)
 
       VStack(spacing: TVMetrics.rowGap) {
         ForEach(board.standings.prefix(Self.shownRows), id: \.nickname) { row in
@@ -324,6 +340,7 @@ private struct StandingsBoard: View {
       }
       .tvRole(.footer)
       .foregroundStyle(.secondary)
+      .tvPill()
     }
   }
 }
@@ -331,19 +348,25 @@ private struct StandingsBoard: View {
 private struct StandingRow: View {
   let row: Leaderboard.Row
 
+  @Environment(Safety.self) private var safety
+
   var body: some View {
     HStack(spacing: TVMetrics.gap) {
       Text(verbatim: row.rank.twoDigits)
         .tvRole(.rank)
         .foregroundStyle(Medal(rank: row.rank).map { AnyShapeStyle($0.color) } ?? AnyShapeStyle(.secondary))
         .frame(width: TVMetrics.rankWidth, alignment: .leading)
-      Text(verbatim: row.nickname)
+      Text(verbatim: safety.shown(row.nickname))
         .tvRole(.standingName)
         .lineLimit(1)
       if let delta = row.delta, delta != 0 {
-        Text(verbatim: delta > 0 ? "▲\(delta)" : "▼\(-delta)")
-          .tvRole(.standingDelta)
-          .foregroundStyle(delta > 0 ? AnyShapeStyle(.success) : AnyShapeStyle(.danger))
+        HStack(spacing: TVMetrics.rowGap / 2) {
+          GlassSymbol(delta > 0 ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill", color: delta > 0 ? Palette.success : Palette.danger, depth: .figure)
+            .imageScale(.small)
+          Text(abs(delta), format: .number)
+        }
+        .tvRole(.standingDelta)
+        .foregroundStyle(delta > 0 ? AnyShapeStyle(.success) : AnyShapeStyle(.danger))
       }
       Spacer(minLength: TVMetrics.gap)
       Text(verbatim: row.score.grouped)
@@ -352,7 +375,7 @@ private struct StandingRow: View {
     }
     .padding(.horizontal, TVMetrics.inset)
     .frame(minHeight: TVMetrics.rowHeight)
-    .background(.panel, in: .rect(cornerRadius: TVMetrics.rowRadius))
+    .glassCard(in: .rect(cornerRadius: TVMetrics.rowRadius))
   }
 }
 
@@ -390,31 +413,28 @@ private struct TVPodiumStep: View {
   /// Which step, whatever ties did to `placing.rank`.
   let medal: Medal
 
+  @Environment(Safety.self) private var safety
+
   var body: some View {
     VStack(spacing: TVMetrics.rowGap * 2) {
       if medal == .first {
-        Image(systemName: "trophy.fill")
+        GlassSymbol("trophy.fill", color: medal.color, depth: .tv, glow: .tv)
           .tvRole(.trophy)
-          .foregroundStyle(medal.color)
-          .glow(.tv, color: medal.color)
       }
-      Text(verbatim: placing.nickname)
+      Text(verbatim: safety.shown(placing.nickname))
         .tvRole(.podiumName)
         .lineLimit(1)
         .minimumScaleFactor(0.5)
       Text(verbatim: placing.score.grouped)
         .tvRole(.podiumScore)
         .foregroundStyle(.secondary)
-      Text(medal.label)
-        .tvRole(.podiumPlace)
-        .textCase(.uppercase)
-        .foregroundStyle(medal.color)
+      GlassText(verbatim: String(localized: medal.label).uppercased(), tvRole: .podiumPlace, color: medal.color)
         .frame(maxWidth: .infinity, minHeight: TVMetrics.podiumStep(medal), alignment: .top)
         .padding(.top, TVMetrics.tileGap)
-        .background {
-          UnevenRoundedRectangle(topLeadingRadius: TVMetrics.stepRadius, topTrailingRadius: TVMetrics.stepRadius)
-            .fill(LinearGradient(colors: [medal.color.opacity(0.3), medal.color.opacity(0.03)], startPoint: .top, endPoint: .bottom))
-        }
+        .glassCard(
+          in: UnevenRoundedRectangle(topLeadingRadius: TVMetrics.stepRadius, topTrailingRadius: TVMetrics.stepRadius),
+          tint: medal.color
+        )
         .overlay {
           StepRim(radius: TVMetrics.stepRadius)
             .strokeBorder(medal.color.opacity(0.85), style: StrokeStyle(lineWidth: Space.xs, lineCap: .round))
@@ -431,11 +451,12 @@ private struct Masthead<Trailing: View>: View {
   let gameName: String
   @ViewBuilder var trailing: Trailing
 
+  @Environment(\.palette) private var palette
+
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: TVMetrics.gap) {
       HStack(spacing: 0) {
-        Text(verbatim: "TRIVIA")
-          .foregroundStyle(.themeAccent)
+        GlassText(verbatim: "TRIVIA", tvRole: .masthead, color: palette.accent, depth: .figure)
         if !gameName.isEmpty {
           Text(verbatim: "//\(gameName)")
             .foregroundStyle(.secondary)
@@ -482,11 +503,12 @@ private struct WaitingLine: View {
     }
     .tvRole(.waiting)
     .foregroundStyle(.secondary)
+    .tvPill()
   }
 }
 
-/// The four answers, two by two. At the reveal the right one lights up in its
-/// colour, the rest dim, and each shows how many chose it.
+/// The four answers, two by two, on glass in their colours. At the reveal the
+/// right one lights up, the rest dim, and each shows how many chose it.
 private struct AnswerGrid: View {
   let options: [String]
   var correctIndex: Int?
@@ -538,13 +560,24 @@ private struct AnswerTile: View {
     let ink = state == .correct ? Palette.onAccentInk : style.color
     let shape = RoundedRectangle(cornerRadius: TVMetrics.tileRadius)
     HStack(spacing: TVMetrics.tileGap) {
-      HStack(spacing: TVMetrics.rowGap) {
-        Image(systemName: markers.symbol(for: style))
-          .imageScale(.small)
-        Text(verbatim: style.letter)
+      Group {
+        if state == .correct {
+          HStack(spacing: TVMetrics.rowGap) {
+            markers.image(for: style)
+              .markerSlot(markers)
+              .imageScale(.small)
+            Text(verbatim: style.letter)
+          }
+          .foregroundStyle(ink)
+        } else {
+          HStack(spacing: TVMetrics.rowGap) {
+            AnswerGlyph(style: style, depth: .tv)
+              .imageScale(.small)
+            GlassText(verbatim: style.letter, tvRole: .answerKey, color: ink)
+          }
+        }
       }
       .tvRole(.answerKey)
-      .foregroundStyle(ink)
       .frame(width: TVMetrics.keyWidth, alignment: .leading)
 
       Text(verbatim: text)
@@ -566,9 +599,7 @@ private struct AnswerTile: View {
     .foregroundStyle(state == .correct ? AnyShapeStyle(.onAccent) : AnyShapeStyle(.primary))
     .padding(.horizontal, TVMetrics.inset)
     .frame(maxWidth: .infinity, minHeight: TVMetrics.tileHeight)
-    .background {
-      shape.fill(state == .correct ? style.color : style.color.opacity(0.12))
-    }
+    .glassEffect(.regular.tint(style.color.opacity(state == .correct ? 0.9 : 0.16)), in: shape)
     .overlay {
       shape.strokeBorder(style.color.opacity(state == .correct ? 0 : 0.5), lineWidth: 3)
     }
@@ -585,6 +616,16 @@ private struct AnswerTile: View {
       }
     }
     .opacity(state == .wrong ? 0.4 : 1)
+  }
+}
+
+extension View {
+  /// A line of the game's voice on a capsule of glass, at TV size — the
+  /// phones' `StatusLine` capsule.
+  fileprivate func tvPill() -> some View {
+    padding(.horizontal, TVMetrics.nameInset)
+      .padding(.vertical, TVMetrics.rowGap)
+      .glassCard(in: .capsule)
   }
 }
 

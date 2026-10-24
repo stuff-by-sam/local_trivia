@@ -98,10 +98,17 @@ final class HostController {
 
   /// `advertises: false` keeps the game off Bonjour (tests).
   @ObservationIgnored private let advertises: Bool
+  /// Who the host has blocked, kept between games.
+  @ObservationIgnored let safety: Safety
+  /// Addresses blocked players joined from, kept out while this hosting
+  /// lasts: a browser player's id goes with its storage, but not its address.
+  /// Not kept after — another phone may have that address tomorrow.
+  @ObservationIgnored private var barredPeers: Set<String> = []
 
-  init(library: HostLibrary? = nil, advertises: Bool = true) {
+  init(library: HostLibrary? = nil, advertises: Bool = true, safety: Safety = Safety(defaults: nil)) {
     storedLibrary = library
     self.advertises = advertises
+    self.safety = safety
   }
 
   // MARK: - Hosting
@@ -118,7 +125,7 @@ final class HostController {
     await server.setWebAccent(theme.webAccent)
     let port: UInt16
     do {
-      port = try await server.start(name: gameName, lanAddress: lanAddress, advertises: advertises)
+      port = try await server.start(name: gameName, lanAddress: lanAddress, hostID: safety.installID, advertises: advertises)
     } catch {
       status = .failed(Self.describe(error))
       return
@@ -137,6 +144,11 @@ final class HostController {
     }
 
     let game = HostedGame(accent: theme.webAccent, deliver: { [weak self] event, audience in self?.deliver(event, to: audience) })
+    barredPeers = []
+    game.isBarred = { [weak self] device, peer in
+      guard let self else { return false }
+      return self.safety.isBarred(device: device) || self.barredPeers.contains(peer)
+    }
     self.game = game
 
     pump = Task { [weak self] in
@@ -221,6 +233,24 @@ final class HostController {
   func skipQuestion() { game?.skip() }
   func endGame() { game?.endGame() }
   func kick(_ player: HostedGame.Player) { game?.kick(token: player.token) }
+
+  /// Removes `player` and keeps them out: their phone or browser, in any game
+  /// hosted here, and the address they came from while this hosting lasts.
+  /// Returns the report to send with it.
+  @discardableResult
+  func block(_ player: HostedGame.Player) -> Report? {
+    guard !isHost(player), let removed = game?.kick(token: player.token) else { return nil }
+    safety.block(player: removed.nickname, device: removed.device)
+    if let peer = removed.peer, peer != "127.0.0.1", peer != "::1" { barredPeers.insert(peer) }
+    return Report(
+      .player(nickname: removed.nickname), gameName: gameName, isHost: true,
+      blocked: "The host removed this player and blocked their device from games they host.")
+  }
+
+  /// The player called `nickname` in this game, if there is one.
+  func player(named nickname: String) -> HostedGame.Player? {
+    game?.players.first { $0.nickname.localizedCaseInsensitiveCompare(nickname) == .orderedSame }
+  }
 
   /// The host's own seat — known by its token, not guessed from the network.
   func isHost(_ player: HostedGame.Player) -> Bool {

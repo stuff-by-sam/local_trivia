@@ -59,11 +59,21 @@ struct HostSetupView: View {
           } header: {
             SectionHeader("Game")
           } footer: {
-            Text("Players see the game name when they look for games. You play too, under your name.")
+            if !gameNameIsAllowed {
+              Label("That game name isn't allowed. Pick another.", systemImage: "exclamationmark.triangle.fill")
+                .foregroundStyle(.warning)
+            } else if !store.nicknameIsAllowed {
+              Label("That name isn't allowed. Pick another.", systemImage: "exclamationmark.triangle.fill")
+                .foregroundStyle(.warning)
+            } else {
+              Text("Players see the game name when they look for games. You play too, under your name.")
+            }
           }
         }
 
         questionsSection
+
+        AnotherAISection { importReport = importPasted($0) }
 
         ScoringSection(rules: $library.rules)
       }
@@ -203,11 +213,18 @@ struct HostSetupView: View {
   }
 
   private var canStart: Bool {
-    !host.library.playable.isEmpty && store.nicknameIsValid && host.canStart
+    !host.library.playable.isEmpty && store.nicknameIsValid && gameNameIsAllowed && host.canStart
+  }
+
+  /// What players see in their list of games is held to what a name is.
+  private var gameNameIsAllowed: Bool {
+    ContentFilter.allows(host.library.advertisedName, as: .name)
   }
 
   private var startHint: String {
     if host.library.playable.isEmpty { return String(localized: "Add at least one question") }
+    if !gameNameIsAllowed { return String(localized: "Pick another game name") }
+    if !store.nicknameIsAllowed { return String(localized: "Pick another name to play under") }
     if !store.nicknameIsValid { return String(localized: "Enter your name to play") }
     let count = host.library.playable.count
     return Self.inflected(AttributedString(localized: "^[\(count) question](inflect: true) ready"))
@@ -228,8 +245,21 @@ struct HostSetupView: View {
       return ImportReport(title: String(localized: "Couldn't Import"), detail: String(localized: "That file couldn't be read, or it's too large."))
     }
     let text = String(data: data, encoding: .utf8) ?? String(decoding: data, as: UTF8.self)
-    let outcome = host.library.importCSV(text)
+    return report(host.library.importCSV(text))
+  }
 
+  /// An AI chat's reply, pasted: the CSV in it, imported as a file would be.
+  private func importPasted(_ text: String) -> ImportReport {
+    let outcome = host.library.importCSV(text)
+    guard !outcome.questions.isEmpty || !outcome.errors.isEmpty else {
+      return ImportReport(
+        title: String(localized: "No Questions Found"),
+        detail: String(localized: "Copy the CSV from the AI's reply, then tap Paste again."))
+    }
+    return report(outcome)
+  }
+
+  private func report(_ outcome: CSVImport.Result) -> ImportReport {
     var detail: [String] = []
     if !outcome.errors.isEmpty {
       detail.append(Self.inflected(AttributedString(localized: "Skipped ^[\(outcome.errors.count) row](inflect: true):")))
@@ -245,6 +275,80 @@ struct HostSetupView: View {
   /// "1 question" / "6 questions": the agreement is resolved by AttributedString.
   private static func inflected(_ text: AttributedString) -> String {
     String(text.characters)
+  }
+}
+
+/// Questions from an AI chat of the host's choosing: a prompt to copy, for
+/// their topic and how many they want, and the CSV the chat answers with,
+/// pasted back in (or saved as a file, for Import CSV). The app talks to no
+/// AI itself.
+private struct AnotherAISection: View {
+  let onPaste: (String) -> Void
+
+  @State private var topic = ""
+  @State private var count = AIPrompt.defaultCount
+  @State private var copies = 0
+  @State private var isShowingCopied = false
+
+  var body: some View {
+    Section {
+      LabeledContent {
+        TextField("Topic", text: $topic, prompt: Text("90s films, the solar system…"))
+          .multilineTextAlignment(.trailing)
+          .submitLabel(.done)
+      } label: {
+        Text("Topic")
+      }
+      LabeledContent {
+        HStack(spacing: Space.s) {
+          TextField("Questions", value: $count, format: .number)
+            .keyboardType(.numberPad)
+            .multilineTextAlignment(.trailing)
+            .monospacedDigit()
+            .fixedSize()
+          Stepper("Questions", value: $count, in: AIPrompt.counts, step: 5)
+            .labelsHidden()
+        }
+      } label: {
+        Text("Questions")
+      }
+      .onChange(of: count) { _, value in
+        let clamped = value.clamped(to: AIPrompt.counts)
+        if clamped != value { count = clamped }
+      }
+      Button(action: copy) {
+        Label(isShowingCopied ? "Copied" : "Copy Prompt", systemImage: isShowingCopied ? "checkmark" : "doc.on.doc")
+      }
+      .disabled(topic.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+      .haptic(.found, trigger: copies)
+      .task(id: copies) {
+        guard copies > 0 else { return }
+        Motion.settle.perform { isShowingCopied = true }
+        try? await Task.sleep(for: .seconds(2))
+        guard !Task.isCancelled else { return }
+        Motion.settle.perform { isShowingCopied = false }
+      }
+      HStack(spacing: Space.m) {
+        Text("Then paste the CSV it replies with")
+          .foregroundStyle(.secondary)
+        Spacer(minLength: Space.s)
+        PasteButton(payloadType: String.self) { strings in
+          guard let text = strings.first else { return }
+          onPaste(text)
+        }
+        .labelStyle(.titleAndIcon)
+        .buttonBorderShape(.capsule)
+      }
+    } header: {
+      SectionHeader("Use Another AI")
+    } footer: {
+      Text("Copy the prompt into any AI chat. When it replies, copy its CSV and tap Paste — or save the reply as a .csv file and use Import CSV. Check every answer before you play: an AI can be wrong.")
+    }
+  }
+
+  private func copy() {
+    UIPasteboard.general.string = AIPrompt.text(topic: topic, count: count)
+    copies += 1
   }
 }
 
@@ -370,6 +474,7 @@ extension HostQuestion.Problem {
     case .missingOption: "Needs all four answers"
     case .noCorrectAnswer: "Needs a correct answer"
     case .timeOutOfRange: "Time limit must be 5–600 seconds"
+    case .objectionable: "Has words that aren't allowed in a game"
     }
   }
 }

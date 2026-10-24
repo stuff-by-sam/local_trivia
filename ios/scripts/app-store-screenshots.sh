@@ -3,7 +3,9 @@
 # (`-screen <state>`, see LocalTrivia/Design/ScreenStates.swift), on the two
 # display sizes App Store Connect asks for: 6.9" iPhone and 13" iPad. The
 # status bar reads 9:41 with full signal and battery, and the iPad runs apps
-# full screen, with no window controls.
+# full screen, with no window controls. Reduce Motion is on while they're
+# taken, so the blinking cursor is always lit and nothing is caught
+# mid-breath; each simulator gets its own setting back afterwards.
 #
 #   scripts/app-store-screenshots.sh [output folder]
 #
@@ -65,6 +67,8 @@ for device in "${DEVICES[@]}"; do
     xcrun simctl shutdown "$udid"
     xcrun simctl bootstatus "$udid" -b > /dev/null
   fi
+  reduce_motion=$(xcrun simctl spawn "$udid" defaults read com.apple.Accessibility ReduceMotionEnabled 2>/dev/null || echo 0)
+  xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool YES
   xcrun simctl ui "$udid" appearance dark
   xcrun simctl status_bar "$udid" override --time 9:41 --dataNetwork wifi --wifiMode active --wifiBars 3 \
     --cellularMode active --cellularBars 4 --batteryState discharging --batteryLevel 100
@@ -85,6 +89,7 @@ for device in "${DEVICES[@]}"; do
 
   xcrun simctl terminate "$udid" "$BUNDLE" || true
   xcrun simctl status_bar "$udid" clear
+  xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$([[ "$reduce_motion" == 1 ]] && echo YES || echo NO)"
 done
 
 echo "Saved to $OUT"

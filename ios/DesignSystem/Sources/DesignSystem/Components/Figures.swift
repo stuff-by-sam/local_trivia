@@ -1,24 +1,31 @@
 import SwiftUI
 
-/// The answer set, in its colours: the brand mark.
+/// The answer set, in its colours: the brand mark. Four characters of
+/// layered glass, as on the app icon.
 public struct AnswerSetMark: View {
-  @Environment(\.answerMarkers) private var markers
+  let depth: GlassDepth
 
-  public init() {}
+  public init(depth: GlassDepth = .figure) {
+    self.depth = depth
+  }
 
   public var body: some View {
     HStack(spacing: Space.l) {
       ForEach(AnswerStyle.allCases) { style in
-        Image(systemName: markers.symbol(for: style))
-          .foregroundStyle(style.color)
+        AnswerGlyph(style: style, depth: depth)
       }
     }
     .accessibilityHidden(true)
   }
 }
 
-/// "TRIVIA", with a block cursor hanging past the word so the word itself is
-/// what's centred, and the TV's phosphor bloom.
+/// "TRIVIA" in Liquid Glass: each letter a pane of the system's glass, tinted
+/// in the accent, over its own phosphor bloom for the glass to bend. A block
+/// cursor of the same glass blinks in the next character cell, as tall as the
+/// capitals and standing on their baseline; it hangs past the word, so the
+/// word itself is what's centred.
+///
+/// Under Increase Contrast it's solid accent, letters and block alike.
 public struct Wordmark: View {
   public enum Scale: Sendable {
     case screen, showcase
@@ -50,35 +57,66 @@ public struct Wordmark: View {
 
   let scale: Scale
 
+  @Environment(\.palette) private var palette
+
   public init(scale: Scale = .screen) {
     self.scale = scale
   }
 
   public var body: some View {
-    Text(verbatim: "TRIVIA")
-      .tracking(scale.tracking)
-      .overlay(alignment: .trailing) {
-        BlinkingCursor(glyph: "█")
-          .fixedSize()
-          .alignmentGuide(.trailing) { $0[.leading] }
+    let lettering = Lettering("TRIVIA", size: scale.size, weight: .heavy, tracking: scale.tracking)
+    let letters = OutlineShape(path: lettering.letters)
+    let cursor = lettering.cursor
+    // Square, as a terminal's block is, softened just enough for glass to
+    // catch its corners.
+    let block = RoundedRectangle(cornerRadius: cursor.width / 24)
+    ZStack(alignment: .topLeading) {
+      if palette.isHighContrast {
+        letters.fill(palette.accent)
+      } else {
+        letters
+          .fill(palette.glow(palette.accent))
+          .blur(radius: scale.glow.radius)
+        Color.clear
+          .glassEffect(glass, in: letters)
       }
-      // Evens out tracking's trailing gap.
-      .offset(x: scale.tracking / 2)
-      .font(.system(size: scale.size, weight: .heavy, design: .monospaced))
-      .foregroundStyle(.themeAccent)
-      .glow(scale.glow)
-      // A logo: the cursor follows the word in every language.
-      .environment(\.layoutDirection, .leftToRight)
-      .accessibilityElement(children: .ignore)
-      .accessibilityLabel(Text(verbatim: "Trivia"))
-      .accessibilityAddTraits(.isHeader)
+      Blinking {
+        if palette.isHighContrast {
+          block.fill(palette.accent)
+        } else {
+          ZStack {
+            block
+              .fill(palette.glow(palette.accent))
+              .blur(radius: scale.glow.radius)
+            Color.clear
+              .glassEffect(glass, in: block)
+          }
+        }
+      }
+      .frame(width: cursor.width, height: cursor.height)
+      .offset(x: cursor.minX, y: cursor.minY)
+    }
+    .frame(width: lettering.size.width, height: lettering.size.height)
+    // A logo: the cursor follows the word in every language.
+    .environment(\.layoutDirection, .leftToRight)
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel(Text(verbatim: "Trivia"))
+    .accessibilityAddTraits(.isHeader)
+  }
+
+  /// The letters' glass: the accent, lit.
+  private var glass: Glass {
+    .regular.tint(palette.accent.opacity(0.55))
   }
 }
 
-/// The big rank. Medal-coloured, with the medal's bloom, on the podium places.
+/// The big rank, made of glass. Medal-coloured, with the medal's bloom, on
+/// the podium places; first place gets a glass trophy that hops as it lands.
 public struct RankFigure: View {
   let rank: Int?
   let isCompact: Bool
+
+  @State private var hasLanded = false
 
   /// `isCompact` steps it down to make room for a table under it.
   public init(rank: Int?, isCompact: Bool = false) {
@@ -91,18 +129,20 @@ public struct RankFigure: View {
     let tint = medal?.color ?? .primary
     HStack(alignment: .center, spacing: Space.m) {
       if medal == .first {
-        Image(systemName: "trophy.fill")
+        GlassSymbol("trophy.fill", color: tint, depth: .hero, glow: .medal)
           .font(.largeTitle)
-          .symbolEffect(.bounce, options: .nonRepeating)
+          .glassBounce(trigger: hasLanded)
+          .onAppear { hasLanded = true }
       }
-      Text(verbatim: rank.map { "#\($0)" } ?? "—")
-        .textRole(.display(isCompact ? .pinLarge : .hero))
-        .tracking(0)
-        .minimumScaleFactor(0.5)
-        .lineLimit(1)
+      GlassText(
+        verbatim: rank.map { "#\($0)" } ?? "—",
+        role: .display(isCompact ? .pinLarge : .hero),
+        color: tint,
+        depth: .hero,
+        glow: medal == nil ? nil : .medal
+      )
+      .minimumScaleFactor(0.5)
     }
-    .foregroundStyle(tint)
-    .glow(.medal, color: medal == nil ? .clear : tint)
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(rank.map { Text("Rank \($0)") } ?? Text("Unranked"))
   }
@@ -137,7 +177,8 @@ nonisolated public struct StepRim: InsettableShape {
   }
 }
 
-/// One step of the podium: the name and score on top, the place below.
+/// One step of the podium: the name and score on top, the place below, on a
+/// block of glass tinted in its medal's colour.
 public struct PodiumStep: View {
   let name: String
   let score: String
@@ -165,21 +206,13 @@ public struct PodiumStep: View {
           .textRole(.figureSmall)
           .foregroundStyle(.secondary)
       }
-      Text(medal.label)
-        .textRole(.shout)
-        .foregroundStyle(medal.color)
+      GlassText(medal.label, role: .shout, color: medal.color, depth: .figure)
         .frame(maxWidth: .infinity, minHeight: Size.podiumStep(medal), alignment: .top)
         .padding(.top, Space.m)
-        .background {
-          UnevenRoundedRectangle(topLeadingRadius: Self.radius, topTrailingRadius: Self.radius)
-            .fill(
-              LinearGradient(
-                colors: [medal.color.opacity(isPlayer ? 0.32 : 0.2), medal.color.opacity(0.02)],
-                startPoint: .top,
-                endPoint: .bottom
-              )
-            )
-        }
+        .glassEffect(
+          .regular.tint(medal.color.opacity(isPlayer ? 0.32 : 0.2)),
+          in: UnevenRoundedRectangle(topLeadingRadius: Self.radius, topTrailingRadius: Self.radius)
+        )
         .overlay {
           // A lit edge along the top of the step, round at the corners.
           StepRim(radius: Self.radius)
@@ -191,31 +224,37 @@ public struct PodiumStep: View {
   }
 }
 
-/// A round badge for a moment: the verdict, or waiting. The verdict's is
-/// glass so the chosen answer can flow into it; a plain badge is drawn.
-public struct Badge: View {
+/// A round badge for a moment: the verdict, or waiting. A disc of glass
+/// tinted in its colour — the chosen answer's glass flows into the verdict's —
+/// with its symbol made of glass on it. The symbol hops when `bounce` changes,
+/// and breathes while `isWaiting`.
+public struct Badge<Bounce: Equatable & Sendable>: View {
   let symbol: String
   let color: Color
-  let isGlass: Bool
+  let bounce: Bounce
+  let isWaiting: Bool
 
-  public init(symbol: String, color: Color, isGlass: Bool) {
+  public init(symbol: String, color: Color, bounce: Bounce, isWaiting: Bool = false) {
     self.symbol = symbol
     self.color = color
-    self.isGlass = isGlass
+    self.bounce = bounce
+    self.isWaiting = isWaiting
   }
 
   public var body: some View {
-    let icon = Image(systemName: symbol)
+    GlassSymbol(symbol, color: color, depth: .hero)
       .font(.largeTitle.weight(.bold))
-      .foregroundStyle(color)
+      .glassBounce(trigger: bounce)
+      .glassPulse(isActive: isWaiting)
       .frame(width: Size.badge, height: Size.badge)
-    Group {
-      if isGlass {
-        icon.glassEffect(.regular.tint(color.opacity(0.2)), in: .circle)
-      } else {
-        icon.panel(radius: Size.badge / 2)
-      }
-    }
-    .accessibilityHidden(true)
+      .glassEffect(.regular.tint(color.opacity(0.2)), in: .circle)
+      .accessibilityHidden(true)
+  }
+}
+
+extension Badge where Bounce == Bool {
+  /// A badge that doesn't hop.
+  public init(symbol: String, color: Color, isWaiting: Bool = false) {
+    self.init(symbol: symbol, color: color, bounce: false, isWaiting: isWaiting)
   }
 }

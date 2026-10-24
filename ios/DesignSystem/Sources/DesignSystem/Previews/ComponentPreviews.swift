@@ -182,9 +182,39 @@ private enum Sample {
         PodiumStep(name: "ALEX", score: "7,010", medal: .third, isPlayer: false)
       }
       HStack(spacing: Space.l) {
-        Badge(symbol: "checkmark", color: Palette.success, isGlass: true)
-        Badge(symbol: "hourglass", color: .secondary, isGlass: false)
+        Badge(symbol: "checkmark", color: Palette.success)
+        Badge(symbol: "hourglass", color: .secondary)
       }
+    }
+  }
+}
+
+#Preview("Glass") {
+  PreviewMatrix {
+    VStack(spacing: Space.l) {
+      // Glass characters: symbols, marks and display type, at every depth.
+      HStack(alignment: .firstTextBaseline, spacing: Space.l) {
+        ForEach(AnswerStyle.allCases) { AnswerGlyph(style: $0) }
+        GlassText(verbatim: "4821", role: .display(.pin), color: Palette.success, depth: .figure, glow: .figure)
+        GlassText(verbatim: "#1", role: .display(.points), color: Medal.first.color, depth: .hero, glow: .medal)
+      }
+      HStack(spacing: Space.l) {
+        GlassSymbol("trophy.fill", color: Medal.first.color, depth: .hero).font(.largeTitle)
+        GlassSymbol("arrowtriangle.up.fill", color: Palette.success).imageScale(.small)
+        GlassCounter(870, prefix: "+", role: .display(.points), color: .primary)
+        GlassText(verbatim: "Correct", role: .shout, color: Palette.success)
+        StatusDot(.online)
+        StatusDot(.failed)
+      }
+      AnswerSetMark(depth: .hero).font(.largeTitle)
+      // Content glass, clear (menus) and tinted (game screens).
+      HStack(spacing: Space.s) {
+        Text(verbatim: "Clear").textRole(.status).padding(Space.inset).panel().glassClarity(.clear)
+        Text(verbatim: "Tinted").textRole(.status).padding(Space.inset).panel().glassClarity(.tinted)
+        Text(verbatim: "Gold").textRole(.status).padding(Space.inset).glassCard(in: .capsule, tint: Medal.first.color)
+      }
+      StatusLine("Locked in · 3 of 6 answered")
+      StatusLine(verbatim: Sample.longAnswer, isWaiting: false)
     }
   }
 }

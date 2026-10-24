@@ -35,7 +35,7 @@ final class AccessibilityUITests: XCTestCase {
   /// at the default size the audit flags system list rows that draw in full.
   private func captureEveryScreen(as setting: String, arguments: [String], failsOnClippedText: Bool = false) throws {
     let app = XCUIApplication()
-    app.launchArguments += ["-nickname", "UITest"] + arguments
+    app.launchArguments += ["-nickname", "UITest", "-termsAccepted", "1"] + arguments
     app.launch()
     let allow = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.buttons["Allow"]
     if allow.waitForExistence(timeout: 3) { allow.tap() }

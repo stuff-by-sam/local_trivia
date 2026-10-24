@@ -20,6 +20,8 @@ nonisolated struct HostQuestion: Codable, Identifiable, Hashable, Sendable {
 
   enum Problem: Equatable, Sendable {
     case missingText, missingOption, noCorrectAnswer, timeOutOfRange
+    /// A word the content filter keeps out of games (`ContentFilter`).
+    case objectionable
   }
 
   /// A new question has no right answer until the host picks one: a
@@ -42,6 +44,7 @@ nonisolated struct HostQuestion: Codable, Identifiable, Hashable, Sendable {
     }
     if !(0...3).contains(correct) { return .noCorrectAnswer }
     if let timeLimit, !Self.timeLimits.contains(timeLimit) { return .timeOutOfRange }
+    if !([text, category] + options).allSatisfy({ ContentFilter.allows($0, as: .question) }) { return .objectionable }
     return nil
   }
 

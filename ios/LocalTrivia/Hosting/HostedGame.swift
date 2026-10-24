@@ -34,6 +34,10 @@ final class HostedGame {
     let token: String
     let nickname: String
     var connection: ConnectionID?
+    /// The id the phone or browser joined with, if it sent one, and the
+    /// address it joined from: what a block keeps out.
+    var device: String? = nil
+    var peer: String? = nil
     var score = 0
     /// Total time taken on correct answers: the tie-break.
     var cumulativeMs = 0
@@ -100,6 +104,10 @@ final class HostedGame {
   @ObservationIgnored private var questionTimer: Task<Void, Never>?
   @ObservationIgnored private var advanceTimer: Task<Void, Never>?
 
+  /// Whether a phone the host has blocked is trying to join — by the id it
+  /// sends, or the address it comes from. (`HostController` asks `Safety`.)
+  @ObservationIgnored var isBarred: (_ device: String?, _ peer: String) -> Bool = { _, _ in false }
+
   @ObservationIgnored private let deliver: (ServerEvent, Audience) -> Void
   @ObservationIgnored private let uptime: () -> Duration
 
@@ -137,7 +145,7 @@ final class HostedGame {
 
   func receive(_ event: ClientEvent, from connection: ConnectionID) {
     switch event {
-    case .join(let pin, let nickname): join(pin: pin, nickname: nickname, from: connection)
+    case .join(let pin, let nickname, let device): join(pin: pin, nickname: nickname, device: device, from: connection)
     case .resume(let token): resume(token: token, from: connection)
     case .submitAnswer(let questionId, let option): submit(questionId: questionId, option: option, from: connection)
     }
@@ -145,13 +153,17 @@ final class HostedGame {
 
   // MARK: - Players
 
-  private func join(pin: String, nickname: String, from connection: ConnectionID) {
+  private func join(pin: String, nickname: String, device: String? = nil, from connection: ConnectionID) {
     let name = nickname.trimmingCharacters(in: .whitespacesAndNewlines)
     let peer = peers[connection] ?? "#\(connection)"
     // Checked before the PIN, or every lockout would still allow one guess.
     if let until = lockedOutUntil[peer], uptime() < until {
       return deliver(
         .joinError(Notice(code: "TOO_MANY_TRIES", message: "TOO MANY WRONG PINS — TRY AGAIN IN A MINUTE")), .connection(connection))
+    }
+    // A blocked phone needn't learn the PIN, either.
+    if isBarred(device, peer) {
+      return deliver(.joinError(Notice(code: "BLOCKED", message: "THE HOST HAS BLOCKED YOU FROM THIS GAME")), .connection(connection))
     }
     guard pin.trimmingCharacters(in: .whitespaces) == self.pin else {
       wrongPINs[peer, default: 0] += 1
@@ -163,6 +175,9 @@ final class HostedGame {
     }
     guard (1...GameStore.nicknameLimit).contains(name.utf16.count) else {
       return deliver(.joinError(Notice(code: "BAD_NICKNAME", message: "NICKNAME MUST BE 1–20 CHARS")), .connection(connection))
+    }
+    guard ContentFilter.allows(name, as: .name) else {
+      return deliver(.joinError(Notice(code: "BAD_NICKNAME", message: "THAT NICKNAME ISN'T ALLOWED — PICK ANOTHER")), .connection(connection))
     }
     guard !connectedPlayers.contains(where: { $0.nickname.lowercased() == name.lowercased() }) else {
       return deliver(.joinError(Notice(code: "NICKNAME_TAKEN", message: "NICKNAME TAKEN — PICK ANOTHER")), .connection(connection))
@@ -179,6 +194,8 @@ final class HostedGame {
       token: Self.randomToken(),
       nickname: name,
       connection: connection,
+      device: device,
+      peer: peers[connection],
       eligibleFrom: state == .lobby ? 0 : questionIndex + 1,
       joinOrder: joinCount
     )
@@ -196,14 +213,24 @@ final class HostedGame {
     deliver(.resumed(snapshot(for: players[index])), .connection(connection))
   }
 
-  func kick(token: String) {
-    guard let index = players.firstIndex(where: { $0.token == token }) else { return }
+  /// Removes a player — or, blocking them, the same, plus whatever the host
+  /// keeps out after (`isBarred`). Their name leaves every screen at once:
+  /// standings or a podium on show are sent again without it.
+  @discardableResult
+  func kick(token: String) -> Player? {
+    guard let index = players.firstIndex(where: { $0.token == token }) else { return nil }
     let player = players.remove(at: index)
     if let connection = player.connection {
       deliver(.kicked(Notice(code: nil, message: "REMOVED BY THE HOST")), .connection(connection))
     }
     playersChanged()
     endIfEveryoneAnswered()
+    switch state {
+    case .leaderboard: deliver(.leaderboard(leaderboard()), .everyone)
+    case .podium: deliver(.gameOver(finalResult()), .players)
+    case .lobby, .questionActive, .reveal: break
+    }
+    return player
   }
 
   /// What every phone is told when the host closes the game.

@@ -115,3 +115,24 @@ public struct PickerRow<Mark: View>: View {
     .glassEffect(.regular.interactive(), in: .rect(cornerRadius: Radius.control))
   }
 }
+
+extension PickerRow where Mark == Color {
+  /// A row whose mark is drawn over it with `pickerMark(_:)`.
+  public init(title: String, detail: String) {
+    self.init(title: title, detail: detail) { Color.clear }
+  }
+}
+
+extension View {
+  /// Draws `mark` where a `PickerRow`'s mark goes, over this — for a row
+  /// that's a menu's label, where glass inside the label doesn't draw.
+  public func pickerMark(@ViewBuilder _ mark: () -> some View) -> some View {
+    overlay(alignment: .leading) {
+      mark()
+        .frame(width: Space.l)
+        .padding(.leading, Space.inset)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+  }
+}

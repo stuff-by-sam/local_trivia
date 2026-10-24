@@ -5,16 +5,28 @@ import SwiftUI
 public struct BlinkingCursor: View {
   var glyph: String
 
-  @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
   public init(glyph: String = "_") {
     self.glyph = glyph
   }
 
   public var body: some View {
+    Blinking {
+      Text(verbatim: glyph)
+    }
+  }
+}
+
+/// Anything, lit and dark at the cursor's ~1 Hz; steady under Reduce Motion.
+/// Only `content` redraws.
+struct Blinking<Content: View>: View {
+  @ViewBuilder var content: Content
+
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+  var body: some View {
     TimelineView(.periodic(from: .now, by: 0.53)) { context in
       let lit = reduceMotion || Int(context.date.timeIntervalSinceReferenceDate / 0.53).isMultiple(of: 2)
-      Text(verbatim: glyph)
+      content
         .opacity(lit ? 1 : 0)
     }
     .accessibilityHidden(true)
@@ -23,9 +35,15 @@ public struct BlinkingCursor: View {
 
 /// What the game is doing right now, in its own voice: `WAITING FOR HOST_`.
 /// The cursor marks it as waiting; pass `isWaiting: false` for a steady line.
+///
+/// On a capsule of glass, like the toolbar's readouts: a layer of its own
+/// over the backdrop. At accessibility sizes, where the line wraps, the
+/// capsule's ends would crowd it, so it's a rounded rectangle.
 public struct StatusLine: View {
   let text: Text
   let isWaiting: Bool
+
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   public init(_ text: LocalizedStringKey, isWaiting: Bool = true) {
     self.text = Text(text)
@@ -44,11 +62,17 @@ public struct StatusLine: View {
     }
     .textRole(.status)
     .foregroundStyle(.secondary)
+    .multilineTextAlignment(.center)
+    .padding(.horizontal, Space.m)
+    .padding(.vertical, Space.s)
+    .frame(minHeight: Size.statusPill)
+    .glassCard(in: typeSize.isAccessibilitySize ? AnyShape(.rect(cornerRadius: Radius.control)) : AnyShape(.capsule))
     .accessibilityElement(children: .combine)
   }
 }
 
-/// A lit dot: online, connecting, gone.
+/// A lit dot: online, connecting, gone. A bead of glass in its colour over
+/// its own glow; it breathes while connecting or failing.
 public struct StatusDot: View {
   public enum State: Sendable {
     case online, connecting, failed, idle
@@ -73,12 +97,16 @@ public struct StatusDot: View {
 
   public var body: some View {
     let fill = color ?? fill(for: state)
-    Image(systemName: "circle.fill")
-      .font(.system(size: Size.dot))
-      .foregroundStyle(fill)
-      .shadow(color: palette.isHighContrast ? .clear : fill.opacity(0.9), radius: 3)
-      .symbolEffect(.pulse, options: .repeating, isActive: state == .connecting || state == .failed)
-      .accessibilityHidden(true)
+    Group {
+      if palette.isHighContrast {
+        Circle().fill(fill)
+      } else {
+        GlassCharacter(shape: Circle(), color: fill, depth: .dot)
+      }
+    }
+    .frame(width: Size.dot, height: Size.dot)
+    .glassPulse(isActive: state == .connecting || state == .failed)
+    .accessibilityHidden(true)
   }
 
   private func fill(for state: State) -> Color {

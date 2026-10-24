@@ -79,7 +79,7 @@ struct FinalView: View {
       FooterStatus("Waiting for the next game")
     }
     .screenPadding()
-    .gameToolbar(.player, controls: .always)
+    .gameToolbar(.player)
   }
 }
 
@@ -88,16 +88,19 @@ private struct Podium: View {
   let placings: [Placing]
   let playerName: String
 
+  @Environment(Safety.self) private var safety
+
   var body: some View {
     HStack(alignment: .bottom, spacing: Space.s) {
       ForEach([Medal.second, .first, .third], id: \.self) { medal in
         if let placing = placings.first(where: { $0.rank == medal.rawValue }) ?? placings[safe: medal.rawValue - 1] {
           PodiumStep(
-            name: placing.nickname,
+            name: safety.shown(placing.nickname),
             score: placing.score.grouped,
             medal: medal,
             isPlayer: placing.nickname.localizedCaseInsensitiveCompare(playerName) == .orderedSame
           )
+          .nameActions(placing.nickname)
         } else {
           // An empty place still holds its slot, so a one- or two-player
           // podium keeps its proportions instead of stretching.

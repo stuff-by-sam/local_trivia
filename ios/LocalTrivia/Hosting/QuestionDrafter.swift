@@ -1,6 +1,7 @@
 import Foundation
 import FoundationModels
 import OSLog
+import UIKit
 
 /// Drafts questions on a topic with the on-device model, for the host to
 /// review — the one slow part of hosting, writing a round, done in one step.
@@ -112,8 +113,10 @@ enum QuestionDrafter {
     /// phone, so the host never sees this.
     case cloudUnreachable
 
-    var message: String {
+    @MainActor var message: String {
       switch self {
+      case .unavailable where UIDevice.current.userInterfaceIdiom == .pad:
+        String(localized: "Apple Intelligence isn't available on this iPad right now.")
       case .unavailable: String(localized: "Apple Intelligence isn't available on this iPhone right now.")
       case .declined: String(localized: "That topic can't be drafted. Try another.")
       case .unsupportedLanguage: String(localized: "Drafting isn't available in this language yet.")

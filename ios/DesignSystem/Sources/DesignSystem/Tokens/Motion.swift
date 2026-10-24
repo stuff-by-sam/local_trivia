@@ -16,6 +16,8 @@ public enum Motion: Sendable {
   case pop
   /// Points counting up.
   case count
+  /// Something waiting, breathing: the hourglass, a connecting dot.
+  case breathe
 
   public var animation: Animation {
     switch self {
@@ -24,7 +26,9 @@ public enum Motion: Sendable {
     case .screen: .smooth(duration: 0.5)
     case .mood: .smooth(duration: 0.9)
     case .pop: .spring(duration: 0.35, bounce: 0.45)
-    case .count: .snappy(duration: 0.6)
+    // No bounce: a count that overshoots shows points nobody scored.
+    case .count: .smooth(duration: 0.6)
+    case .breathe: .smooth(duration: 0.8)
     }
   }
 
@@ -64,6 +68,54 @@ extension View {
   /// that". Just the haptic under Reduce Motion.
   public func rejectionShake(trigger: Int) -> some View {
     modifier(RejectionShake(trigger: trigger))
+  }
+
+  /// A hop when `trigger` changes — a verdict landing, first place — for
+  /// glass, which SF Symbols' own bounce doesn't reach. Still under Reduce
+  /// Motion.
+  public func glassBounce(trigger: some Equatable & Sendable) -> some View {
+    modifier(GlassBounce(trigger: trigger))
+  }
+
+  /// Breathing while `isActive` — something waiting — for glass, which SF
+  /// Symbols' own pulse doesn't reach. Steady under Reduce Motion.
+  public func glassPulse(isActive: Bool = true) -> some View {
+    modifier(GlassPulse(isActive: isActive))
+  }
+}
+
+private struct GlassBounce<Trigger: Equatable & Sendable>: ViewModifier {
+  let trigger: Trigger
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+  func body(content: Content) -> some View {
+    // Read here: the animator's closure runs off the main actor.
+    let isStill = reduceMotion
+    return content
+      .keyframeAnimator(initialValue: 1.0, trigger: trigger) { view, scale in
+        view.scaleEffect(isStill ? 1 : scale, anchor: .bottom)
+      } keyframes: { _ in
+        KeyframeTrack {
+          SpringKeyframe(1.2, duration: 0.14)
+          SpringKeyframe(0.94, duration: 0.12)
+          SpringKeyframe(1, duration: 0.2)
+        }
+      }
+  }
+}
+
+private struct GlassPulse: ViewModifier {
+  let isActive: Bool
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+  func body(content: Content) -> some View {
+    let breathes = isActive && !reduceMotion
+    content
+      .phaseAnimator(breathes ? [1.0, 0.35] : [1.0]) { view, opacity in
+        view.opacity(opacity)
+      } animation: { _ in
+        Motion.breathe.animation
+      }
   }
 }
 

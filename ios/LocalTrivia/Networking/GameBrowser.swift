@@ -11,6 +11,9 @@ final class GameBrowser {
   nonisolated static let serviceType = "_trivia-phone._tcp"
 
   private(set) var games: [GameServer] = []
+  /// Each listed game's host, by the id it advertises (`Safety.installID`):
+  /// how a blocked host is known again under a new name or address.
+  private(set) var hostIDs: [URL: String] = [:]
   /// Set when browsing stopped working — often because Local Network access
   /// is off for the app — so the join screen can say so instead of looking
   /// forever.
@@ -40,6 +43,7 @@ final class GameBrowser {
       do {
         try await browser.run { [weak self] endpoints in
           self?.games = Self.games(from: endpoints)
+          self?.hostIDs = Self.hostIDs(from: endpoints)
         }
       } catch {
         // Stopped on purpose — a game started — isn't a failure to report.
@@ -67,11 +71,25 @@ final class GameBrowser {
     return endpoints
       .compactMap { endpoint -> GameServer? in
         guard case .string(let url)? = endpoint.txtRecord.getEntry(for: "url"),
-          let game = GameServer(address: url, name: endpoint.name),
+          // Starred out if it's objectionable: an app host won't advertise
+          // one, but the network may carry anyone's.
+          let game = GameServer(address: url, name: ContentFilter.masked(endpoint.name, as: .name)),
           seen.insert(game.name).inserted
         else { return nil }
         return game
       }
       .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+  }
+
+  nonisolated static func hostIDs(from endpoints: [Bonjour.Endpoint]) -> [URL: String] {
+    var ids: [URL: String] = [:]
+    for endpoint in endpoints {
+      guard case .string(let url)? = endpoint.txtRecord.getEntry(for: "url"),
+        case .string(let id)? = endpoint.txtRecord.getEntry(for: "id"),
+        let game = GameServer(address: url)
+      else { continue }
+      ids[game.url] = id
+    }
+    return ids
   }
 }

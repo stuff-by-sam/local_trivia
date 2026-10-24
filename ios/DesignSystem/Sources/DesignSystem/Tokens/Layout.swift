@@ -56,6 +56,8 @@ nonisolated public enum Size {
   public static let badge: CGFloat = 92
   /// A status dot.
   public static let dot: CGFloat = 7
+  /// A status line's glass capsule.
+  public static let statusPill: CGFloat = 32
   /// The QR code on a card, and at full size.
   public static let qrCard: CGFloat = 112
   public static let qrFull: CGFloat = 240

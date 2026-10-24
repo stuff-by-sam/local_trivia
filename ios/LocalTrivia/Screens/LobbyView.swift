@@ -15,7 +15,7 @@ struct LobbyView: View {
       }
     }
     .screenPadding()
-    .gameToolbar(.player, controls: .always)
+    .gameToolbar(.player)
   }
 }
 
@@ -89,8 +89,7 @@ struct SpectatingView: View {
     VStack(spacing: Space.m) {
       VStack(spacing: Space.xl) {
         VStack(spacing: Space.l) {
-          Badge(symbol: "hourglass", color: .secondary, isGlass: false)
-            .symbolEffect(.pulse, options: .repeating)
+          Badge(symbol: "hourglass", color: .secondary, isWaiting: true)
 
           VStack(spacing: Space.s) {
             Text("Hold tight")

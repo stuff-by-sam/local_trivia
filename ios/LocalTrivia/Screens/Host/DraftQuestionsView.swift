@@ -24,6 +24,9 @@ struct DraftQuestionsView: View {
   @State private var engine = QuestionDrafter.preferredEngine
   /// The drafting under way, stopped if the sheet closes first.
   @State private var drafting: Task<Void, Never>?
+  /// Which drafting is the latest: one that was stopped mustn't, finishing
+  /// late, end the one that replaced it.
+  @State private var run = 0
   @FocusState private var isTopicFocused: Bool
 
   /// The rest start where a preview wants them; the app passes a round alone.
@@ -61,6 +64,8 @@ struct DraftQuestionsView: View {
               .foregroundStyle(.danger)
           } else if engine == .cloud {
             Text("Apple Intelligence drafts these with Private Cloud Compute: your topic goes to Apple to write them, and isn't kept.")
+          } else if UIDevice.current.userInterfaceIdiom == .pad {
+            Text("Apple Intelligence drafts these on this iPad.")
           } else {
             Text("Apple Intelligence drafts these on this iPhone.")
           }
@@ -102,15 +107,22 @@ struct DraftQuestionsView: View {
       }
       .safeAreaBar(edge: .bottom) {
         ActionBar {
-          if drafts.isEmpty {
-            ActionButton("Draft Questions", systemImage: "sparkles", isLoading: isDrafting, action: draft)
-              .disabled(topic.trimmingCharacters(in: .whitespaces).isEmpty && !isDrafting)
-          } else {
+          if !drafts.isEmpty {
             ActionButton(addTitle, systemImage: "plus", action: add)
               .disabled(chosen.isEmpty)
-            ActionButton("Draft Again", systemImage: "arrow.counterclockwise", prominence: .secondary, isLoading: isDrafting, action: draft)
+          }
+          // While drafting, the list says how far it's got; the button stops
+          // it, keeping what's drafted, rather than spinning with nothing to do.
+          if isDrafting {
+            ActionButton("Stop Drafting", systemImage: "stop.fill", prominence: .secondary, action: stop)
+          } else if drafts.isEmpty {
+            ActionButton("Draft Questions", systemImage: "sparkles", action: draft)
+              .disabled(topic.trimmingCharacters(in: .whitespaces).isEmpty)
+          } else {
+            ActionButton("Draft Again", systemImage: "arrow.counterclockwise", prominence: .secondary, action: draft)
           }
         }
+        .motion(.settle, value: isDrafting)
       }
       .scrollEdgeEffectStyle(.hard, for: .bottom)
       .onAppear { if drafts.isEmpty { isTopicFocused = true } }
@@ -136,8 +148,10 @@ struct DraftQuestionsView: View {
       left = []
       asked = wanted
     }
+    run += 1
+    let thisRun = run
     drafting = Task {
-      defer { isDrafting = false }
+      defer { if run == thisRun { isDrafting = false } }
       do throws(QuestionDrafter.Failure) {
         let result = try await QuestionDrafter.draft(topic: topic, count: wanted, avoiding: avoiding) { draft in
           Motion.settle.perform { drafts.append(draft) }
@@ -145,11 +159,25 @@ struct DraftQuestionsView: View {
         guard !Task.isCancelled else { return }
         // The cloud may have handed over to the phone part way.
         if let used = result.last?.engine { engine = used }
-        if result.isEmpty { failure = .failed }
+        if result.isEmpty {
+          failure = .failed
+        } else {
+          // The list fills in as it goes; this says it's done.
+          AccessibilityNotification.Announcement(String(localized: "Drafted ^[\(result.count) question](inflect: true)")).post()
+        }
       } catch {
         failure = error
       }
     }
+  }
+
+  /// Stops drafting, keeping what's in — and saying so, not that the rest
+  /// failed their checks.
+  private func stop() {
+    drafting?.cancel()
+    drafting = nil
+    isDrafting = false
+    asked = drafts.count
   }
 
   private func add() {

@@ -52,6 +52,10 @@ enum ScreenState: String, CaseIterable {
   case tvReveal = "tv.reveal"
   case tvStandings = "tv.standings"
   case tvFinal = "tv.final"
+  case terms
+  case safety
+  case report
+  case reportBlocked = "report.blocked"
 }
 
 /// A screen state as the app would show it: in its navigation stack, over
@@ -77,8 +81,11 @@ struct ScreenPreview: View {
   static func fromLaunchArguments() -> ScreenPreview? {
     let defaults = UserDefaults.standard
     guard let name = defaults.string(forKey: "screen"), let state = ScreenState(rawValue: name) else { return nil }
-    let theme = defaults.string(forKey: "theme").flatMap(Theme.init(rawValue:)) ?? .phosphor
-    let markers = defaults.string(forKey: "markers").flatMap(AnswerMarkers.init(rawValue:)) ?? .classic
+    // From the launch arguments only: the app saves the theme and markers it's
+    // wearing under the same keys, which would otherwise dress every fixture.
+    let arguments = defaults.volatileDomain(forName: UserDefaults.argumentDomain)
+    let theme = (arguments["theme"] as? String).flatMap(Theme.init(rawValue:)) ?? .phosphor
+    let markers = (arguments["markers"] as? String).flatMap(AnswerMarkers.init(rawValue:)) ?? .classic
     let chosen = defaults.object(forKey: "chosen") == nil ? 1 : defaults.integer(forKey: "chosen")
     return ScreenPreview(state, theme: theme, markers: markers, chosen: chosen)
   }
@@ -92,6 +99,9 @@ struct ScreenPreview: View {
       .environment(models.host)
       .environment(models.bigScreen)
       .environment(models.looks)
+      .environment(models.safety)
+      // As `RootView` shows a report: over the screen.
+      .reportSheet(Binding { models.safety.report } set: { models.safety.report = $0 })
   }
 
   @ViewBuilder
@@ -114,13 +124,21 @@ struct ScreenPreview: View {
     case .scannerRestricted:
       over(QRScannerSheet(access: .restricted) { _ in })
     case .players:
-      game(sheet: HostSheetView(sheet: .players))
+      game(hostSheet: .players)
     case .joinCode:
-      game(sheet: HostSheetView(sheet: .joinCode))
+      game(hostSheet: .joinCode)
     case .tvGuide:
-      game(sheet: HostSheetView(sheet: .tv))
+      game(hostSheet: .tv)
     case .looks:
       over(LooksView())
+    case .terms:
+      over(TermsView(isAgreeing: true))
+    case .safety:
+      over(SafetyView())
+    case .report:
+      over(ReportSheet(report: Report(.question(text: Sample.question(elapsed: 0).text, options: Sample.question(elapsed: 0).options, category: "SPACE"), gameName: Sample.game.name, isHost: false)))
+    case .reportBlocked:
+      over(ReportSheet(report: Report(.host(gameName: Sample.game.name), gameName: Sample.game.name, isHost: false, blocked: "This player blocked the host and left the game. The host's games are hidden on their phone.")))
     case .tvIdle, .tvLobby, .tvQuestion, .tvReveal, .tvStandings, .tvFinal:
       BigScreenView()
         .environment(\.backdropFollowsTilt, false)
@@ -139,14 +157,18 @@ struct ScreenPreview: View {
           screen.gameColumn()
         }
       }
+      .glassClarity(models.store.phase.glassClarity)
       .containerBackground(for: .navigation) { Backdrop(mood: mood) }
     }
   }
 
-  /// A host sheet, over the screen it opens from.
-  private func game(sheet: some View) -> some View {
-    game(glassContainer: true)
-      .sheet(isPresented: .constant(true)) { sheet }
+  /// A host sheet, over the screen it opens from — opened as `RootView`
+  /// opens it, so the screen under it knows it's there.
+  private func game(hostSheet: HostController.Sheet) -> some View {
+    @Bindable var host = models.host
+    return game(glassContainer: true)
+      .sheet(item: $host.sheet) { HostSheetView(sheet: $0) }
+      .onAppear { models.host.sheet = hostSheet }
   }
 
   /// A sheet, over the join screen it opens from.
@@ -192,13 +214,14 @@ final class PreviewModels {
   let browser = GameBrowser()
   let bigScreen = BigScreen()
   let looks: Looks
+  let safety = Safety(defaults: nil)
 
   init(_ state: ScreenState, chosen: Int = 1) {
     let defaults = UserDefaults(suiteName: "previews") ?? .standard
     defaults.removePersistentDomain(forName: "previews")
     store = GameStore(defaults: defaults, tokens: PreviewTokens(), makeTransport: { _ in nil })
     store.nickname = Sample.player
-    host = HostController(library: HostLibrary(fileURL: nil), advertises: false)
+    host = HostController(library: HostLibrary(fileURL: nil), advertises: false, safety: safety)
     looks = Looks.preview(defaults: defaults)
     put(in: state, chosen: chosen)
   }
@@ -283,7 +306,7 @@ final class PreviewModels {
       break
     case .round, .editorNew, .editorEdit, .drafting, .drafts:
       host.library.questions = Sample.round
-    case .scannerOff, .scannerRestricted, .looks:
+    case .scannerOff, .scannerRestricted, .looks, .terms, .safety, .report, .reportBlocked:
       // Over a join screen still looking: the join screen's own sheets keep
       // its keyboard down, but these are presented from outside it.
       break

@@ -27,9 +27,11 @@ Every content question is **None**, and every yes/no is **No**:
 - Parental controls, age assurance: No
 - Unrestricted web access: No. The app serves its own web player to phones on
   the Wi-Fi, but doesn't browse the web.
-- User-generated content: No. Nicknames and a host's questions go only to the
-  phones in the same room, over the local network, and never to a server. The
-  host can remove any player.
+- User-generated content: **Yes.** Nicknames and a host's questions are seen
+  by the other players. App Review treats that as user-generated content
+  (guideline 1.2, 2026-10-17), and the app has its precautions: Terms of Use
+  agreed before the first game, a word filter, reporting, and blocking. They
+  only ever go to the phones in the same room, over the local network.
 - Messaging and chat, advertising: No
 - Contests: No (points on a leaderboard, no prizes)
 - Gambling, simulated gambling: No
@@ -49,8 +51,12 @@ network and reads QR codes with the camera, and neither has been tried there.
 
 That's accurate because nothing leaves the local network. Nicknames, answers
 and questions go between the phones in a game, never to the developer or a
-server, which is what Apple's definition of *collect* turns on. It matches
-`PrivacyInfo.xcprivacy`, which declares no collected data and no tracking.
+server, which is what Apple's definition of *collect* turns on. A report is an
+email the person writes and sends from their own mail app, if they choose to —
+optional, user-initiated feedback, which Apple doesn't count as collection.
+The random device code a join carries goes only to the host's phone. It
+matches `PrivacyInfo.xcprivacy`, which declares no collected data and no
+tracking.
 
 ## Accessibility
 
@@ -83,8 +89,10 @@ Claim only what's been tested on a device:
 > HOST FROM YOUR PHONE
 > • Write a round in minutes: a question, four answers, tap the right one.
 > Add categories and time limits, or import a CSV.
-> • On iPhones with Apple Intelligence, name a topic and draft questions on
-> the device, then review every answer before it goes in.
+> • On an iPhone or iPad with Apple Intelligence, name a topic and draft
+> questions on the device, then review every answer before it goes in.
+> • Or name a topic and copy a ready-made prompt into the AI chat you already
+> use, then paste its reply straight back in as a round.
 > • Set the scoring (points, time per question, shuffle and auto-advance),
 > with a live preview of what an answer earns.
 > • The host plays too.
@@ -108,6 +116,11 @@ Claim only what's been tested on a device:
 > • Ten themes, from phosphor green to holographic foil and chalkboard.
 > • Five sets of answer markers, and an app icon to match every theme.
 > • All of it free.
+>
+> SAFE TO PLAY WITH ANYONE
+> • Names and questions are filtered for objectionable words.
+> • Hosts can remove or block any player. Players can report a question, a
+> name or a game, and block a host or another player.
 >
 > PRIVATE BY DESIGN
 > No accounts, ads, analytics or tracking. Games stay on your local network,
@@ -162,6 +175,17 @@ smaller sizes.
 > Local Network access is needed to find, host and join games. The camera is
 > used only to scan a host's QR code, and is optional. The app has no
 > accounts, and nothing leaves the local network.
+>
+> User-generated content (guideline 1.2): on first launch, the Terms of Use
+> (no tolerance for objectionable content or abusive users) must be agreed
+> before anyone can host or join; they're also under Safety on the join
+> screen. Nicknames, game names and questions are filtered. In a game, the
+> ••• menu reports the question, a player or the game, and blocks the host;
+> touching and holding a name in the standings reports or blocks that player.
+> The host's Players screen removes or blocks players. Reports and blocks
+> email the developer at report@local-trivia.com; we review every report
+> within 24 hours. A screen recording on a device is linked here:
+> [RECORDING LINK]
 
 ## Export compliance
 

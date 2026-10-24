@@ -66,7 +66,7 @@ struct AnswerMarkersTests {
       #expect(Set(symbols).count == 4, "\(markers.rawValue): \(symbols)")
       #expect(Set(names).count == 4, "\(markers.rawValue): \(names)")
       for symbol in symbols {
-        #expect(UIImage(systemName: symbol) != nil, "\(markers.rawValue): no symbol \(symbol)")
+        #expect(Symbols.uiImage(symbol) != nil, "\(markers.rawValue): no symbol \(symbol)")
       }
     }
   }

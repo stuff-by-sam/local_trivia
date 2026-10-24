@@ -52,6 +52,7 @@ actor HostServer {
   private var nextID = 0
   private(set) var port: UInt16?
   private var serviceName = ""
+  private var hostID: String?
   private var advertises = true
   private var lanAddress: String?
   /// What the web player is served wearing: the host's accent (`WebPlayer`).
@@ -95,8 +96,11 @@ actor HostServer {
 
   /// Listens on the first free port from 3000 and advertises `name` with the
   /// join URL other phones should dial. Returns the port.
-  func start(name: String, lanAddress: String?, advertises: Bool = true) async throws(StartError) -> UInt16 {
+  /// `hostID` goes in the advert too (`Safety.installID`), so a player who
+  /// blocks this host knows its games again under any name or address.
+  func start(name: String, lanAddress: String?, hostID: String? = nil, advertises: Bool = true) async throws(StartError) -> UInt16 {
     serviceName = name
+    self.hostID = hostID
     self.advertises = advertises
     self.lanAddress = lanAddress
     for candidate in Self.ports {
@@ -185,6 +189,7 @@ actor HostServer {
     guard advertises else { return nil }
     var txt: [String: String] = ["v": "1"]
     if let lanAddress { txt["url"] = "http://\(lanAddress):\(port)" }
+    if let hostID { txt["id"] = hostID }
     return NWListener.Service(name: serviceName, type: GameBrowser.serviceType, txtRecord: NWTXTRecord(txt))
   }
 

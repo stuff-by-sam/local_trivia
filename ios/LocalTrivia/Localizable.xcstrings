@@ -70,13 +70,19 @@
     "A correct answer earns at least" : {
 
     },
+    "A host can remove or block any player at any time. A blocked player is removed at once, and their phone or browser can't join that host's games again." : {
+
+    },
     "A monochrome tube, warm as an old terminal" : {
       "extractionState" : "manual"
+    },
+    "A theme dresses this iPad, any TV it puts the game on, and the browsers in a game it hosts." : {
+
     },
     "A theme dresses this phone, any TV it puts the game on, and the browsers in a game it hosts." : {
 
     },
-    "A tortoise, a fish, a cat and a bird" : {
+    "A turtle, a fish, a fox and a dog" : {
       "extractionState" : "manual"
     },
     "A wrong answer earns" : {
@@ -92,6 +98,9 @@
 
     },
     "Adds or leaves out this question." : {
+
+    },
+    "Agree and Continue" : {
 
     },
     "Amber" : {
@@ -112,7 +121,16 @@
     "Answers" : {
 
     },
+    "Anyone who does can be removed from a game and blocked by its host and by other players." : {
+
+    },
+    "Anything that would help us" : {
+
+    },
     "App Icons" : {
+
+    },
+    "Apple Intelligence drafts these on this iPad." : {
 
     },
     "Apple Intelligence drafts these on this iPhone." : {
@@ -121,10 +139,43 @@
     "Apple Intelligence drafts these with Private Cloud Compute: your topic goes to Apple to write them, and isn't kept." : {
 
     },
+    "Apple Intelligence isn't available on this iPad right now." : {
+
+    },
     "Apple Intelligence isn't available on this iPhone right now." : {
 
     },
+    "Apple's Standard License Agreement" : {
+
+    },
     "Away" : {
+
+    },
+    "Before you play" : {
+
+    },
+    "Block" : {
+
+    },
+    "Block %@" : {
+
+    },
+    "Block Host…" : {
+
+    },
+    "Block and Report" : {
+
+    },
+    "Block this game's host?" : {
+
+    },
+    "Blocked hosts" : {
+
+    },
+    "Blocked player" : {
+
+    },
+    "Blocked players" : {
 
     },
     "Brushed gold on black, for whoever keeps winning" : {
@@ -180,6 +231,24 @@
     },
     "Cool blue on navy, over a vector display's grid" : {
       "extractionState" : "manual"
+    },
+    "Copied" : {
+
+    },
+    "Copy Prompt" : {
+
+    },
+    "Copy Report" : {
+
+    },
+    "Copy the CSV from the AI's reply, then tap Paste again." : {
+
+    },
+    "Copy the prompt into any AI chat. When it replies, copy its CSV and tap Paste — or save the reply as a .csv file and use Import CSV. Check every answer before you play: an AI can be wrong." : {
+
+    },
+    "Copy the report and email it to %@." : {
+
     },
     "Correct" : {
 
@@ -238,6 +307,9 @@
     "Draft with Apple Intelligence" : {
 
     },
+    "Drafted ^[%lld question](inflect: true)" : {
+
+    },
     "Drafting isn't available in this language yet." : {
 
     },
@@ -256,6 +328,9 @@
     "Edit Round…" : {
 
     },
+    "Effective October 21, 2026" : {
+
+    },
     "Elements" : {
       "extractionState" : "manual"
     },
@@ -271,6 +346,9 @@
     "Enter your name to play" : {
 
     },
+    "Every player can report a question, a player or a game, and can block a host or another player. Blocking removes what they posted from your screen straight away: a blocked host's game ends for you and its games aren't listed again, and a blocked player's name is hidden." : {
+
+    },
     "Every player goes back to the join screen." : {
 
     },
@@ -284,6 +362,9 @@
 
     },
     "Game PIN" : {
+
+    },
+    "Game menu" : {
 
     },
     "Game name" : {
@@ -302,6 +383,12 @@
         }
       }
     },
+    "Games have no accounts and no servers, so content is removed and users are ejected on the spot, by the people in the game: the host removes or blocks a player, and players block a host or another player." : {
+
+    },
+    "Games run on the players' own devices, over the local network. Nothing anyone types is sent to us or to any server, and it's gone when the game ends — except what you choose to send us in a report, which we use only to review it." : {
+
+    },
     "General" : {
 
     },
@@ -310,6 +397,15 @@
     },
     "Gold" : {
       "extractionState" : "manual"
+    },
+    "Harassment or bullying" : {
+
+    },
+    "Has words that aren't allowed in a game" : {
+
+    },
+    "Hateful or discriminatory" : {
+
     },
     "Hold tight" : {
 
@@ -329,10 +425,16 @@
     "Host unreachable, retrying" : {
 
     },
+    "How the app keeps games safe" : {
+
+    },
     "Import CSV…" : {
 
     },
     "Imported ^[%lld question](inflect: true)" : {
+
+    },
+    "In a game, report a question, a player or the game from the game's menu, or by touching and holding a name. Reports go to %@, and we review every one within 24 hours." : {
 
     },
     "In the game · %lld" : {
@@ -351,6 +453,9 @@
 
     },
     "Join code" : {
+
+    },
+    "Kept out of your games" : {
 
     },
     "Leaf, water, fire and lightning" : {
@@ -420,6 +525,15 @@
     "Nickname" : {
 
     },
+    "No Mail Account" : {
+
+    },
+    "No Names Yet" : {
+
+    },
+    "No Questions Found" : {
+
+    },
     "No TV yet" : {
 
     },
@@ -435,7 +549,13 @@
     "No games yet. The host's phone has to be on this Wi-Fi." : {
 
     },
+    "No objectionable content. No abusive users." : {
+
+    },
     "No questions yet. Write one, or import a CSV — the same format the web admin console takes." : {
+
+    },
+    "Nobody" : {
 
     },
     "Nobody Yet" : {
@@ -481,6 +601,12 @@
     "Open Settings" : {
 
     },
+    "Opens an email to %@ for you to send. We review every report within 24 hours." : {
+
+    },
+    "Or connect the iPad to a TV with an HDMI adapter." : {
+
+    },
     "Or connect the phone to a TV with an HDMI adapter." : {
 
     },
@@ -499,10 +625,19 @@
     "Pick a CSV file to import." : {
 
     },
+    "Pick another game name" : {
+
+    },
+    "Pick another name to play under" : {
+
+    },
     "Play Again" : {
 
     },
     "Play in this round" : {
+
+    },
+    "Player" : {
 
     },
     "Players" : {
@@ -517,6 +652,12 @@
     "Players see the game name when they look for games. You play too, under your name." : {
 
     },
+    "Players you blocked as a host can't join a game you host on this phone." : {
+
+    },
+    "Players' names show in the standings after each question." : {
+
+    },
     "Playing as %@" : {
 
     },
@@ -527,6 +668,9 @@
 
     },
     "Point at the QR code on the host's phone" : {
+
+    },
+    "Problem" : {
 
     },
     "QR code to join this game" : {
@@ -557,6 +701,12 @@
     "Rank %lld" : {
       "extractionState" : "manual"
     },
+    "Read them again any time from Safety, on the join screen." : {
+
+    },
+    "Reason" : {
+
+    },
     "Reconnecting" : {
 
     },
@@ -567,6 +717,33 @@
 
     },
     "Removed by the host." : {
+
+    },
+    "Report" : {
+
+    },
+    "Report %@…" : {
+
+    },
+    "Report Question…" : {
+
+    },
+    "Report This Game…" : {
+
+    },
+    "Report a Player" : {
+
+    },
+    "Report a Problem" : {
+
+    },
+    "Report or Block a Player…" : {
+
+    },
+    "Reports" : {
+
+    },
+    "Reports come to us by email at report@local-trivia.com, and blocking someone sends one too. We review every report within 24 hours and act on it, adding objectionable words and names to the app's filter so they can't be used in any game." : {
 
     },
     "Right in %llds: %@ pts · right at the buzzer: %@ · wrong: %@. Answers score more the faster they come in. The standings follow each reveal after 5 seconds; %@" : {
@@ -580,6 +757,9 @@
       }
     },
     "Round's default" : {
+
+    },
+    "Safety" : {
 
     },
     "Scan QR Code" : {
@@ -603,6 +783,12 @@
     "Scoring" : {
 
     },
+    "Send Report" : {
+
+    },
+    "Sexual or explicit" : {
+
+    },
     "Show Join Code" : {
 
     },
@@ -624,6 +810,12 @@
     "Sky" : {
       "extractionState" : "manual"
     },
+    "Something else" : {
+
+    },
+    "Spam or misleading" : {
+
+    },
     "Standings" : {
 
     },
@@ -639,6 +831,9 @@
     "Start Over" : {
 
     },
+    "Stop Drafting" : {
+
+    },
     "Stop Hosting" : {
 
     },
@@ -651,6 +846,9 @@
     "Sun, moon, cloud and star" : {
       "extractionState" : "manual"
     },
+    "Swipe a player to remove or block them; touch and hold to report. A blocked player can't join your games again." : {
+
+    },
     "Synthwave" : {
       "extractionState" : "manual"
     },
@@ -658,6 +856,9 @@
 
     },
     "Tap a question to edit it, or the circle to leave it out of this round. Swipe to delete; Edit to reorder." : {
+
+    },
+    "Terms of Use" : {
 
     },
     "That code isn't a game on this network" : {
@@ -669,7 +870,19 @@
     "That game has ended." : {
 
     },
+    "That game name isn't allowed. Pick another." : {
+
+    },
+    "That name isn't allowed. Pick another." : {
+
+    },
+    "That nickname isn't allowed. Pick another." : {
+
+    },
     "That topic can't be drafted. Try another." : {
+
+    },
+    "The TV shows the join code, each question with its clock and answers, the reveal and the standings. Your iPad keeps the controls, and your own answers." : {
 
     },
     "The TV shows the join code, each question with its clock and answers, the reveal and the standings. Your phone keeps the controls, and your own answers." : {
@@ -687,7 +900,19 @@
     "The game is on the TV" : {
 
     },
+    "The host removed this player and blocked their device from games they host." : {
+
+    },
+    "The shapes beside each answer's letter, on this iPad and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan." : {
+
+    },
     "The shapes beside each answer's letter, on this phone and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan." : {
+
+    },
+    "Their games aren't listed on this phone." : {
+
+    },
+    "Their names are hidden in the standings on this phone." : {
 
     },
     "Themes" : {
@@ -696,7 +921,28 @@
     "Themes & Icons" : {
 
     },
+    "Then paste the CSV it replies with" : {
+
+    },
+    "There is no tolerance for objectionable content or abusive users. Don't use a nickname, game name, question or answer that is hateful, discriminatory, harassing, threatening, violent, sexually explicit or illegal, or that targets or bullies anyone. Don't harass, threaten or impersonate other players." : {
+
+    },
+    "These terms" : {
+
+    },
+    "This iPad doesn't allow the camera. Type the PIN from the host's phone instead." : {
+
+    },
     "This iPhone doesn't allow the camera. Type the PIN from the host's phone instead." : {
+
+    },
+    "This player blocked the host and left the game. The host's games are hidden on their phone." : {
+
+    },
+    "This player blocked the name: it's hidden on their phone." : {
+
+    },
+    "This question has words that aren't allowed in a game. It stays out of play until they're gone." : {
 
     },
     "Time limit" : {
@@ -735,7 +981,19 @@
     "Trivia Night" : {
 
     },
+    "Trivia filters objectionable words out of nicknames, game names and questions, and hides any that still reach a player's screen." : {
+
+    },
+    "Trivia is for people in the same room. Everyone who hosts or plays agrees to these terms first." : {
+
+    },
+    "Trivia lets people in the same room play a quiz together: one person hosts on their iPhone or iPad, and everyone else joins with the app or a web browser. These terms apply to everyone who hosts or plays. By agreeing, you accept them along with Apple's Standard License Agreement for apps." : {
+
+    },
     "Turn on Wi-Fi or Personal Hotspot so others can join" : {
+
+    },
+    "Unblock" : {
 
     },
     "Undo" : {
@@ -744,7 +1002,13 @@
     "Unranked" : {
       "extractionState" : "manual"
     },
+    "Use Another AI" : {
+
+    },
     "Uses these markers." : {
+
+    },
+    "Violent or threatening" : {
 
     },
     "Violet on midnight, down to the horizon" : {
@@ -778,6 +1042,9 @@
     "What's the question?" : {
 
     },
+    "What's wrong" : {
+
+    },
     "White on black, through a dot-matrix screen" : {
       "extractionState" : "manual"
     },
@@ -797,13 +1064,28 @@
     "You" : {
 
     },
+    "You blocked this game's host." : {
+
+    },
+    "You blocked this game's host. Their games won't be listed on this phone." : {
+
+    },
     "You play as" : {
 
     },
     "You'll jump in on the next question." : {
 
     },
+    "You'll leave the game, and this host's games won't be listed on this phone. A report goes to the developer." : {
+
+    },
     "You're in" : {
+
+    },
+    "You're responsible for what you type and for the questions you host — including ones you draft with Apple Intelligence or another AI, which can be wrong. Check them before you play." : {
+
+    },
+    "Your content and your privacy" : {
 
     },
     "Your name" : {
@@ -837,12 +1119,6 @@
     "and %lld more" : {
 
     },
-    "bird" : {
-      "extractionState" : "manual"
-    },
-    "cat" : {
-      "extractionState" : "manual"
-    },
     "circle" : {
       "extractionState" : "manual"
     },
@@ -855,6 +1131,9 @@
     "diamond" : {
       "extractionState" : "manual"
     },
+    "dog" : {
+      "extractionState" : "manual"
+    },
     "down %lld" : {
 
     },
@@ -865,6 +1144,9 @@
       "extractionState" : "manual"
     },
     "flame" : {
+      "extractionState" : "manual"
+    },
+    "fox" : {
       "extractionState" : "manual"
     },
     "heart" : {
@@ -904,10 +1186,10 @@
     "sun" : {
       "extractionState" : "manual"
     },
-    "tortoise" : {
+    "triangle" : {
       "extractionState" : "manual"
     },
-    "triangle" : {
+    "turtle" : {
       "extractionState" : "manual"
     },
     "up %lld" : {

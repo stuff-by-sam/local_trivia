@@ -131,9 +131,11 @@ the server, and its owner plays too.
 - **Set up the round** — name the game, write questions (four answers, tap a
   key to mark the right one — there's no default — optional category and time
   limit; Return moves to the next field, and it saves as you go), draft them
-  with Apple Intelligence on phones that have it (see *Drafting* below), or
-  import a CSV in the web
-  console's format; reorder and include/exclude, and set the
+  with Apple Intelligence on phones that have it (see *Drafting* below),
+  import a CSV in the web console's format, or **Use Another AI**: name a
+  topic and a count, copy a prompt (`AIPrompt`) into any AI chat, and paste
+  its reply back — `CSVImport` takes the CSV out of the chat's code block.
+  Reorder and include/exclude, and set the
   scoring: top points, time per question, a floor for slow correct answers,
   points for wrong answers, shuffle and auto-advance — with a live preview of
   what an answer earns. The round is kept on the phone between games.
@@ -254,7 +256,7 @@ opened; a closed group says what's in use.
 - **Answer markers** — the shapes beside each answer's letter: Classic's
   circle, triangle, square and diamond, or Suits (club, spade, heart,
   diamond), Elements (leaf, water, fire, lightning), Sky (sun, moon, cloud,
-  star) and Critters (tortoise, fish, cat, bird). A set dresses this phone's
+  star) and Critters (turtle, fish, fox, dog). A set dresses this phone's
   answers and any TV it puts the game on. Letters and colours don't change,
   so B is cyan on every phone, and VoiceOver names the shape a set uses
   ("B, spade: Saturn"). Browser players keep the classic shapes.
@@ -281,6 +283,35 @@ How it's built:
 To add a theme, marker set or icon, add its case; for an icon, add its
 `.icon` file and its name in the build setting too. `LooksTests` fails if an
 icon the code names isn't built into the app.
+
+## Safety (App Review guideline 1.2)
+
+Players see what other people type — nicknames, game names, a host's
+questions — so the app has the precautions App Review asks of user-generated
+content (`Safety/`):
+
+- **Terms of Use first.** `TermsView` covers the app on first launch until
+  they're agreed (`Safety.termsVersion`); after that they're under **Safety**
+  on the join screen. Browser players tick a box first, linking
+  `public/play/terms.html`. The same terms are `docs/terms.html`.
+- **A filter.** `ContentFilter` keeps profanity, slurs and sexual terms out:
+  the host turns such nicknames away (`BAD_NICKNAME`), a question with one
+  can't be played (`HostQuestion.Problem.objectionable`), a game name with
+  one can't be hosted, and a player's phone masks any that still arrive
+  (`ServerEvent.masked()`). Names are held to more words than questions,
+  which may need "Moby-Dick" or "blue tit".
+- **Reporting.** The player's ••• menu (`PlayerMenu`) reports the question, a
+  player or the game; touching and holding a question or a name in the
+  standings does too, and so does the host's Players sheet. A report is an
+  email to report@local-trivia.com, written out for the person to send from
+  Mail (`ReportSheet`) — the app itself sends nothing.
+- **Blocking.** A host blocks a player: removed at once, and their phone or
+  browser's random id (`Safety.installID`, sent with `join`) can't join a game
+  hosted here again — nor their address, while this hosting lasts. A player
+  blocks a host — leaves the game, and its games (by the `id` in its Bonjour
+  advert) aren't listed again — or another player, whose name is hidden on
+  this phone. Every block opens a report. **Safety** lists them all to
+  unblock.
 
 ## Security and privacy
 
@@ -334,6 +365,7 @@ LocalTrivia/
     GameStore.swift         @Observable state machine — the app's play.js
     GameServer.swift        A game's address — local network only
     TokenStore.swift        The resume token, in the Keychain
+  Safety/                   Terms, the content filter, reporting and blocking (guideline 1.2)
   Hosting/
     HostedGame.swift        The game engine — gameSession.js, ported
     HostServer.swift        Socket.IO over WebSocket (NWListener) + Bonjour, and the web player
@@ -343,6 +375,7 @@ LocalTrivia/
     HostModels.swift        The round: questions, rules, scoring, on-device storage
     QuestionDrafter.swift   Questions drafted on a topic — the phone's model, or Private Cloud Compute — for review
     CSVImport.swift         public/shared/csv.js, ported
+    AIPrompt.swift          The prompt a host copies into an AI chat, for a CSV this imports
     JoinLink.swift          Join links (http:// for the QR code, localtrivia://), QR codes, the LAN address
   BigScreen/
     BigScreen.swift         A connected TV gets its own scene (a scene accessory), not a mirror of the phone

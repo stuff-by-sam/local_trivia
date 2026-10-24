@@ -101,7 +101,9 @@ private struct CameraOff: View {
     ContentUnavailableView {
       Label(isRestricted ? "Camera Restricted" : "Camera Is Off for Trivia", systemImage: "camera.fill")
     } description: {
-      if isRestricted {
+      if isRestricted && UIDevice.current.userInterfaceIdiom == .pad {
+        Text("This iPad doesn't allow the camera. Type the PIN from the host's phone instead.")
+      } else if isRestricted {
         Text("This iPhone doesn't allow the camera. Type the PIN from the host's phone instead.")
       } else {
         Text("To scan the host's code, allow Camera for Trivia in Settings. Or type the PIN from the host's phone.")

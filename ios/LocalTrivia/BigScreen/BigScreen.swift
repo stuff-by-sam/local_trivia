@@ -37,6 +37,7 @@ extension View {
           .environment(models.store)
           .environment(models.host)
           .environment(models.looks)
+          .environment(models.safety)
       }
       .onAvailabilityChange { isAvailable in
         models.bigScreen.isConnected = isAvailable

@@ -39,6 +39,11 @@ struct QuestionEditorView: View {
           .onChange(of: draft.text) { _, text in advance(ifReturnIn: text, from: .question) }
       } header: {
         SectionHeader("Question")
+      } footer: {
+        if draft.problem == .objectionable {
+          Label("This question has words that aren't allowed in a game. It stays out of play until they're gone.", systemImage: "exclamationmark.triangle.fill")
+            .foregroundStyle(.warning)
+        }
       }
 
       Section {

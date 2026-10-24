@@ -12,14 +12,14 @@ struct ResultView: View {
   @Environment(\.palette) private var palette
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-  enum Verdict {
+  enum Verdict: CaseIterable {
     case correct, wrong, missed
 
     init(_ result: AnswerResult) {
       self = !result.answered ? .missed : result.correct ? .correct : .wrong
     }
 
-    var title: LocalizedStringKey {
+    var title: LocalizedStringResource {
       switch self {
       case .correct: "Correct"
       case .wrong: "Not quite"
@@ -52,28 +52,22 @@ struct ResultView: View {
     VStack(spacing: Space.m) {
       VStack(spacing: Space.xl) {
         VStack(spacing: Space.l) {
-          Badge(symbol: verdict.symbol, color: color, isGlass: true)
-            .symbolEffect(.bounce.up, options: .nonRepeating, value: appeared)
+          Badge(symbol: verdict.symbol, color: color, bounce: appeared)
             // Takes the chosen answer's glass identity: the button you tapped
             // flows into this badge.
             .glassEffectID(result.answered ? GlassID.answer(result.chosenIndex) : GlassID.hero, in: glass)
 
           VStack(spacing: Space.xs) {
-            Text(verdict.title)
-              .textRole(.shout)
-              .foregroundStyle(color)
+            GlassText(verdict.title, role: .shout, color: color)
               .accessibilityAddTraits(.isHeader)
             HStack(alignment: .firstTextBaseline, spacing: Space.s) {
-              Text(verbatim: "+\(shownPoints.grouped)")
-                .textRole(.display(.points))
-                .contentTransition(.numericText(value: Double(shownPoints)))
+              GlassCounter(shownPoints, prefix: "+", role: .display(.points), color: result.points > 0 ? .primary : .secondary)
                 .minimumScaleFactor(0.5)
               Text("pts")
                 .textRole(.label)
                 .foregroundStyle(.secondary)
             }
             .lineLimit(1)
-            .foregroundStyle(result.points > 0 ? .primary : .secondary)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text("Plus \(result.points) points"))
           }
