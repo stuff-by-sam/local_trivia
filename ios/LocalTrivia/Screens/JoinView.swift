@@ -19,6 +19,7 @@ struct JoinView: View {
   @State private var isSettingUpHost = false
   @State private var isChoosingLooks = false
   @State private var isShowingSafety = false
+  @State private var isShowingTutorial = false
   @State private var undo: UndoItem?
   /// A few seconds without finding a game: time to say why, and offer the QR code.
   @State private var isStillLooking = false
@@ -73,8 +74,9 @@ struct JoinView: View {
       }
     }
     .toolbar {
-      ToolbarItem(placement: .topBarLeading) {
+      ToolbarItemGroup(placement: .topBarLeading) {
         Button("Safety", systemImage: "hand.raised") { isShowingSafety = true }
+        Button("How to Play", systemImage: "questionmark") { isShowingTutorial = true }
       }
       ToolbarItem(placement: .topBarTrailing) {
         Button("Themes & Icons", systemImage: "paintpalette") { isChoosingLooks = true }
@@ -91,6 +93,9 @@ struct JoinView: View {
     }
     .sheet(isPresented: $isShowingSafety) {
       SafetyView()
+    }
+    .sheet(isPresented: $isShowingTutorial) {
+      TutorialView()
     }
     .sheet(isPresented: $isSettingUpHost) {
       HostSetupView()
@@ -264,7 +269,8 @@ struct JoinView: View {
   /// The cursor goes where the next keystroke will — unless a sheet is up,
   /// where it would raise a keyboard over the themes or the round.
   private func placeCursor() {
-    guard focus == nil, !isScanning, !isSettingUpHost, !isChoosingLooks, !isShowingSafety, safety.hasAcceptedTerms else { return }
+    guard focus == nil, !isScanning, !isSettingUpHost, !isChoosingLooks, !isShowingSafety, !isShowingTutorial, safety.hasAcceptedTerms
+    else { return }
     focus = store.nicknameIsValid ? .pin : .nickname
   }
 }

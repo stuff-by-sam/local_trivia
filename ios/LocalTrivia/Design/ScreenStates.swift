@@ -56,6 +56,7 @@ enum ScreenState: String, CaseIterable {
   case safety
   case report
   case reportBlocked = "report.blocked"
+  case tutorial
 }
 
 /// A screen state as the app would show it: in its navigation stack, over
@@ -64,20 +65,24 @@ struct ScreenPreview: View {
   let state: ScreenState
   let theme: Theme
   let markers: AnswerMarkers
+  /// The tutorial's page, for `.tutorial`.
+  let page: Int
 
   @State private var models: PreviewModels
   @Namespace private var glass
 
   /// `chosen` is the answer a chosen question has picked, 0–3.
-  init(_ state: ScreenState, theme: Theme = .phosphor, markers: AnswerMarkers = .classic, chosen: Int = 1) {
+  init(_ state: ScreenState, theme: Theme = .phosphor, markers: AnswerMarkers = .classic, chosen: Int = 1, page: Int = 0) {
     self.state = state
     self.theme = theme
     self.markers = markers
+    self.page = page
     _models = State(initialValue: PreviewModels(state, chosen: chosen))
   }
 
   /// `-screen question.chosen -theme amber -markers suits -chosen 3`: that
-  /// screen, for a UI test.
+  /// screen, for a UI test. `-screen tutorial -page 2` opens the tutorial at
+  /// its third page.
   static func fromLaunchArguments() -> ScreenPreview? {
     let defaults = UserDefaults.standard
     guard let name = defaults.string(forKey: "screen"), let state = ScreenState(rawValue: name) else { return nil }
@@ -87,7 +92,7 @@ struct ScreenPreview: View {
     let theme = (arguments["theme"] as? String).flatMap(Theme.init(rawValue:)) ?? .phosphor
     let markers = (arguments["markers"] as? String).flatMap(AnswerMarkers.init(rawValue:)) ?? .classic
     let chosen = defaults.object(forKey: "chosen") == nil ? 1 : defaults.integer(forKey: "chosen")
-    return ScreenPreview(state, theme: theme, markers: markers, chosen: chosen)
+    return ScreenPreview(state, theme: theme, markers: markers, chosen: chosen, page: defaults.integer(forKey: "page"))
   }
 
   var body: some View {
@@ -137,6 +142,8 @@ struct ScreenPreview: View {
       over(SafetyView())
     case .report:
       over(ReportSheet(report: Report(.question(text: Sample.question(elapsed: 0).text, options: Sample.question(elapsed: 0).options, category: "SPACE"), gameName: Sample.game.name, isHost: false)))
+    case .tutorial:
+      over(TutorialView(isFirstRun: true, page: TutorialPage(rawValue: page) ?? .welcome))
     case .reportBlocked:
       over(ReportSheet(report: Report(.host(gameName: Sample.game.name), gameName: Sample.game.name, isHost: false, blocked: "This player blocked the host and left the game. The host's games are hidden on their phone.")))
     case .tvIdle, .tvLobby, .tvQuestion, .tvReveal, .tvStandings, .tvFinal:
@@ -306,7 +313,7 @@ final class PreviewModels {
       break
     case .round, .editorNew, .editorEdit, .drafting, .drafts:
       host.library.questions = Sample.round
-    case .scannerOff, .scannerRestricted, .looks, .terms, .safety, .report, .reportBlocked:
+    case .scannerOff, .scannerRestricted, .looks, .terms, .safety, .report, .reportBlocked, .tutorial:
       // Over a join screen still looking: the join screen's own sheets keep
       // its keyboard down, but these are presented from outside it.
       break

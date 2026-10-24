@@ -98,6 +98,8 @@ Claim only what's been tested on a device:
 > • The host plays too.
 >
 > JOIN IN SECONDS
+> • A one-minute tutorial with a practice question shows you how, and How to
+> Play shows it again any time.
 > • Games on your Wi-Fi show up by themselves. Type the four-digit PIN and
 > you're in.
 > • No app? Scan the host's QR code with any phone's camera to play in the

@@ -13,7 +13,7 @@ final class SafetyUITests: XCTestCase {
   func testTermsComeFirst() throws {
     let app = XCUIApplication()
     // As a first launch: the agreement from any earlier run doesn't count.
-    app.launchArguments += ["-nickname", "UITest", "-termsAccepted", "0"]
+    app.launchArguments += ["-nickname", "UITest", "-termsAccepted", "0", "-tutorialSeen", "YES"]
     app.launch()
 
     let agree = app.buttons["Agree and Continue"]

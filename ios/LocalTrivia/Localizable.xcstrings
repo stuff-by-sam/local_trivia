@@ -88,6 +88,9 @@
     "A wrong answer earns" : {
 
     },
+    "Ada" : {
+
+    },
     "Add ^[%lld Question](inflect: true)" : {
 
     },
@@ -98,6 +101,9 @@
 
     },
     "Adds or leaves out this question." : {
+
+    },
+    "After each question you'll see how the room voted and where you stand. The top three take the podium at the end. Lock your phone or lose Wi-Fi mid-game, and you're back in your seat when you return." : {
 
     },
     "Agree and Continue" : {
@@ -113,6 +119,9 @@
 
     },
     "Answer Markers" : {
+
+    },
+    "Answer fast" : {
 
     },
     "Answer on your phone" : {
@@ -146,6 +155,12 @@
 
     },
     "Apple's Standard License Agreement" : {
+
+    },
+    "Arctic" : {
+
+    },
+    "Atlantic" : {
 
     },
     "Away" : {
@@ -194,6 +209,9 @@
 
     },
     "Cancel" : {
+
+    },
+    "Carbon dioxide" : {
 
     },
     "Category" : {
@@ -253,7 +271,13 @@
     "Correct" : {
 
     },
+    "Correct · +%@ pts" : {
+
+    },
     "Correct! Plus %lld points." : {
+
+    },
+    "Correct, plus %lld points" : {
 
     },
     "Couldn't Import" : {
@@ -331,6 +355,9 @@
     "Effective October 21, 2026" : {
 
     },
+    "Eight" : {
+
+    },
     "Elements" : {
       "extractionState" : "manual"
     },
@@ -346,16 +373,31 @@
     "Enter your name to play" : {
 
     },
+    "Every answer has a letter, a shape and a colour. Right answers score more the faster they come in. Try one:" : {
+
+    },
     "Every player can report a question, a player or a game, and can block a host or another player. Blocking removes what they posted from your screen straight away: a blocked host's game ends for you and its games aren't listed again, and a blocked player's name is hidden." : {
 
     },
     "Every player goes back to the join screen." : {
 
     },
+    "FOUND ON YOUR WI-FI · ONLINE" : {
+
+    },
     "Final Results" : {
 
     },
     "Final results next" : {
+
+    },
+    "Five" : {
+
+    },
+    "Friday Quiz" : {
+
+    },
+    "GEOGRAPHY" : {
 
     },
     "Game" : {
@@ -386,6 +428,9 @@
     "Games have no accounts and no servers, so content is removed and users are ejected on the spot, by the people in the game: the host removes or blocks a player, and players block a host or another player." : {
 
     },
+    "Games on your Wi-Fi show up by themselves. Type the four-digit PIN from the host's screen, add your nickname, and you're in. Nothing listed? Scan the host's QR code instead." : {
+
+    },
     "Games run on the players' own devices, over the local network. Nothing anyone types is sent to us or to any server, and it's gone when the game ends — except what you choose to send us in a report, which we use only to review it." : {
 
     },
@@ -407,6 +452,9 @@
     "Hateful or discriminatory" : {
 
     },
+    "Helium" : {
+
+    },
     "Hold tight" : {
 
     },
@@ -425,7 +473,16 @@
     "Host unreachable, retrying" : {
 
     },
+    "Host your own" : {
+
+    },
+    "How many sides does a hexagon have?" : {
+
+    },
     "How the app keeps games safe" : {
+
+    },
+    "How to Play" : {
 
     },
     "Import CSV…" : {
@@ -443,6 +500,9 @@
     "In this round" : {
 
     },
+    "Indian" : {
+
+    },
     "Iridescent foil that catches the light as you tilt it" : {
       "extractionState" : "manual"
     },
@@ -452,7 +512,13 @@
     "Join Game" : {
 
     },
+    "Join a game" : {
+
+    },
     "Join code" : {
+
+    },
+    "Jupiter" : {
 
     },
     "Kept out of your games" : {
@@ -468,6 +534,9 @@
 
     },
     "Left out of this round" : {
+
+    },
+    "Let's Play" : {
 
     },
     "Liquid colour under clear glass, pooling as you tilt" : {
@@ -495,6 +564,12 @@
     "Looking for games…" : {
 
     },
+    "MATHS" : {
+
+    },
+    "Make it yours" : {
+
+    },
     "Mark %@ as the right answer" : {
 
     },
@@ -513,7 +588,13 @@
     "Needs all four answers" : {
 
     },
+    "Neptune" : {
+
+    },
     "New Question" : {
+
+    },
+    "Next" : {
 
     },
     "Next Question" : {
@@ -523,6 +604,9 @@
 
     },
     "Nickname" : {
+
+    },
+    "Nitrogen" : {
 
     },
     "No Mail Account" : {
@@ -549,6 +633,9 @@
     "No games yet. The host's phone has to be on this Wi-Fi." : {
 
     },
+    "No objectionable content, no abusive players. In a game, the ••• menu reports a question, a player or the game, or blocks the host; touch and hold a name to block that player. Hosts remove or block anyone from Players." : {
+
+    },
     "No objectionable content. No abusive users." : {
 
     },
@@ -571,6 +658,19 @@
       "extractionState" : "manual"
     },
     "Not quite" : {
+
+    },
+    "Not quite · it was %@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not quite · it was %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "Not quite. It was %@." : {
 
     },
     "Not quite. Plus %lld points." : {
@@ -613,16 +713,38 @@
     "Or go to %@" : {
 
     },
+    "Or scan the code" : {
+
+    },
+    "Oxygen" : {
+
+    },
     "PIN" : {
 
     },
     "PIN %@" : {
 
     },
+    "Pacific" : {
+
+    },
+    "Page %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Page %1$lld of %2$lld"
+          }
+        }
+      }
+    },
     "Phosphor" : {
       "extractionState" : "manual"
     },
     "Pick a CSV file to import." : {
+
+    },
+    "Pick a theme, answer markers and an app icon in Themes & Icons, all free. See this again any time with How to Play, on the join screen." : {
 
     },
     "Pick another game name" : {
@@ -635,6 +757,9 @@
 
     },
     "Play in this round" : {
+
+    },
+    "Play nice" : {
 
     },
     "Player" : {
@@ -693,6 +818,9 @@
 
     },
     "Questions · %lld in play" : {
+
+    },
+    "Quiz night for the room you're in. One phone hosts, and everyone else joins on the same Wi-Fi, with the app or any phone's browser. Here's how it works: it takes a minute." : {
 
     },
     "Rank" : {
@@ -759,7 +887,22 @@
     "Round's default" : {
 
     },
+    "SCIENCE" : {
+
+    },
+    "SPACE" : {
+
+    },
     "Safety" : {
+
+    },
+    "Safety, on the join screen" : {
+
+    },
+    "Sam" : {
+
+    },
+    "Saturn" : {
 
     },
     "Scan QR Code" : {
@@ -786,6 +929,9 @@
     "Send Report" : {
 
     },
+    "Seven" : {
+
+    },
     "Sexual or explicit" : {
 
     },
@@ -799,6 +945,12 @@
 
     },
     "Shuffle the questions" : {
+
+    },
+    "Six" : {
+
+    },
+    "Skip" : {
 
     },
     "Skip Question" : {
@@ -817,6 +969,9 @@
 
     },
     "Standings" : {
+
+    },
+    "Standings and the podium" : {
 
     },
     "Standings next" : {
@@ -851,6 +1006,9 @@
     },
     "Synthwave" : {
       "extractionState" : "manual"
+    },
+    "Tap Host a Game and build a round: write questions, draft them with Apple Intelligence, import a CSV, or copy a prompt into any AI chat. Then Start Hosting, and everyone joins with your PIN or QR code. You play too." : {
+
     },
     "Tap a key to mark the right answer." : {
 
@@ -960,6 +1118,16 @@
     "Time's up" : {
 
     },
+    "Time's up · it was %@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Time's up · it was %1$@, %2$@"
+          }
+        }
+      }
+    },
     "Titanium" : {
       "extractionState" : "manual"
     },
@@ -990,6 +1158,9 @@
     "Trivia lets people in the same room play a quiz together: one person hosts on their iPhone or iPad, and everyone else joins with the app or a web browser. These terms apply to everyone who hosts or plays. By agreeing, you accept them along with Apple's Standard License Agreement for apps." : {
 
     },
+    "Try Another" : {
+
+    },
     "Turn on Wi-Fi or Personal Hotspot so others can join" : {
 
     },
@@ -1001,6 +1172,9 @@
     },
     "Unranked" : {
       "extractionState" : "manual"
+    },
+    "Uranus" : {
+
     },
     "Use Another AI" : {
 
@@ -1039,10 +1213,22 @@
     "Wears this theme." : {
 
     },
+    "Welcome to Trivia" : {
+
+    },
     "What's the question?" : {
 
     },
     "What's wrong" : {
+
+    },
+    "Which gas do plants take in from the air?" : {
+
+    },
+    "Which is the largest ocean on Earth?" : {
+
+    },
+    "Which planet has the most moons?" : {
 
     },
     "White on black, through a dot-matrix screen" : {
