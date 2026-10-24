@@ -11,6 +11,7 @@ struct RootView: View {
   @Environment(Looks.self) private var looks
   @Environment(Safety.self) private var safety
   @Environment(\.scenePhase) private var scenePhase
+  @AppStorage(TutorialPage.seenKey) private var hasSeenTutorial = false
   @Namespace private var glass
 
   var body: some View {
@@ -33,9 +34,9 @@ struct RootView: View {
     .sheet(item: $host.sheet) { HostSheetView(sheet: $0) }
     // Over whatever's on screen: a block can end the game under it.
     .reportSheet(Binding { safety.report } set: { safety.report = $0 })
-    // Nobody hosts or joins before agreeing to the terms.
-    .fullScreenCover(isPresented: Binding { !safety.hasAcceptedTerms } set: { _ in }) {
-      TermsView(isAgreeing: true)
+    // Nobody hosts or joins before agreeing to the terms; then how to play.
+    .fullScreenCover(isPresented: Binding { !safety.hasAcceptedTerms || !hasSeenTutorial } set: { _ in }) {
+      FirstRunView()
     }
     .motion(.screen, value: store.phase.screen)
     .haptic(trigger: store.phase.screen) { _, _ in haptic }

@@ -12,7 +12,7 @@ final class LooksUITests: XCTestCase {
   func testPicksAThemeAndMarkers() throws {
     let app = XCUIApplication()
     // Whatever an earlier run left on, this opens wearing the defaults.
-    app.launchArguments += ["-nickname", "UITest", "-termsAccepted", "1", "-theme", "phosphor", "-markers", "classic"]
+    app.launchArguments += ["-nickname", "UITest", "-termsAccepted", "1", "-tutorialSeen", "YES", "-theme", "phosphor", "-markers", "classic"]
     app.launch()
     let allow = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.buttons["Allow"]
     if allow.waitForExistence(timeout: 3) { allow.tap() }

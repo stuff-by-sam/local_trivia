@@ -284,6 +284,17 @@ To add a theme, marker set or icon, add its case; for an icon, add its
 `.icon` file and its name in the build setting too. `LooksTests` fails if an
 icon the code names isn't built into the app.
 
+## How to Play
+
+A first launch shows the Terms of Use, then a short tutorial (`Tutorial/`,
+over everything from `RootView` as `FirstRunView`): seven pages drawn with
+the game's own pieces — joining, a practice question with the real clock and
+answer buttons, scored as a game scores it (`PracticeQuestion`), the
+standings and podium, hosting, playing nice, and Themes & Icons. Skip or
+Let's Play finishes it for good (`tutorialSeen`); **How to Play** (?) beside
+Safety on the join screen shows it again any time. UI tests skip it with
+`-tutorialSeen YES`, and `-resetTutorial YES` starts it as on a first launch.
+
 ## Safety (App Review guideline 1.2)
 
 Players see what other people type — nicknames, game names, a host's
@@ -366,6 +377,7 @@ LocalTrivia/
     GameServer.swift        A game's address — local network only
     TokenStore.swift        The resume token, in the Keychain
   Safety/                   Terms, the content filter, reporting and blocking (guideline 1.2)
+  Tutorial/                 The first launch (terms, then How to Play), and the practice question
   Hosting/
     HostedGame.swift        The game engine — gameSession.js, ported
     HostServer.swift        Socket.IO over WebSocket (NWListener) + Bonjour, and the web player
