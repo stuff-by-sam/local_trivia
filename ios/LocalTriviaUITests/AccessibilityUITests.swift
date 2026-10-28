@@ -37,17 +37,19 @@ final class AccessibilityUITests: XCTestCase {
     let app = XCUIApplication()
     app.launchArguments += ["-nickname", "UITest", "-termsAccepted", "1", "-tutorialSeen", "YES"] + arguments
     app.launch()
-    let allow = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.buttons["Allow"]
-    if allow.waitForExistence(timeout: 3) { allow.tap() }
     var screen = Screens(app: app, setting: setting, failsOnClippedText: failsOnClippedText, test: self)
 
     let host = app.buttons["Host a Game"]
     XCTAssertTrue(host.waitForExistence(timeout: 10))
     try screen.capture("Join")
 
-    app.buttons["Themes & Icons"].tap()
+    app.buttons["Settings"].tap()
+    XCTAssertTrue(app.buttons["Done"].waitForExistence(timeout: 5))
+    try screen.capture("Settings")
+    app.button(beginningWith: "Themes & Icons").tap()
     XCTAssertTrue(app.element(containing: "Wearing").waitForExistence(timeout: 5))
     try screen.capture("Themes & Icons")
+    app.navigationBars["Themes & Icons"].buttons.firstMatch.tap()
     app.buttons["Done"].tap()
 
     host.tap()
@@ -82,6 +84,9 @@ final class AccessibilityUITests: XCTestCase {
     }
 
     app.buttons["Start Hosting"].tap()
+    // Nothing touches the network before this: here's where it's asked for.
+    let allow = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.buttons["Allow"]
+    if allow.waitForExistence(timeout: 3) { allow.tap() }
     XCTAssertTrue(app.element(containing: "In the game").waitForExistence(timeout: 15), "never took a seat in its own game")
     try screen.capture("Host lobby")
 
@@ -236,21 +241,24 @@ extension XCUIApplication {
   @MainActor
   fileprivate func reveal(_ element: XCUIElement) -> Bool {
     let window = windows.firstMatch.frame
-    let list = collectionViews.firstMatch.exists ? collectionViews.firstMatch : scrollViews.firstMatch
     var showMoreBelow = true
     var turns = 0
     for _ in 0..<30 {
+      // The list in front, found afresh: a sheet's may still be on its way up.
+      let list = collectionViews.firstMatch.exists ? collectionViews.firstMatch : scrollViews.firstMatch
       // Below the navigation bar; above the keyboard, or the action bar.
       let top = window.minY + window.height * 0.15
       let bottom = keyboards.firstMatch.exists ? keyboards.firstMatch.frame.minY : window.maxY - window.height * 0.2
       let band = top...max(top, bottom - Size.tapMargin)
       if element.exists, element.isHittable, band.contains(element.frame.midY) { return true }
       if element.exists, !element.frame.isEmpty { showMoreBelow = element.frame.midY > band.upperBound }
-      let before = list.staticTexts.firstMatch.frame
+      // Where the list's first line is, to tell whether a drag moved it.
+      let marker = list.staticTexts.firstMatch
+      let before = marker.exists ? marker.frame : .zero
       let from = coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: showMoreBelow ? 0.5 : 0.25))
       let to = coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: showMoreBelow ? 0.25 : 0.5))
       from.press(forDuration: 0.05, thenDragTo: to)
-      if !element.exists, list.staticTexts.firstMatch.frame == before {
+      if !element.exists, (marker.exists ? marker.frame : .zero) == before {
         turns += 1
         guard turns < 3 else { return false }
         showMoreBelow.toggle()

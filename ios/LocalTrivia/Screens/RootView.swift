@@ -11,6 +11,7 @@ struct RootView: View {
   @Environment(Looks.self) private var looks
   @Environment(Safety.self) private var safety
   @Environment(\.scenePhase) private var scenePhase
+  @Environment(\.hasRoomToSpread) private var spreads
   @AppStorage(TutorialPage.seenKey) private var hasSeenTutorial = false
   @Namespace private var glass
 
@@ -53,15 +54,17 @@ struct RootView: View {
       await GlassSymbol.prepare(Array(markers.prefix(AnswerStyle.allCases.count)) + game + markers.dropFirst(AnswerStyle.allCases.count))
     }
     .onChange(of: looks.theme, initial: true) { _, theme in host.theme = theme }
-    .onChange(of: browser.games) { _, _ in store.discovered(listedGames, isComplete: browser.hasSettled) }
-    .onChange(of: store.connection) { _, _ in store.discovered(listedGames, isComplete: browser.hasSettled) }
-    .onChange(of: browser.hasSettled) { _, settled in store.discovered(listedGames, isComplete: settled) }
-    .onChange(of: safety.blockedHosts) { _, _ in store.discovered(listedGames, isComplete: browser.hasSettled) }
+    .onChange(of: browser.games) { _, _ in noteGamesFound() }
+    .onChange(of: store.connection) { _, _ in noteGamesFound() }
+    .onChange(of: browser.hasSettled) { _, _ in noteGamesFound() }
+    .onChange(of: safety.blockedHosts) { _, _ in noteGamesFound() }
     .onChange(of: scenePhase) { _, phase in
       switch phase {
       case .active:
         store.sceneDidBecomeActive()
         host.appDidBecomeActive()
+        // Back, perhaps from switching Local Network on: look again.
+        if browser.hasFailed { browser.start() }
       case .background:
         host.appDidEnterBackground()
       default:
@@ -72,31 +75,38 @@ struct RootView: View {
     .onOpenURL { url in
       guard safety.hasAcceptedTerms, let link = JoinLink(url: url), !host.isHosting, !store.isInGame || store.server == link.server
       else { return }
-      guard !safety.isBlocked(link.server, hostID: browser.hostIDs[link.server.url]) else {
-        store.noteBlockedHost()
-        return
-      }
-      store.join(link.server, pin: link.pin)
+      store.join(link, safety: safety, browser: browser)
     }
     .onChange(of: store.isInGame, initial: true) { _, inGame in
       // A phone that auto-locks between questions misses the next one.
       UIApplication.shared.isIdleTimerDisabled = inGame
-      // Nothing in a game uses the list of games, so stop looking for them
-      // until the player's back at the join screen.
-      if inGame { browser.stop() } else { browser.start() }
+      // Nothing in a game uses the list of games. The join screen looks
+      // again once the player sets out to join another.
+      if inGame { browser.stop() }
     }
+    // Relaunched with a seat in a game: look for it too, so one whose host
+    // has stopped hosting is let go rather than retried for good.
+    .onChange(of: store.isRejoining, initial: true) { _, rejoining in
+      if rejoining { browser.start() }
+    }
+    // Where a spread finds the middle of the window — on iPhone Duo, the
+    // hinge. Outermost, so the first run's cover and every sheet know it too.
+    .measuresWindow()
   }
 
-  /// The games on the network, less those of hosts this phone has blocked.
-  private var listedGames: [GameServer] {
-    browser.games.filter { !safety.isBlocked($0, hostID: browser.hostIDs[$0.url]) }
+  /// What the browser's found, for the store to pick a game from — only while
+  /// it's looking: a list from before is no news about the network.
+  private func noteGamesFound() {
+    guard browser.isLooking else { return }
+    store.discovered(browser.games(shownBy: safety), isComplete: browser.hasSettled)
   }
 
   private var column: some View {
     screen
       .id(store.phase.screen)
       .screenTransition()
-      .gameColumn()
+      // With room for a spread, each screen lays out its own halves.
+      .gameColumn(unless: spreads)
       .glassClarity(store.phase.glassClarity)
   }
 
@@ -144,9 +154,10 @@ struct RootView: View {
 }
 
 extension View {
-  /// On iPad, keeps the phone-sized column the game is designed for, centred.
-  func gameColumn() -> some View {
-    frame(maxWidth: Size.column)
+  /// On a big screen, keeps the phone-sized column the game is designed for,
+  /// centred — `unless` the screen lays itself out as a `Spread` instead.
+  func gameColumn(unless spreads: Bool = false) -> some View {
+    frame(maxWidth: spreads ? .infinity : Size.column)
       .frame(maxWidth: .infinity)
   }
 }

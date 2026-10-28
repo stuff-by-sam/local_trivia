@@ -9,11 +9,14 @@ struct LocalTriviaApp: App {
   var body: some Scene {
     WindowGroup {
       #if DEBUG
-      if let fixture = ScreenPreview.fromLaunchArguments() {
-        fixture
-      } else {
-        game
+      Group {
+        if let fixture = ScreenPreview.fromLaunchArguments() {
+          fixture
+        } else {
+          game
+        }
       }
+      .foldGuide()
       #else
       game
       #endif

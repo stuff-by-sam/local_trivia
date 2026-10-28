@@ -8,7 +8,8 @@ final class SafetyUITests: XCTestCase {
     continueAfterFailure = false
   }
 
-  /// Nobody hosts or joins before agreeing; the terms are under Safety after.
+  /// Nobody hosts or joins before agreeing; the terms are under Settings,
+  /// Safety, after.
   @MainActor
   func testTermsComeFirst() throws {
     let app = XCUIApplication()
@@ -24,7 +25,10 @@ final class SafetyUITests: XCTestCase {
     agree.tap()
 
     XCTAssertTrue(app.buttons["Host a Game"].waitForExistence(timeout: 5))
-    app.buttons["Safety"].tap()
+    app.buttons["Settings"].tap()
+    let safety = app.buttons["Safety"]
+    XCTAssertTrue(safety.waitForExistence(timeout: 5), "no Safety in Settings")
+    safety.tap()
     XCTAssertTrue(app.buttons["Terms of Use"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Report a Problem"].exists)
     attach(app, "2 Safety")
@@ -59,6 +63,7 @@ final class SafetyUITests: XCTestCase {
     attach(app, "5 Block host")
   }
 
+  @MainActor
   private func attach(_ app: XCUIApplication, _ name: String) {
     let shot = XCTAttachment(screenshot: app.screenshot())
     shot.name = name

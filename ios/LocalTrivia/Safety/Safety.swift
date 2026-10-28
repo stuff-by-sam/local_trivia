@@ -165,3 +165,24 @@ final class Safety {
     defaults?.data(forKey: key).flatMap { try? JSONDecoder().decode(T.self, from: $0) }
   }
 }
+
+// MARK: - Games a player can see
+
+extension GameBrowser {
+  /// The games on the network, less those of hosts this phone has blocked.
+  func games(shownBy safety: Safety) -> [GameServer] {
+    games.filter { !safety.isBlocked($0, hostID: hostIDs[$0.url]) }
+  }
+}
+
+extension GameStore {
+  /// Into the game a join link or QR code names — unless this phone blocked
+  /// its host, when the join screen says why nothing happened.
+  func join(_ link: JoinLink, safety: Safety, browser: GameBrowser) {
+    guard !safety.isBlocked(link.server, hostID: browser.hostIDs[link.server.url]) else {
+      noteBlockedHost()
+      return
+    }
+    join(link.server, pin: link.pin)
+  }
+}

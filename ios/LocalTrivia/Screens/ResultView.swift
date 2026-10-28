@@ -11,6 +11,7 @@ struct ResultView: View {
   @State private var appeared = false
   @Environment(\.palette) private var palette
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @Environment(\.hasRoomToSpread) private var spreads
 
   enum Verdict: CaseIterable {
     case correct, wrong, missed
@@ -48,50 +49,31 @@ struct ResultView: View {
   private var verdict: Verdict { Verdict(result) }
 
   var body: some View {
-    let color = verdict.color(in: palette)
-    VStack(spacing: Space.m) {
-      VStack(spacing: Space.xl) {
-        VStack(spacing: Space.l) {
-          Badge(symbol: verdict.symbol, color: color, bounce: appeared)
-            // Takes the chosen answer's glass identity: the button you tapped
-            // flows into this badge.
-            .glassEffectID(result.answered ? GlassID.answer(result.chosenIndex) : GlassID.hero, in: glass)
-
-          VStack(spacing: Space.xs) {
-            GlassText(verdict.title, role: .shout, color: color)
-              .accessibilityAddTraits(.isHeader)
-            HStack(alignment: .firstTextBaseline, spacing: Space.s) {
-              GlassCounter(shownPoints, prefix: "+", role: .display(.points), color: result.points > 0 ? .primary : .secondary)
-                .minimumScaleFactor(0.5)
-              Text("pts")
-                .textRole(.label)
-                .foregroundStyle(.secondary)
-            }
-            .lineLimit(1)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text("Plus \(result.points) points"))
+    Group {
+      if spreads {
+        // The verdict on one half, what it means on the other — so on a big
+        // screen the answer you tapped flows across to the verdict.
+        Spread {
+          verdictBlock
+            .scrollsWhenCrowded()
+        } trail: {
+          VStack(spacing: Space.m) {
+            details
+              .scrollsWhenCrowded()
+            FooterStatus("Standings next")
           }
         }
-
-        Readout {
-          if let answer = correctAnswer {
-            ReadoutRow("Answer") {
-              // Keycap on the first line, like a list marker, however far
-              // a long answer wraps.
-              HStack(alignment: .firstTextBaseline, spacing: Space.s) {
-                AnswerKey(style: answer.style)
-                Text(verbatim: answer.text)
-                  .textRole(.bodyEmphasis)
-              }
-            }
+      } else {
+        VStack(spacing: Space.m) {
+          VStack(spacing: Space.xl) {
+            verdictBlock
+            details
           }
-          ReadoutRow("Total") { Text(verbatim: result.totalScore.grouped) }
-          ReadoutRow("Rank") { Text(verbatim: result.rank.map { "#\($0)" } ?? "—") }
+          .scrollsWhenCrowded()
+
+          FooterStatus("Standings next")
         }
       }
-      .scrollsWhenCrowded()
-
-      FooterStatus("Standings next")
     }
     .screenPadding()
     .gameToolbar(.player, status: .progress)
@@ -106,6 +88,51 @@ struct ResultView: View {
     }
     .onAppear {
       AccessibilityNotification.Announcement(announcement).post()
+    }
+  }
+
+  /// Right or wrong, and what it was worth.
+  private var verdictBlock: some View {
+    let color = verdict.color(in: palette)
+    return VStack(spacing: Space.l) {
+      Badge(symbol: verdict.symbol, color: color, bounce: appeared)
+        // Takes the chosen answer's glass identity: the button you tapped
+        // flows into this badge.
+        .glassEffectID(result.answered ? GlassID.answer(result.chosenIndex) : GlassID.hero, in: glass)
+
+      VStack(spacing: Space.xs) {
+        GlassText(verdict.title, role: .shout, color: color)
+          .accessibilityAddTraits(.isHeader)
+        HStack(alignment: .firstTextBaseline, spacing: Space.s) {
+          GlassCounter(shownPoints, prefix: "+", role: .display(.points), color: result.points > 0 ? .primary : .secondary)
+            .minimumScaleFactor(0.5)
+          Text("pts")
+            .textRole(.label)
+            .foregroundStyle(.secondary)
+        }
+        .lineLimit(1)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Plus \(result.points) points"))
+      }
+    }
+  }
+
+  /// What the answer was, and where that leaves the player.
+  private var details: some View {
+    Readout {
+      if let answer = correctAnswer {
+        ReadoutRow("Answer") {
+          // Keycap on the first line, like a list marker, however far
+          // a long answer wraps.
+          HStack(alignment: .firstTextBaseline, spacing: Space.s) {
+            AnswerKey(style: answer.style)
+            Text(verbatim: answer.text)
+              .textRole(.bodyEmphasis)
+          }
+        }
+      }
+      ReadoutRow("Total") { Text(verbatim: result.totalScore.grouped) }
+      ReadoutRow("Rank") { Text(verbatim: result.rank.map { "#\($0)" } ?? "—") }
     }
   }
 

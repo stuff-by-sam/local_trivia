@@ -18,9 +18,17 @@ final class PracticeRound {
 /// clock and answers, scored as a game scores them, so the first tap of a real
 /// game isn't the first tap. Nothing leaves the phone.
 struct PracticeQuestion: View {
+  /// What to draw of it: all of it, or — on a spread, as a real question
+  /// splits — the question and its clock on one half, the answers on the
+  /// other. The answers keep the clock running.
+  enum Part {
+    case whole, question, answers
+  }
+
   let round: PracticeRound
   /// On screen: the clock starts when the page is shown, and waits until then.
   let isShowing: Bool
+  var part = Part.whole
 
   @Environment(\.palette) private var palette
 
@@ -33,49 +41,66 @@ struct PracticeQuestion: View {
 
   var body: some View {
     VStack(spacing: Space.m) {
-      VStack(spacing: Space.s) {
-        Text(question.category)
-          .textRole(.label)
-          .foregroundStyle(.secondary)
-        Text(question.text)
-          .textRole(.question(length: String(localized: question.text).count))
-          .multilineTextAlignment(.center)
+      if part != .answers {
+        prompt
+        clock
       }
-      .padding(Space.inset)
-      .frame(maxWidth: .infinity)
-      .panel()
-
-      if let window = round.window {
-        ProgressView(timerInterval: window, countsDown: true) {
-          EmptyView()
-        } currentValueLabel: {
-          EmptyView()
-        }
-        .progressViewStyle(.linear)
-        .tint(AnyShapeStyle(.themeAccent))
-        // Stopped where it was once there's an answer.
-        .opacity(chosen == nil && !isOver ? 1 : 0)
-        .accessibilityHidden(true)
+      if part != .question {
+        answers
+        outcome
+          .frame(minHeight: Size.target)
       }
-
-      let options = question.options.map { String(localized: $0) }
-      let longest = options.map(\.count).max() ?? 0
-      VStack(spacing: Space.s) {
-        ForEach(AnswerStyle.allCases) { style in
-          AnswerButton(style: style, text: options[style.rawValue], longestOption: longest, state: state(of: style.rawValue)) {
-            choose(style.rawValue)
-          }
-        }
-      }
-
-      outcome
-        .frame(minHeight: Size.target)
     }
-    .haptic(trigger: chosen) { old, new in
-      guard old == nil, let new else { return nil }
+    .haptic(trigger: chosen) { [part] old, new in
+      guard part != .question, old == nil, let new else { return nil }
       return new == question.correct ? .correct : .wrong
     }
-    .task(id: TaskKey(isShowing: isShowing, index: round.index)) { await runClock() }
+    .task(id: TaskKey(isShowing: isShowing, index: round.index)) {
+      guard part != .question else { return }
+      await runClock()
+    }
+  }
+
+  private var prompt: some View {
+    VStack(spacing: Space.s) {
+      Text(question.category)
+        .textRole(.label)
+        .foregroundStyle(.secondary)
+      Text(question.text)
+        .textRole(.question(length: String(localized: question.text).count))
+        .multilineTextAlignment(.center)
+    }
+    .padding(Space.inset)
+    .frame(maxWidth: .infinity)
+    .panel()
+  }
+
+  @ViewBuilder
+  private var clock: some View {
+    if let window = round.window {
+      ProgressView(timerInterval: window, countsDown: true) {
+        EmptyView()
+      } currentValueLabel: {
+        EmptyView()
+      }
+      .progressViewStyle(.linear)
+      .tint(AnyShapeStyle(.themeAccent))
+      // Stopped where it was once there's an answer.
+      .opacity(chosen == nil && !isOver ? 1 : 0)
+      .accessibilityHidden(true)
+    }
+  }
+
+  private var answers: some View {
+    let options = question.options.map { String(localized: $0) }
+    let longest = options.map(\.count).max() ?? 0
+    return VStack(spacing: Space.s) {
+      ForEach(AnswerStyle.allCases) { style in
+        AnswerButton(style: style, text: options[style.rawValue], longestOption: longest, state: state(of: style.rawValue)) {
+          choose(style.rawValue)
+        }
+      }
+    }
   }
 
   @ViewBuilder
