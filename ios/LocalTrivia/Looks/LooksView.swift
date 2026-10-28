@@ -95,9 +95,9 @@ struct LooksView: View {
       }
     } footer: {
       if UIDevice.current.userInterfaceIdiom == .pad {
-        Text("The shapes beside each answer's letter, on this iPad and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan.")
+        Text("The shapes beside each answer's letter, on this iPad and any TV it puts the game on. Letters and colors stay the same on every phone, so B is always cyan.")
       } else {
-        Text("The shapes beside each answer's letter, on this phone and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan.")
+        Text("The shapes beside each answer's letter, on this phone and any TV it puts the game on. Letters and colors stay the same on every phone, so B is always cyan.")
       }
     }
   }

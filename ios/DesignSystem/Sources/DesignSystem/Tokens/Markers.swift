@@ -10,6 +10,7 @@ import SwiftUI
 /// every set's four shapes can be told apart without their colours.
 nonisolated public enum AnswerMarkers: String, CaseIterable, Identifiable, Sendable {
   case classic, suits, elements, sky, critters
+  case smarts, gameNight, party, showtime, quest, backyard
 
   public var id: String { rawValue }
 
@@ -20,6 +21,12 @@ nonisolated public enum AnswerMarkers: String, CaseIterable, Identifiable, Senda
     case .elements: "Elements"
     case .sky: "Sky"
     case .critters: "Critters"
+    case .smarts: "Smarts"
+    case .gameNight: "Game Night"
+    case .party: "Party"
+    case .showtime: "Showtime"
+    case .quest: "Quest"
+    case .backyard: "Backyard"
     }
   }
 
@@ -30,6 +37,12 @@ nonisolated public enum AnswerMarkers: String, CaseIterable, Identifiable, Senda
     case .elements: "Leaf, water, fire and lightning"
     case .sky: "Sun, moon, cloud and star"
     case .critters: "A turtle, a fish, a fox and a dog"
+    case .smarts: "A light bulb, a book, a brain and a graduation cap: for know-it-alls"
+    case .gameNight: "Dice, a puzzle piece, a controller and a crown"
+    case .party: "A present, a balloon, a party popper and a cake"
+    case .showtime: "Theater masks, a ticket, popcorn and a clapperboard"
+    case .quest: "A map, a key, a shield and a flag"
+    case .backyard: "A lizard, a bird, a rabbit and a ladybug"
     }
   }
 
@@ -44,6 +57,15 @@ nonisolated public enum AnswerMarkers: String, CaseIterable, Identifiable, Senda
     case .sky: ["sun.max.fill", "moon.fill", "cloud.fill", "star.fill"]
     // Each in its colour too: a green turtle, a cyan fish, an amber fox.
     case .critters: ["tortoise.fill", "fish.fill", "fox.fill", "dog.fill"]
+    case .smarts: ["lightbulb.fill", "book.fill", "brain.fill", "graduationcap.fill"]
+    case .gameNight: ["dice.fill", "puzzlepiece.fill", "gamecontroller.fill", "crown.fill"]
+    // A cyan balloon, an amber popper, a pink cake.
+    case .party: ["gift.fill", "balloon.fill", "party.popper.fill", "birthday.cake.fill"]
+    // Popcorn in amber, buttered.
+    case .showtime: ["theatermasks.fill", "ticket.fill", "popcorn.fill", "movieclapper.fill"]
+    case .quest: ["map.fill", "key.fill", "shield.fill", "flag.fill"]
+    // A green lizard, a bluebird, a sandy rabbit.
+    case .backyard: ["lizard.fill", "bird.fill", "hare.fill", "ladybug.fill"]
     }
     return symbols[style.rawValue]
   }
@@ -71,6 +93,30 @@ nonisolated public enum AnswerMarkers: String, CaseIterable, Identifiable, Senda
     case (.critters, .b): "fish"
     case (.critters, .c): "fox"
     case (.critters, .d): "dog"
+    case (.smarts, .a): "light bulb"
+    case (.smarts, .b): "book"
+    case (.smarts, .c): "brain"
+    case (.smarts, .d): "graduation cap"
+    case (.gameNight, .a): "dice"
+    case (.gameNight, .b): "puzzle piece"
+    case (.gameNight, .c): "controller"
+    case (.gameNight, .d): "crown"
+    case (.party, .a): "present"
+    case (.party, .b): "balloon"
+    case (.party, .c): "party popper"
+    case (.party, .d): "cake"
+    case (.showtime, .a): "theater masks"
+    case (.showtime, .b): "ticket"
+    case (.showtime, .c): "popcorn"
+    case (.showtime, .d): "clapperboard"
+    case (.quest, .a): "map"
+    case (.quest, .b): "skeleton key"
+    case (.quest, .c): "shield"
+    case (.quest, .d): "flag"
+    case (.backyard, .a): "lizard"
+    case (.backyard, .b): "bird"
+    case (.backyard, .c): "rabbit"
+    case (.backyard, .d): "ladybug"
     }
   }
 }

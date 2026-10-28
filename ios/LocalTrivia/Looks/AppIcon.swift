@@ -9,6 +9,7 @@ import SwiftUI
 /// setting. `IconArtwork` draws the same layers, for choosing between them.
 enum AppIcon: String, CaseIterable, Identifiable, Sendable {
   case classic, amber, cobalt, synthwave, noir, gold, holographic, chalkboard, glass, titanium
+  case aurora, ember, sakura, abyss, circuit
 
   var id: String { rawValue }
 
@@ -33,6 +34,11 @@ enum AppIcon: String, CaseIterable, Identifiable, Sendable {
     case .chalkboard: "Chalkboard"
     case .glass: "Glass"
     case .titanium: "Titanium"
+    case .aurora: "Aurora"
+    case .ember: "Ember"
+    case .sakura: "Sakura"
+    case .abyss: "Abyss"
+    case .circuit: "Circuit"
     }
   }
 

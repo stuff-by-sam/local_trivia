@@ -204,6 +204,6 @@ private struct Practice {
     Practice(category: "SPACE", text: "Which planet has the most moons?", options: ["Jupiter", "Saturn", "Uranus", "Neptune"], correct: 1),
     Practice(category: "GEOGRAPHY", text: "Which is the largest ocean on Earth?", options: ["Atlantic", "Indian", "Arctic", "Pacific"], correct: 3),
     Practice(category: "SCIENCE", text: "Which gas do plants take in from the air?", options: ["Oxygen", "Nitrogen", "Carbon dioxide", "Helium"], correct: 2),
-    Practice(category: "MATHS", text: "How many sides does a hexagon have?", options: ["Five", "Six", "Seven", "Eight"], correct: 1),
+    Practice(category: "MATH", text: "How many sides does a hexagon have?", options: ["Five", "Six", "Seven", "Eight"], correct: 1),
   ]
 }

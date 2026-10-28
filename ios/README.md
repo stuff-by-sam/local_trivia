@@ -235,17 +235,24 @@ own — themes, then answer markers, then app icons — closed until it's
 opened; a closed group says what's in use.
 
 - **Themes** — Phosphor (the game's own), Amber, Cobalt, Synthwave, Noir,
-  Gold, Holographic, Chalkboard, Glass and Titanium. A theme is the accent,
-  the ink behind the glass, and the texture the glass refracts: Phosphor's
-  scanlines, Cobalt's vector grid, Synthwave's horizon, Noir's dot matrix,
-  Gold's brushed metal, Chalkboard's eraser smears and dust on slate. Three
+  Gold, Holographic, Chalkboard, Glass, Titanium, Aurora, Ember, Sakura,
+  Abyss and Circuit. A theme is the accent, the ink behind the glass, and
+  the texture the glass refracts: Phosphor's scanlines, Cobalt's vector
+  grid, Synthwave's horizon, Noir's dot matrix, Gold's brushed metal,
+  Chalkboard's eraser smears and dust on slate, Ember's sparks rising from a
+  campfire's glow, Circuit's copper traces with a signal or two lit. Six
   follow the phone's tilt: Holographic's iridescent foil slides across the
   screen the way Apple Card's does, Glass's pools of liquid colour run
-  downhill under the glass controls, and a band of light slides across
-  Titanium's brushed metal. These hold still while a question is up (the app
-  still does no per-frame work then), under Reduce Motion, on a TV, and in
-  the background; Core Motion runs only while one is following the phone,
-  and needs no permission.
+  downhill under the glass controls, a band of light slides across
+  Titanium's brushed metal, Aurora's curtains of northern light sway, and
+  Sakura's petals and Abyss's glowing plankton drift apart in two depths
+  under the caustic light rippling down from the surface. The scenes are
+  drawn once and only moved, never redrawn, as the phone tilts, and every
+  tilt glides between the sensor's readings (`Motion.drift`) rather than
+  stepping at its 30 a second. They hold still while a question is up (the
+  app still does no per-frame work then), under Reduce Motion, on a TV, and
+  in the background; Core Motion runs only while one is following the
+  phone, and needs no permission.
   A theme dresses this phone and any TV it's showing the game on, and, when
   this phone hosts, the browser players in its game: they have no theme of
   their own, so the web player is served in the host's accent
@@ -256,13 +263,18 @@ opened; a closed group says what's in use.
 - **Answer markers** — the shapes beside each answer's letter: Classic's
   circle, triangle, square and diamond, or Suits (club, spade, heart,
   diamond), Elements (leaf, water, fire, lightning), Sky (sun, moon, cloud,
-  star) and Critters (turtle, fish, fox, dog). A set dresses this phone's
+  star), Critters (turtle, fish, fox, dog), Smarts (light bulb, book, brain,
+  graduation cap), Game Night (dice, puzzle piece, controller, crown), Party
+  (present, balloon, party popper, cake), Showtime (theater masks, ticket,
+  popcorn, clapperboard), Quest (map, skeleton key, shield, flag) and Backyard
+  (lizard, bird, rabbit, ladybug). A set dresses this phone's
   answers and any TV it puts the game on. Letters and colours don't change,
   so B is cyan on every phone, and VoiceOver names the shape a set uses
   ("B, spade: Saturn"). Browser players keep the classic shapes.
 - **App icons** — one to match every theme: the classic icon's four
   shapes, recoloured (Holographic's in foil, Chalkboard's in pastel chalk on
-  slate, Titanium's in brushed metal). Glass's shapes are glass layers over
+  slate, Titanium's in brushed metal, Aurora's in the northern lights,
+  Circuit's gold-plated on the board's green). Glass's shapes are glass layers over
   liquid colour, which the system refracts and lights. Each is an Icon
   Composer file beside
   `AppIcon.icon`, named in the target's *Alternate App Icon Sets* build
@@ -459,7 +471,7 @@ Screenshots of every phase are attached to the test result.
 
 `GlassContrastUITests` measures, from the pixels on screen, the text on the
 glass a player needs most — each answer chosen, the primary action, the undo
-toast — against the glass behind it, in all ten themes, and fails below
+toast — against the glass behind it, in every theme, and fails below
 4.5:1. Glass also answers to the phone's Liquid Glass slider, Reduce
 Transparency and Increase Contrast, which a test can't set, so it measures
 under whatever the simulator is set to: run it once per setting.

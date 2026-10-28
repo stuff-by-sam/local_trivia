@@ -41,17 +41,19 @@ final class LooksUITests: XCTestCase {
     themes.tap()
 
     markers.tap()
-    // The list makes rows only as they scroll in.
-    app.swipeUp()
+    // The list makes rows only as they scroll in, and the sets run on past
+    // the screen: each row is scrolled to, and says itself that it's on.
     let suits = button(in: app, startingWith: "Suits,")
-    XCTAssertTrue(suits.waitForExistence(timeout: 5), "the markers didn't open")
+    XCTAssertTrue(reveal(suits, in: app), "the markers didn't open")
     suits.tap()
-    XCTAssertTrue(button(in: app, startingWith: "Answer Markers, Suits").waitForExistence(timeout: 5), "the markers didn't go on")
+    XCTAssertTrue(isSelected(suits), "the markers didn't go on")
     capture(app, "3 Wearing Suits")
 
     // Back to the game's own.
-    button(in: app, startingWith: "Classic,").tap()
-    XCTAssertTrue(button(in: app, startingWith: "Answer Markers, Classic").waitForExistence(timeout: 5))
+    let classic = button(in: app, startingWith: "Classic,")
+    XCTAssertTrue(reveal(classic, in: app))
+    classic.tap()
+    XCTAssertTrue(isSelected(classic), "the classic markers didn't go back on")
     let wearing = element(in: app, containing: "Wearing")
     for _ in 0..<4 where !wearing.exists {
       // A screen at a time: a swipe down at the top would close the sheet.
@@ -66,6 +68,29 @@ final class LooksUITests: XCTestCase {
     app.buttons["Done"].tap()
     XCTAssertTrue(settings.waitForExistence(timeout: 5))
     capture(app, "4 Back, in Phosphor")
+  }
+
+  /// Drags the list a little at a time until `element` sits where it can be
+  /// tapped, clear of the bars: down the list first, then back up.
+  @MainActor
+  private func reveal(_ element: XCUIElement, in app: XCUIApplication) -> Bool {
+    let window = app.windows.firstMatch.frame
+    let band = (window.minY + window.height * 0.15)...(window.maxY - window.height * 0.15)
+    for step in 0..<12 {
+      if element.exists, element.isHittable, band.contains(element.frame.midY) { return true }
+      let isDown = element.exists ? element.frame.midY > band.upperBound : step < 5
+      let from = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: isDown ? 0.7 : 0.35))
+      let to = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: isDown ? 0.4 : 0.65))
+      from.press(forDuration: 0.05, thenDragTo: to)
+    }
+    return false
+  }
+
+  /// Whether `element` says it's the one on, within a few seconds.
+  @MainActor
+  private func isSelected(_ element: XCUIElement) -> Bool {
+    let selected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isSelected == true"), object: element)
+    return XCTWaiter().wait(for: [selected], timeout: 5) == .completed
   }
 
   /// A button in the list — not Settings' row behind it, whose "Themes &

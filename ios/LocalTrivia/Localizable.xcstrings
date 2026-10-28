@@ -67,7 +67,19 @@
     "A host can remove or block any player at any time. A blocked player is removed at once, and their phone or browser can't join that host's games again." : {
 
     },
+    "A light bulb, a book, a brain and a graduation cap: for know-it-alls" : {
+      "extractionState" : "manual"
+    },
+    "A lizard, a bird, a rabbit and a ladybug" : {
+      "extractionState" : "manual"
+    },
+    "A map, a key, a shield and a flag" : {
+      "extractionState" : "manual"
+    },
     "A monochrome tube, warm as an old terminal" : {
+      "extractionState" : "manual"
+    },
+    "A present, a balloon, a party popper and a cake" : {
       "extractionState" : "manual"
     },
     "A theme dresses this iPad, any TV it puts the game on, and the browsers in a game it hosts." : {
@@ -81,6 +93,9 @@
     },
     "A wrong answer earns" : {
 
+    },
+    "Abyss" : {
+      "extractionState" : "manual"
     },
     "Ada" : {
 
@@ -157,8 +172,14 @@
     "Atlantic" : {
 
     },
+    "Aurora" : {
+      "extractionState" : "manual"
+    },
     "Away" : {
 
+    },
+    "Backyard" : {
+      "extractionState" : "manual"
     },
     "Before you play" : {
 
@@ -220,6 +241,9 @@
     "Changes Trivia's icon on your Home Screen." : {
 
     },
+    "Cherry blossoms drifting by on a spring night" : {
+      "extractionState" : "manual"
+    },
     "Choose a different game." : {
 
     },
@@ -227,6 +251,9 @@
 
     },
     "Circle, triangle, square and diamond: the game's own" : {
+      "extractionState" : "manual"
+    },
+    "Circuit" : {
       "extractionState" : "manual"
     },
     "Classic" : {
@@ -313,6 +340,9 @@
     "Details" : {
 
     },
+    "Dice, a puzzle piece, a controller and a crown" : {
+      "extractionState" : "manual"
+    },
     "Done" : {
 
     },
@@ -358,6 +388,9 @@
     "Elements" : {
       "extractionState" : "manual"
     },
+    "Ember" : {
+      "extractionState" : "manual"
+    },
     "End Game" : {
 
     },
@@ -370,7 +403,7 @@
     "Enter your name to play" : {
 
     },
-    "Every answer has a letter, a shape and a colour. Right answers score more the faster they come in. Try one:" : {
+    "Every answer has a letter, a shape and a color. Right answers score more the faster they come in. Try one:" : {
 
     },
     "Every player can report a question, a player or a game, and can block a host or another player. Blocking removes what they posted from your screen straight away: a blocked host's game ends for you and its games aren't listed again, and a blocked player's name is hidden." : {
@@ -399,6 +432,9 @@
     },
     "Game" : {
 
+    },
+    "Game Night" : {
+      "extractionState" : "manual"
     },
     "Game PIN" : {
 
@@ -530,7 +566,10 @@
     "Let's Play" : {
 
     },
-    "Liquid colour under clear glass, pooling as you tilt" : {
+    "Light rippling down from far above, and glowing plankton that drift as you tilt" : {
+      "extractionState" : "manual"
+    },
+    "Liquid color under clear glass, pooling as you tilt" : {
       "extractionState" : "manual"
     },
     "Local Network Settings" : {
@@ -555,7 +594,7 @@
     "Looking for the game" : {
 
     },
-    "MATHS" : {
+    "MATH" : {
 
     },
     "Make it yours" : {
@@ -645,6 +684,9 @@
     "Noir" : {
       "extractionState" : "manual"
     },
+    "Northern lights over a polar night, swaying as you tilt" : {
+      "extractionState" : "manual"
+    },
     "Not quite" : {
 
     },
@@ -729,6 +771,9 @@
         }
       }
     },
+    "Party" : {
+      "extractionState" : "manual"
+    },
     "Phosphor" : {
       "extractionState" : "manual"
     },
@@ -794,6 +839,9 @@
     },
     "QR code to join this game" : {
 
+    },
+    "Quest" : {
+      "extractionState" : "manual"
     },
     "Question" : {
 
@@ -893,6 +941,9 @@
     "Safety, in Settings" : {
 
     },
+    "Sakura" : {
+      "extractionState" : "manual"
+    },
     "Sam" : {
 
     },
@@ -941,6 +992,9 @@
     "Show on a TV…" : {
 
     },
+    "Showtime" : {
+      "extractionState" : "manual"
+    },
     "Shuffle the questions" : {
 
     },
@@ -959,11 +1013,17 @@
     "Sky" : {
       "extractionState" : "manual"
     },
+    "Smarts" : {
+      "extractionState" : "manual"
+    },
     "Something else" : {
 
     },
     "Spam or misleading" : {
 
+    },
+    "Sparks rising from a campfire, late into the night" : {
+      "extractionState" : "manual"
     },
     "Standings" : {
 
@@ -1046,6 +1106,9 @@
     "The broadcast terminal: green on black" : {
       "extractionState" : "manual"
     },
+    "The circuit board behind the screen, with a signal or two lit up" : {
+      "extractionState" : "manual"
+    },
     "The four-digit PIN on the host's phone." : {
 
     },
@@ -1058,11 +1121,14 @@
     "The host removed this player and blocked their device from games they host." : {
 
     },
-    "The shapes beside each answer's letter, on this iPad and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan." : {
+    "The shapes beside each answer's letter, on this iPad and any TV it puts the game on. Letters and colors stay the same on every phone, so B is always cyan." : {
 
     },
-    "The shapes beside each answer's letter, on this phone and any TV it puts the game on. Letters and colours stay the same on every phone, so B is always cyan." : {
+    "The shapes beside each answer's letter, on this phone and any TV it puts the game on. Letters and colors stay the same on every phone, so B is always cyan." : {
 
+    },
+    "Theater masks, a ticket, popcorn and a clapperboard" : {
+      "extractionState" : "manual"
     },
     "Their games aren't listed on this phone." : {
 
@@ -1308,7 +1374,25 @@
     "and %lld more" : {
 
     },
+    "balloon" : {
+      "extractionState" : "manual"
+    },
+    "bird" : {
+      "extractionState" : "manual"
+    },
+    "book" : {
+      "extractionState" : "manual"
+    },
+    "brain" : {
+      "extractionState" : "manual"
+    },
+    "cake" : {
+      "extractionState" : "manual"
+    },
     "circle" : {
+      "extractionState" : "manual"
+    },
+    "clapperboard" : {
       "extractionState" : "manual"
     },
     "cloud" : {
@@ -1317,7 +1401,16 @@
     "club" : {
       "extractionState" : "manual"
     },
+    "controller" : {
+      "extractionState" : "manual"
+    },
+    "crown" : {
+      "extractionState" : "manual"
+    },
     "diamond" : {
+      "extractionState" : "manual"
+    },
+    "dice" : {
       "extractionState" : "manual"
     },
     "dog" : {
@@ -1332,19 +1425,37 @@
     "fish" : {
       "extractionState" : "manual"
     },
+    "flag" : {
+      "extractionState" : "manual"
+    },
     "flame" : {
       "extractionState" : "manual"
     },
     "fox" : {
       "extractionState" : "manual"
     },
+    "graduation cap" : {
+      "extractionState" : "manual"
+    },
     "heart" : {
+      "extractionState" : "manual"
+    },
+    "ladybug" : {
       "extractionState" : "manual"
     },
     "leaf" : {
       "extractionState" : "manual"
     },
+    "light bulb" : {
+      "extractionState" : "manual"
+    },
     "lightning bolt" : {
+      "extractionState" : "manual"
+    },
+    "lizard" : {
+      "extractionState" : "manual"
+    },
+    "map" : {
       "extractionState" : "manual"
     },
     "moon" : {
@@ -1360,8 +1471,29 @@
         }
       }
     },
+    "party popper" : {
+      "extractionState" : "manual"
+    },
+    "popcorn" : {
+      "extractionState" : "manual"
+    },
+    "present" : {
+      "extractionState" : "manual"
+    },
     "pts" : {
 
+    },
+    "puzzle piece" : {
+      "extractionState" : "manual"
+    },
+    "rabbit" : {
+      "extractionState" : "manual"
+    },
+    "shield" : {
+      "extractionState" : "manual"
+    },
+    "skeleton key" : {
+      "extractionState" : "manual"
     },
     "spade" : {
       "extractionState" : "manual"
@@ -1373,6 +1505,12 @@
       "extractionState" : "manual"
     },
     "sun" : {
+      "extractionState" : "manual"
+    },
+    "theater masks" : {
+      "extractionState" : "manual"
+    },
+    "ticket" : {
       "extractionState" : "manual"
     },
     "triangle" : {

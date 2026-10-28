@@ -18,18 +18,34 @@ public struct BlinkingCursor: View {
 
 /// Anything, lit and dark at the cursor's ~1 Hz; steady under Reduce Motion.
 /// Only `content` redraws.
+///
+/// Every cursor keeps the same beat: the timeline counts half-periods from
+/// a fixed moment, not from whenever the view was last drawn — so a screen
+/// redrawing around it (a keystroke, a player arriving) never restarts or
+/// stretches a blink, and two cursors on screen blink together.
 struct Blinking<Content: View>: View {
   @ViewBuilder var content: Content
 
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+  /// Half a blink: lit this long, then dark this long.
+  static var period: TimeInterval { 0.53 }
+  /// When the beat started: the same for every cursor, every time.
+  private static var epoch: Date { Date(timeIntervalSinceReferenceDate: 0) }
+
   var body: some View {
-    TimelineView(.periodic(from: .now, by: 0.53)) { context in
-      let lit = reduceMotion || Int(context.date.timeIntervalSinceReferenceDate / 0.53).isMultiple(of: 2)
+    TimelineView(.periodic(from: Self.epoch, by: Self.period)) { context in
       content
-        .opacity(lit ? 1 : 0)
+        .opacity(reduceMotion || Self.isLit(at: context.date) ? 1 : 0)
     }
     .accessibilityHidden(true)
+  }
+
+  /// Lit on even half-periods. The timeline wakes on their boundaries, so it
+  /// rounds to the nearest rather than flooring a time that may land a hair
+  /// before one.
+  static func isLit(at date: Date) -> Bool {
+    Int((date.timeIntervalSince(epoch) / period).rounded()).isMultiple(of: 2)
   }
 }
 

@@ -97,15 +97,28 @@ public struct AnswerButton: View {
       HStack(spacing: Space.m) {
         AnswerKey(style: style, isInverted: state == .chosen)
         // Host-authored: verbatim, never a localization key or Markdown.
+        // Laid out in the chosen answer's bold, whatever it's drawn in, so
+        // lighting up never re-wraps it: the answer under the thumb, and the
+        // three around it, stay exactly where they were.
         Text(verbatim: text)
-          .textRole(.answer(longestOption: longestOption, isChosen: state == .chosen))
+          .textRole(.answer(longestOption: longestOption, isChosen: true))
+          .hidden()
+          .overlay(alignment: .leading) {
+            Text(verbatim: text)
+              .textRole(.answer(longestOption: longestOption, isChosen: state == .chosen))
+          }
           .multilineTextAlignment(.leading)
           .frame(maxWidth: .infinity, alignment: .leading)
-        if state == .chosen {
+        // The checkmark's room, kept by every answer for the same reason.
+        ZStack {
           Image(systemName: "checkmark")
-            .font(.body.weight(.bold))
-            .transition(.symbolEffect(.appear))
+            .hidden()
+          if state == .chosen {
+            Image(systemName: "checkmark")
+              .transition(.symbolEffect(.appear))
+          }
         }
+        .font(.body.weight(.bold))
       }
       // The lit colours are bright; white on them fails contrast, ink doesn't.
       .foregroundStyle(state == .chosen ? AnyShapeStyle(.onAccent) : AnyShapeStyle(.primary))
