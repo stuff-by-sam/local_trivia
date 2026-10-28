@@ -165,7 +165,8 @@ final class GameStore {
   // MARK: - Private state
 
   /// Preferences hold only what isn't sensitive: the nickname draft and the
-  /// last game's address. The resume token goes to `tokens` (the Keychain).
+  /// address of the game this phone has a seat in. The resume token goes to
+  /// `tokens` (the Keychain).
   private enum Keys {
     static let nickname = "nickname"
     /// Not "server": builds that could join a laptop's game kept it there,
@@ -185,9 +186,13 @@ final class GameStore {
   /// leaves it alone. A game restored from last launch isn't pinned — the
   /// network may have changed since.
   @ObservationIgnored private var isPinned = false
-  /// Games that ended while we were in them. Their Bonjour adverts can linger
-  /// a moment; until an advert is gone, discovery mustn't pick it back up.
-  @ObservationIgnored private var endedGames: Set<URL> = []
+  /// Games that ended while we were in them, and when. Their Bonjour adverts
+  /// can linger a moment; until an advert is gone, discovery mustn't pick it
+  /// back up. Once it's had time to go, an advert there is a new game —
+  /// whether or not the browser was looking when the old one went.
+  @ObservationIgnored private var endedGames: [URL: Date] = [:]
+  /// Long past the moment an ended game's advert lingers for.
+  nonisolated static let advertLinger: TimeInterval = 10
   /// The current game has been seen advertised since it was picked. If its
   /// advert goes while it can't be reached, its host has stopped hosting it.
   @ObservationIgnored private var sawAdvert = false
@@ -234,23 +239,26 @@ final class GameStore {
     let restored = defaults.data(forKey: Keys.server)
       .flatMap { try? JSONDecoder().decode(GameServer.self, from: $0) }
       .flatMap { $0.isLoopback ? nil : $0 }
-    server = restored
     // A token means nothing without the server that issued it. The Keychain
     // outlives an uninstall and preferences don't, so a token with no server
     // is a leftover from a previous install: discard it rather than "rejoin"
     // a game the app can't name.
-    if restored == nil {
+    let seat = restored == nil ? nil : tokens.load()
+    // And only a seat brings a game back. Without one, the last game is just
+    // where this phone played before: the app opens on nothing in particular,
+    // dialling nobody, and finds the next game by its PIN.
+    if seat == nil {
       tokens.save(nil)
-      token = nil
-    } else {
-      token = tokens.load()
+      defaults.removeObject(forKey: Keys.server)
     }
+    server = seat == nil ? nil : restored
+    token = seat
   }
 
   // MARK: - Intents
 
-  /// Dials the last server straight away: a relaunch mid-game resumes before
-  /// the first frame settles, and a returning player is usually one PIN away.
+  /// Dials the game this phone has a seat in, if it has one: a relaunch
+  /// mid-game resumes before the first frame settles.
   func start() {
     guard transport == nil, let server else { return }
     open(server)
@@ -259,7 +267,7 @@ final class GameStore {
   /// The player picked this game — from the list, a QR code, or by address.
   func connect(to server: GameServer) {
     isPinned = true
-    endedGames.remove(server.url)  // chosen on purpose: that's a new game
+    endedGames[server.url] = nil  // chosen on purpose: that's a new game
     select(server)
   }
 
@@ -269,9 +277,13 @@ final class GameStore {
   /// means the browser has looked long enough that `found` is every game
   /// there is.
   func discovered(_ found: [GameServer], isComplete: Bool = false) {
-    // An ended game whose advert has gone is forgotten: if it reappears, it's new.
-    endedGames.formIntersection(found.map(\.url))
-    let games = found.filter { !endedGames.contains($0.url) }
+    // An ended game whose advert has gone is forgotten: if it reappears, it's
+    // new. So is one that ended long enough ago for its advert to have gone.
+    let advertised = Set(found.map(\.url))
+    endedGames = endedGames.filter { url, ended in
+      advertised.contains(url) && now().timeIntervalSince(ended) < Self.advertLinger
+    }
+    let games = found.filter { endedGames[$0.url] == nil }
     // The advert names the game where a join link only gives its address (or
     // Bonjour renamed it over a clash): same server, new label. Update it in
     // place, whatever else is going on.
@@ -361,8 +373,8 @@ final class GameStore {
   /// `endedAt` is the address other phones knew it by, if it differs from ours.
   func forgetGame(endedAt address: URL? = nil) {
     forgetLeftSeat()
-    if let url = server?.url { endedGames.insert(url) }
-    if let address { endedGames.insert(address) }
+    if let url = server?.url { endedGames[url] = now() }
+    if let address { endedGames[address] = now() }
     close()
     token = nil
     phase = .join

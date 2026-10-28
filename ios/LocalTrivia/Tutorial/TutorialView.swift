@@ -6,50 +6,58 @@ import SwiftUI
 /// playing nice, and making it yours.
 ///
 /// Shown once after the terms on first launch (`FirstRunView`), where it can
-/// be skipped; any time after from How to Play on the join screen.
+/// be skipped; any time after from How to Play, a page of Settings. Either
+/// way it's in a navigation stack of its presenter's.
 struct TutorialView: View {
   /// First launch: Skip and Let's Play finish it for good.
   var isFirstRun = false
+  /// What Let's Play does, when it's more than closing the tutorial: from
+  /// Settings, it closes Settings too, and the game's next.
+  var onPlay: (() -> Void)?
 
   @State private var page: TutorialPage
   @State private var practice = PracticeRound()
   @AppStorage(TutorialPage.seenKey) private var hasSeenTutorial = false
   @Environment(\.dismiss) private var dismiss
 
-  init(isFirstRun: Bool = false, page: TutorialPage = .welcome) {
+  init(isFirstRun: Bool = false, page: TutorialPage = .welcome, onPlay: (() -> Void)? = nil) {
     self.isFirstRun = isFirstRun
+    self.onPlay = onPlay
     _page = State(initialValue: page)
   }
 
   var body: some View {
-    NavigationStack {
-      TabView(selection: $page) {
-        ForEach(TutorialPage.allCases) { page in
-          TutorialPageView(page: page, isShowing: self.page == page, practice: practice)
-            .tag(page)
-        }
+    TabView(selection: $page) {
+      ForEach(TutorialPage.allCases) { page in
+        TutorialPageView(page: page, isShowing: self.page == page, practice: practice)
+          .tag(page)
       }
-      .tabViewStyle(.page(indexDisplayMode: .never))
-      .navigationTitle(Text("How to Play"))
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          Button(isFirstRun ? "Skip" : "Done", action: finish)
-        }
-      }
-      .safeAreaBar(edge: .bottom) {
-        ActionBar {
-          PageDots(current: page)
-          if page.isLast {
-            ActionButton("Let's Play", systemImage: "play.fill", action: finish)
-          } else {
-            ActionButton("Next", systemImage: "arrow.forward", prominence: page == .welcome ? .primary : .secondary, action: next)
-          }
-        }
-        .dynamicTypeSize(...Size.barTypeLimit)
-      }
-      .containerBackground(for: .navigation) { Backdrop(mood: .idle) }
     }
+    .tabViewStyle(.page(indexDisplayMode: .never))
+    .navigationTitle(Text("How to Play"))
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbar {
+      // Anywhere else it's a page with a way back.
+      if isFirstRun {
+        ToolbarItem(placement: .cancellationAction) {
+          Button("Skip", action: finish)
+        }
+      }
+    }
+    .safeAreaBar(edge: .bottom) {
+      ActionBar {
+        PageDots(current: page)
+        if page.isLast {
+          ActionButton("Let's Play", systemImage: "play.fill", action: finish)
+        } else {
+          ActionButton("Next", systemImage: "arrow.forward", prominence: page == .welcome ? .primary : .secondary, action: next)
+        }
+      }
+      .dynamicTypeSize(...Size.barTypeLimit)
+      // Under the words, on a page spread across a big screen.
+      .inSpreadsSecondHalf()
+    }
+    .containerBackground(for: .navigation) { Backdrop(mood: .idle) }
     .interactiveDismissDisabled(isFirstRun)
   }
 
@@ -60,7 +68,7 @@ struct TutorialView: View {
 
   private func finish() {
     hasSeenTutorial = true
-    dismiss()
+    if let onPlay { onPlay() } else { dismiss() }
   }
 }
 
@@ -91,7 +99,7 @@ enum TutorialPage: Int, CaseIterable, Identifiable {
     case .welcome:
       "Quiz night for the room you're in. One phone hosts, and everyone else joins on the same Wi-Fi, with the app or any phone's browser. Here's how it works: it takes a minute."
     case .join:
-      "Games on your Wi-Fi show up by themselves. Type the four-digit PIN from the host's screen, add your nickname, and you're in. Nothing listed? Scan the host's QR code instead."
+      "Type the four-digit PIN from the host's screen and your nickname, and Trivia finds the game on your Wi-Fi. Can't find it? Scan the host's QR code instead."
     case .answer:
       "Every answer has a letter, a shape and a colour. Right answers score more the faster they come in. Try one:"
     case .standings:
@@ -101,7 +109,7 @@ enum TutorialPage: Int, CaseIterable, Identifiable {
     case .safety:
       "No objectionable content, no abusive players. In a game, the ••• menu reports a question, a player or the game, or blocks the host; touch and hold a name to block that player. Hosts remove or block anyone from Players."
     case .looks:
-      "Pick a theme, answer markers and an app icon in Themes & Icons, all free. See this again any time with How to Play, on the join screen."
+      "Pick a theme, answer markers and an app icon, all free, in Settings: the gear on the join screen. How to Play is there too, any time."
     }
   }
 }
@@ -113,40 +121,73 @@ private struct TutorialPageView: View {
   let isShowing: Bool
   let practice: PracticeRound
 
+  @Environment(\.hasRoomToSpread) private var spreads
+
   var body: some View {
-    VStack(spacing: Space.xl) {
-      Group {
-        switch page {
-        case .welcome: WelcomePicture()
-        case .join: JoinPicture()
-        case .answer: EmptyView()
-        case .standings: PodiumPicture()
-        case .host: HostPicture()
-        case .safety: SafetyPicture()
-        case .looks: LooksPicture()
+    if spreads {
+      // The picture on one half, the words on the other — or, practising,
+      // the words and the question on one, and its answers on the other.
+      Spread {
+        Group {
+          if page == .answer {
+            VStack(spacing: Space.xl) {
+              words
+              PracticeQuestion(round: practice, isShowing: isShowing, part: .question)
+            }
+          } else {
+            picture
+          }
+        }
+        .scrollsWhenCrowded()
+      } trail: {
+        Group {
+          if page == .answer { PracticeQuestion(round: practice, isShowing: isShowing, part: .answers) } else { words }
+        }
+        .scrollsWhenCrowded()
+      }
+      .padding(.horizontal, Space.screen)
+      .padding(.vertical, Space.l)
+    } else {
+      VStack(spacing: Space.xl) {
+        picture
+        words
+        if page == .answer {
+          PracticeQuestion(round: practice, isShowing: isShowing)
         }
       }
-      .accessibilityHidden(true)
+      .padding(.horizontal, Space.screen)
+      .padding(.vertical, Space.l)
+      .gameColumn()
+      .scrollsWhenCrowded()
+    }
+  }
 
-      VStack(alignment: .leading, spacing: Space.s) {
-        Text(page.title)
-          .textRole(.title)
-          .accessibilityAddTraits(.isHeader)
-        Text(page.message)
-          .textRole(.body)
-          .foregroundStyle(.secondary)
-          .fixedSize(horizontal: false, vertical: true)
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
-
-      if page == .answer {
-        PracticeQuestion(round: practice, isShowing: isShowing)
+  private var picture: some View {
+    Group {
+      switch page {
+      case .welcome: WelcomePicture()
+      case .join: JoinPicture()
+      case .answer: EmptyView()
+      case .standings: PodiumPicture()
+      case .host: HostPicture()
+      case .safety: SafetyPicture()
+      case .looks: LooksPicture()
       }
     }
-    .padding(.horizontal, Space.screen)
-    .padding(.vertical, Space.l)
-    .gameColumn()
-    .scrollsWhenCrowded()
+    .accessibilityHidden(true)
+  }
+
+  private var words: some View {
+    VStack(alignment: .leading, spacing: Space.s) {
+      Text(page.title)
+        .textRole(.title)
+        .accessibilityAddTraits(.isHeader)
+      Text(page.message)
+        .textRole(.body)
+        .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 }
 
@@ -162,14 +203,14 @@ private struct WelcomePicture: View {
   }
 }
 
-/// The join screen in miniature: a game found on the Wi-Fi, a PIN half typed.
+/// The join screen in miniature: a PIN half typed, and the game it's found.
 private struct JoinPicture: View {
   var body: some View {
-    VStack(spacing: Space.l) {
-      PickerRow(title: String(localized: "Friday Quiz"), detail: String(localized: "FOUND ON YOUR WI-FI · ONLINE")) {
-        StatusDot(.online)
-      }
+    VStack(alignment: .leading, spacing: Space.s) {
       PINCells(pin: "48", length: GameStore.pinLength, isFocused: true)
+      GameLine { StatusDot(.online) } label: {
+        GameLineLabel(Text("Friday Quiz"), detail: Text("Found on your Wi-Fi"), isMenu: false)
+      }
     }
   }
 }
@@ -219,7 +260,7 @@ private struct SafetyPicture: View {
       Label("Block Host…", systemImage: "hand.raised")
         .foregroundStyle(.danger)
       Divider()
-      Label("Safety, on the join screen", systemImage: "hand.raised")
+      Label("Safety, in Settings", systemImage: "gearshape")
         .foregroundStyle(.secondary)
     }
     .textRole(.body)

@@ -74,65 +74,69 @@ public struct PromptField<Field: View>: View {
   }
 }
 
-/// A tappable glass row for a picker's label: a status mark, two lines, and
-/// the up–down chevron.
-public struct PickerRow<Mark: View>: View {
-  let title: String
-  let detail: String
+/// One line saying which game the PIN goes to: a status mark, the game, and
+/// how its link is — `● FRIDAY QUIZ · ONLINE` — with the up–down chevron
+/// when it's a menu of others to pick from.
+///
+/// The mark sits outside the line's label, and the line stays the label of a
+/// menu: glass inside a menu's label doesn't draw.
+public struct GameLine<Mark: View, Label: View>: View {
   @ViewBuilder var mark: Mark
+  @ViewBuilder var label: Label
 
-  public init(title: String, detail: String, @ViewBuilder mark: () -> Mark) {
-    self.title = title
-    self.detail = detail
+  public init(@ViewBuilder mark: () -> Mark, @ViewBuilder label: () -> Label) {
     self.mark = mark()
+    self.label = label()
   }
 
   public var body: some View {
-    HStack(spacing: Space.m) {
+    HStack(spacing: Space.s) {
       mark
         .frame(width: Space.l)
-      // Wraps rather than cuts off: which game, and whether it's reachable,
-      // is what the player came here to read.
-      VStack(alignment: .leading, spacing: Space.xxs) {
-        Text(verbatim: title)
-          .textRole(.headline)
-          .foregroundStyle(.primary)
-        Text(verbatim: detail)
-          .textRole(.figureSmall)
+        .accessibilityHidden(true)
+      label
+    }
+    .padding(.leading, Space.xs)
+    .frame(minHeight: Size.target, alignment: .leading)
+  }
+}
+
+/// A game line's words: the game, its state, and the chevron that says
+/// there's a choice. Wraps rather than cuts off: which game, and whether it
+/// answers, is what the player looks here to read.
+public struct GameLineLabel: View {
+  let title: Text
+  let detail: Text?
+  let isMenu: Bool
+
+  public init(_ title: Text, detail: Text? = nil, isMenu: Bool = true) {
+    self.title = title
+    self.detail = detail
+    self.isMenu = isMenu
+  }
+
+  public var body: some View {
+    HStack(alignment: .firstTextBaseline, spacing: Space.xs) {
+      title
+        .foregroundStyle(.primary)
+      if let detail {
+        Text(verbatim: "·")
+          .foregroundStyle(.secondary)
+          .accessibilityHidden(true)
+        detail
           .foregroundStyle(.secondary)
       }
-      .fixedSize(horizontal: false, vertical: true)
-      .padding(.vertical, Space.s)
-      Spacer(minLength: 0)
-      Image(systemName: "chevron.up.chevron.down")
-        .font(.footnote.weight(.semibold))
-        .foregroundStyle(.secondary)
-        .accessibilityHidden(true)
+      if isMenu {
+        Image(systemName: "chevron.up.chevron.down")
+          .imageScale(.small)
+          .foregroundStyle(.secondary)
+          .accessibilityHidden(true)
+      }
     }
-    .padding(.horizontal, Space.inset)
-    .frame(minHeight: Size.picker)
+    .textRole(.status)
+    .multilineTextAlignment(.leading)
+    .fixedSize(horizontal: false, vertical: true)
     .contentShape(.rect)
-    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: Radius.control))
-  }
-}
-
-extension PickerRow where Mark == Color {
-  /// A row whose mark is drawn over it with `pickerMark(_:)`.
-  public init(title: String, detail: String) {
-    self.init(title: title, detail: detail) { Color.clear }
-  }
-}
-
-extension View {
-  /// Draws `mark` where a `PickerRow`'s mark goes, over this — for a row
-  /// that's a menu's label, where glass inside the label doesn't draw.
-  public func pickerMark(@ViewBuilder _ mark: () -> some View) -> some View {
-    overlay(alignment: .leading) {
-      mark()
-        .frame(width: Space.l)
-        .padding(.leading, Space.inset)
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
+    .accessibilityElement(children: .combine)
   }
 }

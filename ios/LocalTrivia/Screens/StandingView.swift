@@ -6,34 +6,57 @@ struct StandingView: View {
   let standing: GameStore.Standing
 
   @Environment(GameStore.self) private var store
+  @Environment(\.hasRoomToSpread) private var spreads
 
   var body: some View {
-    VStack(spacing: Space.m) {
-      VStack(spacing: Space.m) {
-        VStack(spacing: Space.m) {
-          Text("Your position")
-            .textRole(.label)
-            .foregroundStyle(.secondary)
-          // With the whole table below it (a phone-hosted game), the big
-          // number steps down to make room.
-          RankFigure(rank: standing.rank, isCompact: store.leaderboard != nil)
-          Text("of \(ranked) · \(standing.score.grouped) pts")
-            .textRole(.status)
-            .foregroundStyle(.secondary)
+    Group {
+      if spreads {
+        // Your place on one half, at full size; the room's table on the other.
+        Spread {
+          place(isCompact: false)
+            .scrollsWhenCrowded()
+        } trail: {
+          VStack(spacing: Space.m) {
+            if let board = store.leaderboard {
+              LeaderboardTable(board: board, playerName: store.playerName)
+                .scrollsWhenCrowded()
+            }
+            FooterStatus("Next question soon")
+          }
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(position)
-        if let board = store.leaderboard {
-          LeaderboardTable(board: board, playerName: store.playerName)
-            .padding(.top, Space.l)
+      } else {
+        VStack(spacing: Space.m) {
+          VStack(spacing: Space.m) {
+            // With the whole table below it (a phone-hosted game), the big
+            // number steps down to make room.
+            place(isCompact: store.leaderboard != nil)
+            if let board = store.leaderboard {
+              LeaderboardTable(board: board, playerName: store.playerName)
+                .padding(.top, Space.l)
+            }
+          }
+          .scrollsWhenCrowded()
+
+          FooterStatus("Next question soon")
         }
       }
-      .scrollsWhenCrowded()
-
-      FooterStatus("Next question soon")
     }
     .screenPadding()
     .gameToolbar(.player, status: .progress)
+  }
+
+  private func place(isCompact: Bool) -> some View {
+    VStack(spacing: Space.m) {
+      Text("Your position")
+        .textRole(.label)
+        .foregroundStyle(.secondary)
+      RankFigure(rank: standing.rank, isCompact: isCompact)
+      Text("of \(ranked) · \(standing.score.grouped) pts")
+        .textRole(.status)
+        .foregroundStyle(.secondary)
+    }
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel(position)
   }
 
   /// "Your position: 2 of 6, 1,450 points."
@@ -54,32 +77,55 @@ struct FinalView: View {
   let standing: GameStore.Standing
 
   @Environment(GameStore.self) private var store
+  @Environment(\.hasRoomToSpread) private var spreads
 
   var body: some View {
-    VStack(spacing: Space.m) {
-      VStack(spacing: 0) {
-        VStack(spacing: Space.m) {
-          Text("Game over")
-            .textRole(.label)
-            .foregroundStyle(.secondary)
-          RankFigure(rank: standing.rank)
-          Text("\(standing.score.grouped) pts")
-            .textRole(.status)
-            .foregroundStyle(.secondary)
+    Group {
+      if spreads {
+        // Where you finished on one half; the podium on the other.
+        Spread {
+          finish
+            .scrollsWhenCrowded()
+        } trail: {
+          VStack(spacing: Space.m) {
+            if !standing.podium.isEmpty {
+              Podium(placings: standing.podium, playerName: store.playerName)
+                .scrollsWhenCrowded()
+            }
+            FooterStatus("Waiting for the next game")
+          }
         }
+      } else {
+        VStack(spacing: Space.m) {
+          VStack(spacing: 0) {
+            finish
 
-        if !standing.podium.isEmpty {
-          Podium(placings: standing.podium, playerName: store.playerName)
-            .padding(.top, Space.xxl)
+            if !standing.podium.isEmpty {
+              Podium(placings: standing.podium, playerName: store.playerName)
+                .padding(.top, Space.xxl)
+            }
+          }
+          .padding(.vertical, Space.l)
+          .scrollsWhenCrowded()
+
+          FooterStatus("Waiting for the next game")
         }
       }
-      .padding(.vertical, Space.l)
-      .scrollsWhenCrowded()
-
-      FooterStatus("Waiting for the next game")
     }
     .screenPadding()
     .gameToolbar(.player)
+  }
+
+  private var finish: some View {
+    VStack(spacing: Space.m) {
+      Text("Game over")
+        .textRole(.label)
+        .foregroundStyle(.secondary)
+      RankFigure(rank: standing.rank)
+      Text("\(standing.score.grouped) pts")
+        .textRole(.status)
+        .foregroundStyle(.secondary)
+    }
   }
 }
 

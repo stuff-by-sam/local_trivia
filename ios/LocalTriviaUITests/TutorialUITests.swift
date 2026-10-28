@@ -1,7 +1,7 @@
 import XCTest
 
 /// How to play: once after the terms on a first launch, through to a practice
-/// answer and Let's Play — then again from the join screen, any time.
+/// answer and Let's Play — then again from Settings, any time.
 final class TutorialUITests: XCTestCase {
   override func setUp() {
     continueAfterFailure = false
@@ -36,14 +36,20 @@ final class TutorialUITests: XCTestCase {
     app.buttons["Let's Play"].tap()
     XCTAssertTrue(app.buttons["Host a Game"].waitForExistence(timeout: 5), "the tutorial never finished")
 
-    // Any time after, from the join screen.
-    app.buttons["How to Play"].tap()
+    // Any time after, from Settings: a page, with a way back.
+    app.buttons["Settings"].tap()
+    let howToPlay = app.buttons["How to Play"]
+    XCTAssertTrue(howToPlay.waitForExistence(timeout: 5), "no How to Play in Settings")
+    howToPlay.tap()
     XCTAssertTrue(app.staticTexts["Welcome to Trivia"].waitForExistence(timeout: 5), "How to Play doesn't open it")
-    XCTAssertTrue(app.buttons["Done"].exists)
+    XCTAssertFalse(app.buttons["Skip"].exists, "only a first run skips")
+    app.navigationBars["How to Play"].buttons.firstMatch.tap()
+    XCTAssertTrue(app.buttons["Done"].waitForExistence(timeout: 5), "not back in Settings")
     app.buttons["Done"].tap()
     XCTAssertTrue(app.buttons["Host a Game"].waitForExistence(timeout: 5))
   }
 
+  @MainActor
   private func attach(_ app: XCUIApplication, _ name: String) {
     let shot = XCTAttachment(screenshot: app.screenshot())
     shot.name = name

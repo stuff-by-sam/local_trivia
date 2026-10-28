@@ -15,7 +15,6 @@ final class HostAGameUITests: XCTestCase {
     // Argument-domain defaults: sets the remembered nickname for this launch only.
     app.launchArguments += ["-nickname", "UITest", "-termsAccepted", "1", "-tutorialSeen", "YES"]
     app.launch()
-    allowLocalNetworkIfAsked()
 
     let host = app.buttons["Host a Game"]
     XCTAssertTrue(host.waitForExistence(timeout: 10))
@@ -39,6 +38,8 @@ final class HostAGameUITests: XCTestCase {
     capture(app, "2 Round")
 
     app.buttons["Start Hosting"].tap()
+    // Nothing touches the network before this: here's where it's asked for.
+    allowLocalNetworkIfAsked()
     // The host's lobby lists who's in; the host's own seat makes one.
     XCTAssertTrue(app.element(containing: "In the game · 1").waitForExistence(timeout: 15), "never took a seat in its own game")
     capture(app, "3 Lobby")

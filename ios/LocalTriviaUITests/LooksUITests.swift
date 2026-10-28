@@ -1,8 +1,8 @@
 import XCTest
 
-/// Finds Themes & Icons from the join screen, opens its groups, and picks a
-/// theme and a set of answer markers — free, so each goes straight on — then
-/// puts the game's own back, so no later run starts in them.
+/// Finds Themes & Icons in Settings, opens its groups, and picks a theme and
+/// a set of answer markers — free, so each goes straight on — then puts the
+/// game's own back, so no later run starts in them.
 final class LooksUITests: XCTestCase {
   override func setUp() {
     continueAfterFailure = false
@@ -14,17 +14,18 @@ final class LooksUITests: XCTestCase {
     // Whatever an earlier run left on, this opens wearing the defaults.
     app.launchArguments += ["-nickname", "UITest", "-termsAccepted", "1", "-tutorialSeen", "YES", "-theme", "phosphor", "-markers", "classic"]
     app.launch()
-    let allow = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.buttons["Allow"]
-    if allow.waitForExistence(timeout: 3) { allow.tap() }
 
-    let link = app.buttons["Themes & Icons"]
-    XCTAssertTrue(link.waitForExistence(timeout: 10), "no way into Themes & Icons")
+    let settings = app.buttons["Settings"]
+    XCTAssertTrue(settings.waitForExistence(timeout: 10), "no way into Settings")
+    settings.tap()
+    let link = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Themes & Icons")).firstMatch
+    XCTAssertTrue(link.waitForExistence(timeout: 5), "no way into Themes & Icons")
     link.tap()
     XCTAssertTrue(element(in: app, containing: "Wearing Phosphor").waitForExistence(timeout: 5))
     XCTAssertFalse(element(in: app, containing: "$").exists, "nothing has a price")
     XCTAssertFalse(element(in: app, containing: "Restore Purchases").exists)
     // Every group starts closed, and the markers come before the icons.
-    let themes = button(in: app, startingWith: "Themes")
+    let themes = button(in: app, startingWith: "Themes,")
     let markers = button(in: app, startingWith: "Answer Markers")
     let icons = button(in: app, startingWith: "App Icons")
     XCTAssertFalse(button(in: app, startingWith: "Amber,").exists, "the themes should start closed")
@@ -60,13 +61,15 @@ final class LooksUITests: XCTestCase {
     button(in: app, startingWith: "Phosphor,").tap()
     XCTAssertTrue(element(in: app, containing: "Wearing Phosphor").waitForExistence(timeout: 5))
 
+    app.navigationBars["Themes & Icons"].buttons.firstMatch.tap()
+    XCTAssertTrue(app.buttons["Done"].waitForExistence(timeout: 5), "not back in Settings")
     app.buttons["Done"].tap()
-    XCTAssertTrue(link.waitForExistence(timeout: 5))
+    XCTAssertTrue(settings.waitForExistence(timeout: 5))
     capture(app, "4 Back, in Phosphor")
   }
 
-  /// A button in the list — not the join screen's toolbar behind it, whose
-  /// "Themes & Icons" starts the same way.
+  /// A button in the list — not Settings' row behind it, whose "Themes &
+  /// Icons" starts the same way.
   @MainActor
   private func button(in app: XCUIApplication, startingWith text: String) -> XCUIElement {
     app.collectionViews.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", text)).firstMatch

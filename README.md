@@ -42,20 +42,22 @@ a laptop. Anyone with the app can tap **Host a Game**, write or import a round
 (CSV, same format as below) or draft one with Apple Intelligence on the
 phone, set the
 scoring, and run the game from their phone — and play in it too. Everyone else
-opens the app, finds the game on their own (the host's phone advertises it over
-Bonjour), types the PIN, and they're in — or, without the app, scans the host's
-QR code with their camera and plays in the browser: the hosting phone serves
+opens the app and types the PIN — the app finds the game while they type (the
+host's phone advertises it over Bonjour) — and they're in; or, without the
+app, scans the host's QR code with their camera and plays in the browser: the
+hosting phone serves
 this repo's player page itself, in the colour of the host's theme. Standings go to every player's phone, and if the host mirrors their
 phone to a TV (AirPlay, or an HDMI adapter), the TV becomes the big screen: the
 join code, each question and its answers, the reveal and the standings.
 
 Themes, app icons and answer markers (other shapes in place of the circle,
-triangle, square and diamond) are free to pick, under **Themes & Icons** on the
-join screen.
+triangle, square and diamond) are free to pick, under **Settings → Themes &
+Icons** on the join screen. On an iPad, or an iPhone Duo open, every game
+screen spreads across two halves, either side of the Duo's hinge.
 
 The laptop server above is for browser players; the app doesn't join it.
 
-Build it with Xcode 27 for iOS 27; see [ios/README.md](ios/README.md).
+Build it with Xcode 27.1 for iOS 27; see [ios/README.md](ios/README.md).
 
 ## Notes
 
@@ -110,7 +112,7 @@ scripts/          loadtest.js (simulated players), op.js (one-shot host command)
                   autohost.js (bots + a scripted operator, for client testing)
 test/             smoke.test.js (game loop), auth.test.js (operator boundary),
                   api.test.js (admin REST routes)
-ios/              native SwiftUI app: hosts games from a phone, and plays them (Xcode 27, iOS 27)
+ios/              native SwiftUI app: hosts games from a phone, and plays them (Xcode 27.1, iOS 27)
 ```
 
 > **One shared scope.** The browser loads these as classic `<script>` tags, so

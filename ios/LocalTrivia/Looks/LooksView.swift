@@ -4,12 +4,11 @@ import SwiftUI
 /// Themes, answer markers and app icons: how this phone dresses the game.
 /// Every one is free; tapping one puts it on.
 ///
-/// Out of the way on purpose — a toolbar button on the join screen — because
-/// the game is the point. Each kind is a group that opens when it's wanted,
-/// and says what's in use while it's closed.
+/// Out of the way on purpose — a page of Settings — because the game is the
+/// point. Each kind is a group that opens when it's wanted, and says what's
+/// in use while it's closed.
 struct LooksView: View {
   @Environment(Looks.self) private var looks
-  @Environment(\.dismiss) private var dismiss
   @Environment(\.dynamicTypeSize) private var typeSize
 
   @State private var showsThemes = false
@@ -21,36 +20,31 @@ struct LooksView: View {
   @State private var isAlerting = false
 
   var body: some View {
-    NavigationStack {
-      List {
-        Section {
-          Showcase(theme: looks.theme)
-        }
-        .listRowBackground(Color.clear)
+    List {
+      Section {
+        Showcase(theme: looks.theme)
+      }
+      .listRowBackground(Color.clear)
 
-        Group {
-          themes
-          markers
+      Group {
+        themes
+        markers
 
-          if looks.canChangeIcon {
-            icons
-          }
+        if looks.canChangeIcon {
+          icons
         }
-        // Clear glass over the backdrop: the theme shows through every row.
-        .listRowBackground(Rectangle().fill(.clear).glassCard(in: .rect))
       }
-      // The one sheet that shows the backdrop: showing a theme is the point.
-      .scrollContentBackground(.hidden)
-      .background { Backdrop(mood: .idle) }
-      .glassClarity(.clear)
-      .navigationTitle("Themes & Icons")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
-      }
-      .alert(Text(verbatim: alert), isPresented: $isAlerting) {
-        Button("OK") {}
-      }
+      // Clear glass over the backdrop: the theme shows through every row.
+      .listRowBackground(Rectangle().fill(.clear).glassCard(in: .rect))
+    }
+    // The one page of a sheet that shows the backdrop: showing a theme is the point.
+    .scrollContentBackground(.hidden)
+    .background { Backdrop(mood: .idle) }
+    .glassClarity(.clear)
+    .navigationTitle("Themes & Icons")
+    .navigationBarTitleDisplayMode(.inline)
+    .alert(Text(verbatim: alert), isPresented: $isAlerting) {
+      Button("OK") {}
     }
     .theme(looks.theme)
     .environment(\.answerMarkers, looks.markers)

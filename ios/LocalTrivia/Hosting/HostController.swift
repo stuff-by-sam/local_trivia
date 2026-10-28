@@ -143,7 +143,7 @@ final class HostController {
       }
     }
 
-    let game = HostedGame(accent: theme.webAccent, deliver: { [weak self] event, audience in self?.deliver(event, to: audience) })
+    let game = HostedGame(pin: Self.pin(), accent: theme.webAccent, deliver: { [weak self] event, audience in self?.deliver(event, to: audience) })
     barredPeers = []
     game.isBarred = { [weak self] device, peer in
       guard let self else { return false }
@@ -369,6 +369,17 @@ final class HostController {
     case .players: outbox?.yield((text, .connections(game?.connectedPlayers.compactMap(\.connection) ?? [])))
     case .everyone: outbox?.yield((text, .everyone))
     }
+  }
+
+  /// A new game's PIN — or, for a UI test joining from another simulator,
+  /// the one it was launched with (`-hostPIN 4821`).
+  private static func pin() -> String {
+    #if DEBUG
+    if let pin = UserDefaults.standard.string(forKey: "hostPIN"), pin.count == GameStore.pinLength, pin.allSatisfy(\.isNumber) {
+      return pin
+    }
+    #endif
+    return HostedGame.randomPIN()
   }
 
   private static func describe(_ error: HostServer.StartError) -> String {

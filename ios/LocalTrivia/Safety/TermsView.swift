@@ -2,7 +2,8 @@ import DesignSystem
 import SwiftUI
 
 /// The Terms of Use: agreed to before anyone hosts or joins a game (shown over
-/// everything from `RootView` until they are), and read again from Safety.
+/// everything from `RootView` until they are), and read again from Safety, in
+/// Settings. Either way it's in a navigation stack of its presenter's.
 ///
 /// The same terms are on GitHub Pages (docs/terms.html), and served to browser
 /// players by the host (public/play/terms.html). Change all three together,
@@ -12,67 +13,92 @@ struct TermsView: View {
   var isAgreeing = false
 
   @Environment(Safety.self) private var safety
-  @Environment(\.dismiss) private var dismiss
+  @Environment(\.hasRoomToSpread) private var spreads
 
   var body: some View {
-    NavigationStack {
-      ScrollView {
-        VStack(alignment: .leading, spacing: Space.xl) {
+    Group {
+      if isAgreeing, spreads {
+        // The terms on one half, read through; what they come to, and
+        // agreeing, on the other.
+        Spread {
+          ScrollView {
+            document
+              .padding(.horizontal, Space.screen)
+              .padding(.vertical, Space.l)
+          }
+        } trail: {
+          VStack(alignment: .leading, spacing: Space.xl) {
+            beforeYouPlay
+            agreeing
+          }
+          .padding(.horizontal, Space.screen)
+          .scrollsWhenCrowded()
+        }
+      } else {
+        ScrollView {
+          VStack(alignment: .leading, spacing: Space.xl) {
+            if isAgreeing { beforeYouPlay }
+            document
+          }
+          .padding(.horizontal, Space.screen)
+          .padding(.vertical, Space.l)
+          .gameColumn()
+        }
+        .safeAreaBar(edge: .bottom) {
           if isAgreeing {
-            VStack(alignment: .leading, spacing: Space.s) {
-              Text("Before you play")
-                .textRole(.title)
-                .accessibilityAddTraits(.isHeader)
-              Text("Trivia is for people in the same room. Everyone who hosts or plays agrees to these terms first.")
-                .textRole(.body)
-                .foregroundStyle(.secondary)
-            }
-          }
-          ForEach(Terms.sections) { section in
-            VStack(alignment: .leading, spacing: Space.s) {
-              Text(section.title)
-                .textRole(.headline)
-                .accessibilityAddTraits(.isHeader)
-              ForEach(section.paragraphs.indices, id: \.self) { index in
-                Text(section.paragraphs[index])
-                  .textRole(.body)
-                  .foregroundStyle(.secondary)
-                  .fixedSize(horizontal: false, vertical: true)
-              }
-            }
-          }
-          Link(destination: Terms.appleEULA) {
-            Label("Apple's Standard License Agreement", systemImage: "arrow.up.right.square")
-          }
-          .textRole(.bodyEmphasis)
-          Text("Effective October 21, 2026")
-            .textRole(.labelSmall)
-            .foregroundStyle(.secondary)
-        }
-        .padding(.horizontal, Space.screen)
-        .padding(.vertical, Space.l)
-        .gameColumn()
-      }
-      .navigationTitle("Terms of Use")
-      .navigationBarTitleDisplayMode(.inline)
-      // Over the app's backdrop, as every screen is: it's the first one seen.
-      .containerBackground(for: .navigation) { Backdrop(mood: .idle) }
-      .toolbar {
-        if !isAgreeing {
-          ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
-        }
-      }
-      .safeAreaBar(edge: .bottom) {
-        if isAgreeing {
-          ActionBar {
-            FieldMessage(Text("Read them again any time from Safety, on the join screen."), kind: .hint)
-            ActionButton("Agree and Continue", systemImage: "checkmark") { safety.acceptTerms() }
+            ActionBar { agreeing }
           }
         }
+        .scrollEdgeEffectStyle(isAgreeing ? .hard : nil, for: .bottom)
       }
-      .scrollEdgeEffectStyle(isAgreeing ? .hard : nil, for: .bottom)
     }
+    .navigationTitle("Terms of Use")
+    .navigationBarTitleDisplayMode(.inline)
+    // Over the app's backdrop, as every screen is: it's the first one seen.
+    .containerBackground(for: .navigation) { Backdrop(mood: .idle) }
     .interactiveDismissDisabled(isAgreeing)
+  }
+
+  private var beforeYouPlay: some View {
+    VStack(alignment: .leading, spacing: Space.s) {
+      Text("Before you play")
+        .textRole(.title)
+        .accessibilityAddTraits(.isHeader)
+      Text("Trivia is for people in the same room. Everyone who hosts or plays agrees to these terms first.")
+        .textRole(.body)
+        .foregroundStyle(.secondary)
+    }
+  }
+
+  private var document: some View {
+    VStack(alignment: .leading, spacing: Space.xl) {
+      ForEach(Terms.sections) { section in
+        VStack(alignment: .leading, spacing: Space.s) {
+          Text(section.title)
+            .textRole(.headline)
+            .accessibilityAddTraits(.isHeader)
+          ForEach(section.paragraphs.indices, id: \.self) { index in
+            Text(section.paragraphs[index])
+              .textRole(.body)
+              .foregroundStyle(.secondary)
+              .fixedSize(horizontal: false, vertical: true)
+          }
+        }
+      }
+      Link(destination: Terms.appleEULA) {
+        Label("Apple's Standard License Agreement", systemImage: "arrow.up.right.square")
+      }
+      .textRole(.bodyEmphasis)
+      Text("Effective October 21, 2026")
+        .textRole(.labelSmall)
+        .foregroundStyle(.secondary)
+    }
+  }
+
+  @ViewBuilder
+  private var agreeing: some View {
+    FieldMessage(Text("Read them again any time in Settings, under Safety."), kind: .hint)
+    ActionButton("Agree and Continue", systemImage: "checkmark") { safety.acceptTerms() }
   }
 }
 
@@ -126,8 +152,5 @@ enum Terms {
 }
 
 #if DEBUG
-#Preview("Agreeing") {
-  TermsView(isAgreeing: true)
-    .environment(Safety(defaults: nil))
-}
+#Preview("Agreeing") { ScreenPreview(.terms) }
 #endif
