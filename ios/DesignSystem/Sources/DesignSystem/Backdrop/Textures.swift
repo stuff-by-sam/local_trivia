@@ -2,10 +2,10 @@ import CoreMotion
 import Observation
 import SwiftUI
 
-// The themes' textures (`Backdrop.Texture`), apart from Phosphor's scanlines.
-// Each is drawn once and holds still, bar Holographic's foil, Glass's liquid
-// and Titanium's shine, which follow the phone's tilt while they may
-// (`TiltFollowing`).
+// The themes' textures (`Backdrop.Texture`), apart from Phosphor's scanlines
+// and the scenes in SceneTextures.swift. Each is drawn once and holds still,
+// bar Holographic's foil, Glass's liquid and Titanium's shine, which follow
+// the phone's tilt while they may (`TiltFollowing`).
 
 /// Cobalt's texture: hairlines on a 22 pt square pitch, faint enough to read as
 /// the glass's structure rather than a pattern of its own.
@@ -301,7 +301,11 @@ struct TiltFollowing<Content: View>: View {
 
   var body: some View {
     let isLive = followsTilt && scenePhase == .active && Tilt.shared.isAvailable
-    content(isLive ? Tilt.shared.angles : .level)
+    let angles = isLive ? Tilt.shared.angles : .level
+    content(angles)
+      // Readings come 30 a second; a screen draws up to 120. Gliding from
+      // each to the next keeps the light moving as smoothly as the phone.
+      .motion(.drift, value: angles)
       .onAppear { watch(isLive) }
       .onChange(of: isLive) { _, live in watch(live) }
       .onDisappear { watch(false) }

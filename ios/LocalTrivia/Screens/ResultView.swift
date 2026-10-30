@@ -104,8 +104,16 @@ struct ResultView: View {
         GlassText(verdict.title, role: .shout, color: color)
           .accessibilityAddTraits(.isHeader)
         HStack(alignment: .firstTextBaseline, spacing: Space.s) {
-          GlassCounter(shownPoints, prefix: "+", role: .display(.points), color: result.points > 0 ? .primary : .secondary)
-            .minimumScaleFactor(0.5)
+          // As wide as the figure it counts to, from the first frame, with
+          // the count against "pts": digits arrive at the front, as on a
+          // scoreboard, and the line doesn't shuffle to re-centre each time.
+          ZStack(alignment: .trailing) {
+            Text(verbatim: "+" + result.points.grouped)
+              .textRole(.display(.points))
+              .hidden()
+            GlassCounter(shownPoints, prefix: "+", role: .display(.points), color: result.points > 0 ? .primary : .secondary)
+          }
+          .minimumScaleFactor(0.5)
           Text("pts")
             .textRole(.label)
             .foregroundStyle(.secondary)

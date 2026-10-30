@@ -9,9 +9,9 @@ import SwiftUI
 /// theme does. It's static between moods — it only animates when one changes.
 ///
 /// The ink and the texture come from the theme (`Theme`); what's described
-/// above is Phosphor, the game's own. Holographic's foil, Glass's liquid and
-/// Titanium's shine follow the phone's tilt — and hold still while a
-/// question is up.
+/// above is Phosphor, the game's own. Holographic's foil, Glass's liquid,
+/// Titanium's shine, Aurora's curtains, Sakura's petals and Abyss's plankton
+/// follow the phone's tilt — and hold still while a question is up.
 ///
 /// Under Reduce Transparency or Increase Contrast it's the glow alone: no
 /// texture under text, and under Increase Contrast no vignette either.
@@ -26,7 +26,7 @@ public struct Backdrop: View {
   }
 
   /// What the glass has to bend. Each is drawn once and holds still, bar the
-  /// three that follow the phone's tilt (`Textures.swift`).
+  /// ones that follow the phone's tilt (`Textures.swift`, `SceneTextures.swift`).
   nonisolated public enum Texture: Equatable, Sendable {
     case scanlines
     /// A vector display's graticule.
@@ -47,6 +47,17 @@ public struct Backdrop: View {
     case liquid
     /// Brushed metal, with a band of light that slides as the phone tilts.
     case metal
+    /// Curtains of northern light across the sky, swaying as the phone tilts.
+    case aurora
+    /// Sparks rising from a campfire's glow below the screen.
+    case embers
+    /// Cherry blossom petals, near and far, parting as the phone tilts.
+    case blossom
+    /// Light rippling down through deep water, and glowing plankton that
+    /// drift as the phone tilts.
+    case deepWater
+    /// A circuit board's traces and pads, a few lit by a signal.
+    case traces
   }
 
   let mood: Mood
@@ -113,6 +124,11 @@ public struct Backdrop: View {
     case .chalk: ChalkDust()
     case .liquid: LiquidPools(followsTilt: movesWithTilt, isQuiet: mood == .question)
     case .metal: BrushedMetal(color: theme.accent, followsTilt: movesWithTilt)
+    case .aurora: Aurora(followsTilt: movesWithTilt, isQuiet: mood == .question)
+    case .embers: Embers(isQuiet: mood == .question)
+    case .blossom: Blossom(followsTilt: movesWithTilt)
+    case .deepWater: DeepWater(followsTilt: movesWithTilt, isQuiet: mood == .question)
+    case .traces: Traces(color: theme.accent)
     }
   }
 

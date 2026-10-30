@@ -14,6 +14,7 @@ import SwiftUI
 /// shapes beside the letters are `AnswerMarkers`, chosen apart from the theme.)
 nonisolated public enum Theme: String, CaseIterable, Identifiable, Sendable {
   case phosphor, amber, cobalt, synthwave, noir, gold, holographic, chalkboard, glass, titanium
+  case aurora, ember, sakura, abyss, circuit
 
   public var id: String { rawValue }
 
@@ -29,6 +30,11 @@ nonisolated public enum Theme: String, CaseIterable, Identifiable, Sendable {
     case .chalkboard: "Chalkboard"
     case .glass: "Glass"
     case .titanium: "Titanium"
+    case .aurora: "Aurora"
+    case .ember: "Ember"
+    case .sakura: "Sakura"
+    case .abyss: "Abyss"
+    case .circuit: "Circuit"
     }
   }
 
@@ -42,8 +48,13 @@ nonisolated public enum Theme: String, CaseIterable, Identifiable, Sendable {
     case .gold: "Brushed gold on black, for whoever keeps winning"
     case .holographic: "Iridescent foil that catches the light as you tilt it"
     case .chalkboard: "Chalk on slate, still dusty from the last round"
-    case .glass: "Liquid colour under clear glass, pooling as you tilt"
+    case .glass: "Liquid color under clear glass, pooling as you tilt"
     case .titanium: "Brushed titanium: tilt it and the light moves"
+    case .aurora: "Northern lights over a polar night, swaying as you tilt"
+    case .ember: "Sparks rising from a campfire, late into the night"
+    case .sakura: "Cherry blossoms drifting by on a spring night"
+    case .abyss: "Light rippling down from far above, and glowing plankton that drift as you tilt"
+    case .circuit: "The circuit board behind the screen, with a signal or two lit up"
     }
   }
 
@@ -71,6 +82,11 @@ nonisolated public enum Theme: String, CaseIterable, Identifiable, Sendable {
     case .chalkboard: 0xFFF0A0
     case .glass: 0xBFEFFF
     case .titanium: 0xC5CDD8
+    case .aurora: 0x7AF5D3
+    case .ember: 0xFF9466
+    case .sakura: 0xFFADCB
+    case .abyss: 0x5CC4FF
+    case .circuit: 0xC6FF5C
     }
   }
 
@@ -88,6 +104,12 @@ nonisolated public enum Theme: String, CaseIterable, Identifiable, Sendable {
     case .chalkboard: Color(hex: 0x141D19)
     case .glass: Color(hex: 0x04070F)
     case .titanium: Color(hex: 0x0D0F12)
+    case .aurora: Color(hex: 0x02090C)
+    case .ember: Color(hex: 0x0D0604)
+    case .sakura: Color(hex: 0x0E0709)
+    case .abyss: Color(hex: 0x010711)
+    // Solder mask: a green so dark it's nearly the room.
+    case .circuit: Color(hex: 0x020C06)
     }
   }
 
@@ -102,6 +124,11 @@ nonisolated public enum Theme: String, CaseIterable, Identifiable, Sendable {
     case .chalkboard: .chalk
     case .glass: .liquid
     case .titanium: .metal
+    case .aurora: .aurora
+    case .ember: .embers
+    case .sakura: .blossom
+    case .abyss: .deepWater
+    case .circuit: .traces
     }
   }
 }

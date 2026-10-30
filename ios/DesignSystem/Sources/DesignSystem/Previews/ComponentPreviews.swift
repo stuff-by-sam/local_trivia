@@ -322,6 +322,27 @@ private struct SpreadFold: View {
   .preferredColorScheme(.dark)
 }
 
+#Preview("Backdrop scenes") {
+  ScrollView {
+    VStack(spacing: Space.s) {
+      ForEach([Theme.aurora, .ember, .sakura, .abyss, .circuit]) { theme in
+        // At rest, then quieter while a question is up.
+        HStack(spacing: Space.s) {
+          ForEach([Backdrop.Mood.idle, .question], id: \.self) { mood in
+            Backdrop(mood: mood)
+              .frame(height: Size.qrFull)
+              .overlay { Text(verbatim: "\(theme.rawValue) · \(mood)").textRole(.status) }
+              .clipShape(.rect(cornerRadius: Radius.panel))
+          }
+        }
+        .theme(theme)
+      }
+    }
+    .padding(Space.l)
+  }
+  .preferredColorScheme(.dark)
+}
+
 #Preview("Answer markers") {
   ScrollView {
     VStack(alignment: .leading, spacing: Space.l) {

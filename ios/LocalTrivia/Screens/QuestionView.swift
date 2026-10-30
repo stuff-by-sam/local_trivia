@@ -201,7 +201,11 @@ private struct QuestionStatus: View {
   @Environment(GameStore.self) private var store
 
   var body: some View {
-    Group {
+    ZStack {
+      // The line's room, held from the first frame: when it appears at the
+      // tap, the four answers above it stay exactly where the thumb left them.
+      StatusLine("Time's up", isWaiting: false)
+        .hidden()
       if round.lockedIndex != nil {
         if round.acknowledged, let answered = store.answered {
           StatusLine("Locked in · \(answered.answered) of \(answered.total) answered")
@@ -214,7 +218,6 @@ private struct QuestionStatus: View {
         StatusLine("Time's up", isWaiting: false)
       }
     }
-    .frame(minHeight: Space.l + Space.xs)
     .contentTransition(.opacity)
     .motion(.settle, value: round.lockedIndex)
     .motion(.settle, value: round.acknowledged)

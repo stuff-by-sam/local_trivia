@@ -1,0 +1,81 @@
+{
+  "fill" : {
+    "automatic-gradient" : "extended-srgb:0.11000,0.05000,0.08000,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "circle.svg",
+          "name" : "circle"
+        }
+      ],
+      "name" : "Circle",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.6
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.4
+      }
+    },
+    {
+      "layers" : [
+        {
+          "image-name" : "triangle.svg",
+          "name" : "triangle"
+        }
+      ],
+      "name" : "Triangle",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.6
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.4
+      }
+    },
+    {
+      "layers" : [
+        {
+          "image-name" : "square.svg",
+          "name" : "square"
+        }
+      ],
+      "name" : "Square",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.6
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.4
+      }
+    },
+    {
+      "layers" : [
+        {
+          "image-name" : "diamond.svg",
+          "name" : "diamond"
+        }
+      ],
+      "name" : "Diamond",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.6
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.4
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
