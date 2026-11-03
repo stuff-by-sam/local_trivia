@@ -7,7 +7,7 @@
     "%@ (you)" : {
       "extractionState" : "manual"
     },
-    "%@ icon" : {
+    "%@ Copy" : {
 
     },
     "%@ pts" : {
@@ -79,13 +79,16 @@
     "A monochrome tube, warm as an old terminal" : {
       "extractionState" : "manual"
     },
+    "A photo stays on this device. It's softened and dimmed so the game reads over it, and shows on any TV this device puts the game on." : {
+
+    },
     "A present, a balloon, a party popper and a cake" : {
       "extractionState" : "manual"
     },
-    "A theme dresses this iPad, any TV it puts the game on, and the browsers in a game it hosts." : {
+    "A theme dresses this iPad, any TV it puts the game on, and the browsers in a game it hosts. Touch and hold a theme for more." : {
 
     },
-    "A theme dresses this phone, any TV it puts the game on, and the browsers in a game it hosts." : {
+    "A theme dresses this phone, any TV it puts the game on, and the browsers in a game it hosts. Touch and hold a theme for more." : {
 
     },
     "A turtle, a fish, a fox and a dog" : {
@@ -121,6 +124,9 @@
     "Amber" : {
       "extractionState" : "manual"
     },
+    "Animals" : {
+      "extractionState" : "manual"
+    },
     "Answer" : {
 
     },
@@ -139,13 +145,13 @@
     "Answers" : {
 
     },
+    "Any Color" : {
+
+    },
     "Anyone who does can be removed from a game and blocked by its host and by other players." : {
 
     },
     "Anything that would help us" : {
-
-    },
-    "App Icons" : {
 
     },
     "Apple Intelligence drafts these on this iPad." : {
@@ -178,10 +184,19 @@
     "Away" : {
 
     },
+    "Backdrop" : {
+
+    },
     "Backyard" : {
       "extractionState" : "manual"
     },
     "Before you play" : {
+
+    },
+    "Being played." : {
+
+    },
+    "Beside %@" : {
 
     },
     "Block" : {
@@ -208,6 +223,12 @@
     "Blocked players" : {
 
     },
+    "Blossoms" : {
+      "extractionState" : "manual"
+    },
+    "Brushed Lines" : {
+      "extractionState" : "manual"
+    },
     "Brushed gold on black, for whoever keeps winning" : {
       "extractionState" : "manual"
     },
@@ -229,8 +250,14 @@
     "Carbon dioxide" : {
 
     },
+    "Cartoons, shows, songs and internet moments" : {
+
+    },
     "Category" : {
 
+    },
+    "Chalk Dust" : {
+      "extractionState" : "manual"
     },
     "Chalk on slate, still dusty from the last round" : {
       "extractionState" : "manual"
@@ -238,13 +265,25 @@
     "Chalkboard" : {
       "extractionState" : "manual"
     },
-    "Changes Trivia's icon on your Home Screen." : {
+    "Chemistry, biology and Earth science" : {
 
     },
     "Cherry blossoms drifting by on a spring night" : {
       "extractionState" : "manual"
     },
+    "Choices" : {
+
+    },
+    "Choose Another Photo…" : {
+
+    },
+    "Choose a Photo…" : {
+
+    },
     "Choose a different game." : {
+
+    },
+    "Choose a shape for %@." : {
 
     },
     "Choose your Apple TV, or a TV with AirPlay." : {
@@ -256,6 +295,9 @@
     "Circuit" : {
       "extractionState" : "manual"
     },
+    "Circuit Board" : {
+      "extractionState" : "manual"
+    },
     "Classic" : {
       "extractionState" : "manual"
     },
@@ -264,6 +306,9 @@
     },
     "Cobalt" : {
       "extractionState" : "manual"
+    },
+    "Color" : {
+
     },
     "Connect a TV" : {
 
@@ -292,6 +337,9 @@
     "Copy the report and email it to %@." : {
 
     },
+    "Coral" : {
+      "extractionState" : "manual"
+    },
     "Correct" : {
 
     },
@@ -310,9 +358,6 @@
     "Couldn't Open File" : {
 
     },
-    "Couldn't change the icon. Try again in a moment." : {
-
-    },
     "Couldn't draft questions. Try again." : {
 
     },
@@ -322,11 +367,23 @@
     "Couldn't join that game." : {
 
     },
+    "Couldn't save the theme. Try again." : {
+
+    },
     "Couldn't start hosting: %@" : {
 
     },
     "Critters" : {
       "extractionState" : "manual"
+    },
+    "Cyan" : {
+      "extractionState" : "manual"
+    },
+    "Deep Water" : {
+      "extractionState" : "manual"
+    },
+    "Delete" : {
+
     },
     "Delete All" : {
 
@@ -337,14 +394,38 @@
     "Deleted ^[%lld question](inflect: true)" : {
 
     },
+    "Deleted “%@”" : {
+
+    },
     "Details" : {
 
     },
     "Dice, a puzzle piece, a controller and a crown" : {
       "extractionState" : "manual"
     },
+    "Discard Changes" : {
+
+    },
+    "Discard Markers" : {
+
+    },
+    "Discard Theme" : {
+
+    },
+    "Discard these markers?" : {
+
+    },
+    "Discard this theme?" : {
+
+    },
+    "Discard your changes?" : {
+
+    },
     "Done" : {
 
+    },
+    "Dot Matrix" : {
+      "extractionState" : "manual"
     },
     "Double-check this answer" : {
 
@@ -367,7 +448,19 @@
     "Drafts · %lld in" : {
 
     },
+    "Duplicate" : {
+
+    },
     "Each one is checked before it's shown. Check every answer before you play — it can still be wrong." : {
+
+    },
+    "Easy questions for younger players" : {
+
+    },
+    "Edit" : {
+
+    },
+    "Edit Markers" : {
 
     },
     "Edit Question" : {
@@ -377,6 +470,9 @@
 
     },
     "Edit Round…" : {
+
+    },
+    "Edit Theme" : {
 
     },
     "Effective October 21, 2026" : {
@@ -389,6 +485,9 @@
       "extractionState" : "manual"
     },
     "Ember" : {
+      "extractionState" : "manual"
+    },
+    "Embers" : {
       "extractionState" : "manual"
     },
     "End Game" : {
@@ -419,6 +518,12 @@
 
     },
     "Five" : {
+
+    },
+    "Food" : {
+      "extractionState" : "manual"
+    },
+    "For Kids" : {
 
     },
     "Found on your Wi-Fi" : {
@@ -458,6 +563,9 @@
         }
       }
     },
+    "Games & Sports" : {
+      "extractionState" : "manual"
+    },
     "Games have no accounts and no servers, so content is removed and users are ejected on the spot, by the people in the game: the host removes or blocks a player, and players block a host or another player." : {
 
     },
@@ -467,10 +575,16 @@
     "General" : {
 
     },
+    "General Knowledge" : {
+
+    },
     "Glass" : {
       "extractionState" : "manual"
     },
     "Gold" : {
+      "extractionState" : "manual"
+    },
+    "Green" : {
       "extractionState" : "manual"
     },
     "Harassment or bullying" : {
@@ -485,10 +599,19 @@
     "Helium" : {
 
     },
+    "History, science, books, art and more" : {
+
+    },
     "Hold tight" : {
 
     },
+    "Holofoil" : {
+      "extractionState" : "manual"
+    },
     "Holographic" : {
+      "extractionState" : "manual"
+    },
+    "Horizon" : {
       "extractionState" : "manual"
     },
     "Host" : {
@@ -548,8 +671,14 @@
     "Jupiter" : {
 
     },
+    "Keep Editing" : {
+
+    },
     "Kept out of your games" : {
 
+    },
+    "Lavender" : {
+      "extractionState" : "manual"
     },
     "Leaf, water, fire and lightning" : {
       "extractionState" : "manual"
@@ -567,6 +696,12 @@
 
     },
     "Light rippling down from far above, and glowing plankton that drift as you tilt" : {
+      "extractionState" : "manual"
+    },
+    "Lightened a little, so text on it stays easy to read." : {
+
+    },
+    "Liquid Color" : {
       "extractionState" : "manual"
     },
     "Liquid color under clear glass, pooling as you tilt" : {
@@ -597,17 +732,59 @@
     "MATH" : {
 
     },
+    "Magenta" : {
+      "extractionState" : "manual"
+    },
+    "Make Your Own Markers" : {
+
+    },
+    "Make Your Own Theme" : {
+
+    },
+    "Make Your Own from This" : {
+
+    },
     "Make it yours" : {
 
     },
     "Mark %@ as the right answer" : {
 
     },
+    "Metal Sheen" : {
+      "extractionState" : "manual"
+    },
     "Minimum share for a correct answer" : {
 
     },
+    "Mint" : {
+      "extractionState" : "manual"
+    },
     "Move on automatically" : {
 
+    },
+    "Music & Arts" : {
+      "extractionState" : "manual"
+    },
+    "Music, movies and moments from the decade" : {
+
+    },
+    "My %@" : {
+
+    },
+    "My Markers" : {
+
+    },
+    "My Round" : {
+
+    },
+    "My Theme" : {
+
+    },
+    "Name" : {
+
+    },
+    "Nature" : {
+      "extractionState" : "manual"
     },
     "Needs a correct answer" : {
 
@@ -621,7 +798,19 @@
     "Neptune" : {
 
     },
+    "New Markers" : {
+
+    },
     "New Question" : {
+
+    },
+    "New Round" : {
+
+    },
+    "New Round %lld" : {
+
+    },
+    "New Theme" : {
 
     },
     "Next" : {
@@ -666,7 +855,7 @@
     "No objectionable content. No abusive users." : {
 
     },
-    "No questions yet. Write one, or import a CSV — the same format the web admin console takes." : {
+    "No questions yet. Write one, import a CSV — the same format the web admin console takes — or pick a starter round in Round." : {
 
     },
     "Nobody" : {
@@ -682,6 +871,9 @@
 
     },
     "Noir" : {
+      "extractionState" : "manual"
+    },
+    "Northern Lights" : {
       "extractionState" : "manual"
     },
     "Northern lights over a polar night, swaying as you tilt" : {
@@ -734,6 +926,9 @@
     "Open Settings" : {
 
     },
+    "Opens a copy as one of your rounds." : {
+
+    },
     "Opens an email to %@ for you to send. We review every report within 24 hours." : {
 
     },
@@ -748,6 +943,9 @@
     },
     "Or scan the code" : {
 
+    },
+    "Orange" : {
+      "extractionState" : "manual"
     },
     "Oxygen" : {
 
@@ -774,13 +972,16 @@
     "Party" : {
       "extractionState" : "manual"
     },
+    "Periwinkle" : {
+      "extractionState" : "manual"
+    },
     "Phosphor" : {
       "extractionState" : "manual"
     },
     "Pick a CSV file to import." : {
 
     },
-    "Pick a theme, answer markers and an app icon, all free, in Settings: the gear on the join screen. How to Play is there too, any time." : {
+    "Pick a theme and answer markers, or make your own from a color, a photo and the shapes you like. It's all free, in Settings: the gear on the join screen. How to Play is there too, any time." : {
 
     },
     "Pick another game name" : {
@@ -791,6 +992,9 @@
     },
     "Pick your game" : {
 
+    },
+    "Pink" : {
+      "extractionState" : "manual"
     },
     "Play Again" : {
 
@@ -825,6 +1029,9 @@
     "Playing as %@" : {
 
     },
+    "Plays this round." : {
+
+    },
     "Plus %lld points" : {
 
     },
@@ -834,7 +1041,13 @@
     "Point at the QR code on the host's phone" : {
 
     },
+    "Preparing your photo" : {
+
+    },
     "Problem" : {
+
+    },
+    "Puts it beside %@." : {
 
     },
     "QR code to join this game" : {
@@ -874,6 +1087,9 @@
     "Read them again any time in Settings, under Safety." : {
 
     },
+    "Ready to play, with every answer checked. Each opens as a copy that's yours to change." : {
+
+    },
     "Reason" : {
 
     },
@@ -887,6 +1103,12 @@
 
     },
     "Removed by the host." : {
+
+    },
+    "Rename" : {
+
+    },
+    "Rename Round" : {
 
     },
     "Report" : {
@@ -926,7 +1148,13 @@
         }
       }
     },
+    "Round" : {
+
+    },
     "Round's default" : {
+
+    },
+    "Rounds" : {
 
     },
     "SCIENCE" : {
@@ -950,6 +1178,9 @@
     "Saturn" : {
 
     },
+    "Save" : {
+
+    },
     "Scan QR Code" : {
 
     },
@@ -965,10 +1196,22 @@
     "Scan with your phone's camera, or open Trivia on this Wi-Fi and type the code." : {
 
     },
+    "Scanlines" : {
+      "extractionState" : "manual"
+    },
+    "Science & School" : {
+      "extractionState" : "manual"
+    },
+    "Science Class" : {
+
+    },
     "Scores start next question" : {
 
     },
     "Scoring" : {
+
+    },
+    "Search shapes" : {
 
     },
     "Send Report" : {
@@ -981,6 +1224,18 @@
 
     },
     "Sexual or explicit" : {
+
+    },
+    "Shapes" : {
+      "extractionState" : "manual"
+    },
+    "Share Round…" : {
+
+    },
+    "Shared Round" : {
+
+    },
+    "Share…" : {
 
     },
     "Show Join Code" : {
@@ -1013,6 +1268,9 @@
     "Sky" : {
       "extractionState" : "manual"
     },
+    "Sky Blue" : {
+      "extractionState" : "manual"
+    },
     "Smarts" : {
       "extractionState" : "manual"
     },
@@ -1043,6 +1301,9 @@
     "Start Over" : {
 
     },
+    "Starter Rounds" : {
+
+    },
     "Stop Drafting" : {
 
     },
@@ -1064,13 +1325,19 @@
     "Synthwave" : {
       "extractionState" : "manual"
     },
-    "Tap Host a Game and build a round: write questions, draft them with Apple Intelligence, import a CSV, or copy a prompt into any AI chat. Then Start Hosting, and everyone joins with your PIN or QR code. You play too." : {
+    "T-shirt" : {
+      "extractionState" : "manual"
+    },
+    "Tap Host a Game and pick a round: start from a ready-made one, write questions, draft them with Apple Intelligence, import a CSV, or copy a prompt into any AI chat. Then Start Hosting, and everyone joins with your PIN or QR code. You play too." : {
 
     },
     "Tap a key to mark the right answer." : {
 
     },
     "Tap a question to edit it, or the circle to leave it out of this round. Swipe to delete; Edit to reorder." : {
+
+    },
+    "Tap a round to play it. The one it replaces stays here, and everything saves as you edit." : {
 
     },
     "Terms of Use" : {
@@ -1094,7 +1361,13 @@
     "That nickname isn't allowed. Pick another." : {
 
     },
+    "That photo couldn't be opened. Try another." : {
+
+    },
     "That topic can't be drafted. Try another." : {
+
+    },
+    "The 2010s" : {
 
     },
     "The TV shows the join code, each question with its clock and answers, the reveal and the standings. Your iPad keeps the controls, and your own answers." : {
@@ -1139,7 +1412,7 @@
     "Themes" : {
 
     },
-    "Themes & Icons" : {
+    "Themes & Markers" : {
 
     },
     "Then paste the CSV it replies with" : {
@@ -1150,6 +1423,9 @@
     },
     "These terms" : {
 
+    },
+    "Things" : {
+      "extractionState" : "manual"
     },
     "This iPad doesn't allow the camera. Type the PIN from the host's phone instead." : {
 
@@ -1164,6 +1440,9 @@
 
     },
     "This question has words that aren't allowed in a game. It stays out of play until they're gone." : {
+
+    },
+    "Throwback" : {
 
     },
     "Time limit" : {
@@ -1209,7 +1488,13 @@
     "Total" : {
 
     },
+    "Travel" : {
+      "extractionState" : "manual"
+    },
     "Trivia Night" : {
+
+    },
+    "Trivia Round" : {
 
     },
     "Trivia filters objectionable words out of nicknames, game names and questions, and hides any that still reach a player's screen." : {
@@ -1251,6 +1536,12 @@
     "Uses these markers." : {
 
     },
+    "Using %@" : {
+
+    },
+    "Vector Grid" : {
+      "extractionState" : "manual"
+    },
     "Violent or threatening" : {
 
     },
@@ -1268,16 +1559,6 @@
     },
     "Wearing %@" : {
 
-    },
-    "Wearing %@. %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Wearing %1$@. %2$@"
-          }
-        }
-      }
     },
     "Wears this theme." : {
 
@@ -1299,6 +1580,9 @@
     },
     "Which planet has the most moons?" : {
 
+    },
+    "White" : {
+      "extractionState" : "manual"
     },
     "White on black, through a dot-matrix screen" : {
       "extractionState" : "manual"
@@ -1340,11 +1624,23 @@
     "You're responsible for what you type and for the questions you host — including ones you draft with Apple Intelligence or another AI, which can be wrong. Check them before you play." : {
 
     },
+    "Your Photo" : {
+
+    },
+    "Your Rounds" : {
+
+    },
     "Your content and your privacy" : {
 
     },
     "Your name" : {
 
+    },
+    "Your own color, over %@" : {
+      "extractionState" : "manual"
+    },
+    "Your own color, over a photo of yours" : {
+      "extractionState" : "manual"
     },
     "Your position" : {
 
@@ -1365,16 +1661,55 @@
     "^[%lld player](inflect: true)" : {
 
     },
+    "^[%lld question](inflect: true)" : {
+
+    },
     "^[%lld question](inflect: true) ready" : {
 
     },
     "^[%lld question](inflect: true) to go" : {
 
     },
+    "airplane" : {
+      "extractionState" : "manual"
+    },
     "and %lld more" : {
 
     },
+    "ant" : {
+      "extractionState" : "manual"
+    },
+    "backpack" : {
+      "extractionState" : "manual"
+    },
+    "badge" : {
+      "extractionState" : "manual"
+    },
     "balloon" : {
+      "extractionState" : "manual"
+    },
+    "baseball" : {
+      "extractionState" : "manual"
+    },
+    "basket" : {
+      "extractionState" : "manual"
+    },
+    "basketball" : {
+      "extractionState" : "manual"
+    },
+    "bathtub" : {
+      "extractionState" : "manual"
+    },
+    "beach umbrella" : {
+      "extractionState" : "manual"
+    },
+    "bed" : {
+      "extractionState" : "manual"
+    },
+    "bell" : {
+      "extractionState" : "manual"
+    },
+    "binoculars" : {
       "extractionState" : "manual"
     },
     "bird" : {
@@ -1383,10 +1718,52 @@
     "book" : {
       "extractionState" : "manual"
     },
+    "bookmark" : {
+      "extractionState" : "manual"
+    },
+    "books" : {
+      "extractionState" : "manual"
+    },
+    "box" : {
+      "extractionState" : "manual"
+    },
     "brain" : {
       "extractionState" : "manual"
     },
+    "briefcase" : {
+      "extractionState" : "manual"
+    },
+    "buildings" : {
+      "extractionState" : "manual"
+    },
+    "bus" : {
+      "extractionState" : "manual"
+    },
     "cake" : {
+      "extractionState" : "manual"
+    },
+    "camera" : {
+      "extractionState" : "manual"
+    },
+    "capsule" : {
+      "extractionState" : "manual"
+    },
+    "car" : {
+      "extractionState" : "manual"
+    },
+    "carrot" : {
+      "extractionState" : "manual"
+    },
+    "cart" : {
+      "extractionState" : "manual"
+    },
+    "cat" : {
+      "extractionState" : "manual"
+    },
+    "chair" : {
+      "extractionState" : "manual"
+    },
+    "checkered flag" : {
       "extractionState" : "manual"
     },
     "circle" : {
@@ -1401,10 +1778,31 @@
     "club" : {
       "extractionState" : "manual"
     },
+    "comb" : {
+      "extractionState" : "manual"
+    },
+    "cone" : {
+      "extractionState" : "manual"
+    },
     "controller" : {
       "extractionState" : "manual"
     },
+    "cricket ball" : {
+      "extractionState" : "manual"
+    },
     "crown" : {
+      "extractionState" : "manual"
+    },
+    "cube" : {
+      "extractionState" : "manual"
+    },
+    "cylinder" : {
+      "extractionState" : "manual"
+    },
+    "desk" : {
+      "extractionState" : "manual"
+    },
+    "desk lamp" : {
       "extractionState" : "manual"
     },
     "diamond" : {
@@ -1422,6 +1820,24 @@
     "drop" : {
       "extractionState" : "manual"
     },
+    "dumbbell" : {
+      "extractionState" : "manual"
+    },
+    "envelope" : {
+      "extractionState" : "manual"
+    },
+    "eye" : {
+      "extractionState" : "manual"
+    },
+    "ferry" : {
+      "extractionState" : "manual"
+    },
+    "film" : {
+      "extractionState" : "manual"
+    },
+    "fireworks" : {
+      "extractionState" : "manual"
+    },
     "fish" : {
       "extractionState" : "manual"
     },
@@ -1431,13 +1847,49 @@
     "flame" : {
       "extractionState" : "manual"
     },
+    "flask" : {
+      "extractionState" : "manual"
+    },
+    "football" : {
+      "extractionState" : "manual"
+    },
     "fox" : {
+      "extractionState" : "manual"
+    },
+    "frying pan" : {
+      "extractionState" : "manual"
+    },
+    "gas pump" : {
+      "extractionState" : "manual"
+    },
+    "globe" : {
       "extractionState" : "manual"
     },
     "graduation cap" : {
       "extractionState" : "manual"
     },
+    "guitars" : {
+      "extractionState" : "manual"
+    },
+    "hammer" : {
+      "extractionState" : "manual"
+    },
+    "headphones" : {
+      "extractionState" : "manual"
+    },
     "heart" : {
+      "extractionState" : "manual"
+    },
+    "hexagon" : {
+      "extractionState" : "manual"
+    },
+    "hockey puck" : {
+      "extractionState" : "manual"
+    },
+    "horn" : {
+      "extractionState" : "manual"
+    },
+    "house" : {
       "extractionState" : "manual"
     },
     "ladybug" : {
@@ -1455,10 +1907,43 @@
     "lizard" : {
       "extractionState" : "manual"
     },
+    "magic wand" : {
+      "extractionState" : "manual"
+    },
     "map" : {
       "extractionState" : "manual"
     },
+    "medal" : {
+      "extractionState" : "manual"
+    },
+    "megaphone" : {
+      "extractionState" : "manual"
+    },
+    "metronome" : {
+      "extractionState" : "manual"
+    },
+    "microbe" : {
+      "extractionState" : "manual"
+    },
+    "microphone" : {
+      "extractionState" : "manual"
+    },
     "moon" : {
+      "extractionState" : "manual"
+    },
+    "mountains" : {
+      "extractionState" : "manual"
+    },
+    "mug" : {
+      "extractionState" : "manual"
+    },
+    "music note" : {
+      "extractionState" : "manual"
+    },
+    "mustache" : {
+      "extractionState" : "manual"
+    },
+    "octagon" : {
       "extractionState" : "manual"
     },
     "of %lld · %@ pts" : {
@@ -1471,7 +1956,28 @@
         }
       }
     },
+    "oval" : {
+      "extractionState" : "manual"
+    },
+    "paint palette" : {
+      "extractionState" : "manual"
+    },
+    "paintbrush" : {
+      "extractionState" : "manual"
+    },
+    "paper airplane" : {
+      "extractionState" : "manual"
+    },
     "party popper" : {
+      "extractionState" : "manual"
+    },
+    "paw print" : {
+      "extractionState" : "manual"
+    },
+    "pentagon" : {
+      "extractionState" : "manual"
+    },
+    "piano keys" : {
       "extractionState" : "manual"
     },
     "popcorn" : {
@@ -1483,19 +1989,76 @@
     "pts" : {
 
     },
+    "pushpin" : {
+      "extractionState" : "manual"
+    },
     "puzzle piece" : {
+      "extractionState" : "manual"
+    },
+    "pyramid" : {
       "extractionState" : "manual"
     },
     "rabbit" : {
       "extractionState" : "manual"
     },
+    "rain cloud" : {
+      "extractionState" : "manual"
+    },
+    "rainbow" : {
+      "extractionState" : "manual"
+    },
+    "rhombus" : {
+      "extractionState" : "manual"
+    },
+    "ribbon" : {
+      "extractionState" : "manual"
+    },
+    "rugby ball" : {
+      "extractionState" : "manual"
+    },
+    "ruler" : {
+      "extractionState" : "manual"
+    },
+    "sailboat" : {
+      "extractionState" : "manual"
+    },
+    "shell" : {
+      "extractionState" : "manual"
+    },
     "shield" : {
+      "extractionState" : "manual"
+    },
+    "shopping bag" : {
+      "extractionState" : "manual"
+    },
+    "signpost" : {
+      "extractionState" : "manual"
+    },
+    "skateboard" : {
       "extractionState" : "manual"
     },
     "skeleton key" : {
       "extractionState" : "manual"
     },
+    "smiley face" : {
+      "extractionState" : "manual"
+    },
+    "sneaker" : {
+      "extractionState" : "manual"
+    },
+    "snowflake" : {
+      "extractionState" : "manual"
+    },
+    "soccer ball" : {
+      "extractionState" : "manual"
+    },
+    "sofa" : {
+      "extractionState" : "manual"
+    },
     "spade" : {
+      "extractionState" : "manual"
+    },
+    "sparkles" : {
       "extractionState" : "manual"
     },
     "square" : {
@@ -1504,7 +2067,46 @@
     "star" : {
       "extractionState" : "manual"
     },
+    "starburst" : {
+      "extractionState" : "manual"
+    },
+    "storm cloud" : {
+      "extractionState" : "manual"
+    },
     "sun" : {
+      "extractionState" : "manual"
+    },
+    "sun hat" : {
+      "extractionState" : "manual"
+    },
+    "sunglasses" : {
+      "extractionState" : "manual"
+    },
+    "sunset" : {
+      "extractionState" : "manual"
+    },
+    "surfboard" : {
+      "extractionState" : "manual"
+    },
+    "tag" : {
+      "extractionState" : "manual"
+    },
+    "takeout" : {
+      "extractionState" : "manual"
+    },
+    "target" : {
+      "extractionState" : "manual"
+    },
+    "teacup" : {
+      "extractionState" : "manual"
+    },
+    "teddy bear" : {
+      "extractionState" : "manual"
+    },
+    "tennis ball" : {
+      "extractionState" : "manual"
+    },
+    "tent" : {
       "extractionState" : "manual"
     },
     "theater masks" : {
@@ -1513,14 +2115,41 @@
     "ticket" : {
       "extractionState" : "manual"
     },
+    "train" : {
+      "extractionState" : "manual"
+    },
+    "tram" : {
+      "extractionState" : "manual"
+    },
+    "tree" : {
+      "extractionState" : "manual"
+    },
     "triangle" : {
+      "extractionState" : "manual"
+    },
+    "trophy" : {
       "extractionState" : "manual"
     },
     "turtle" : {
       "extractionState" : "manual"
     },
+    "umbrella" : {
+      "extractionState" : "manual"
+    },
     "up %lld" : {
 
+    },
+    "volleyball" : {
+      "extractionState" : "manual"
+    },
+    "water bottle" : {
+      "extractionState" : "manual"
+    },
+    "waving hand" : {
+      "extractionState" : "manual"
+    },
+    "wrench" : {
+      "extractionState" : "manual"
     },
     "your name" : {
 

@@ -8,7 +8,10 @@ import UIKit
 /// it — what the system's glass and the design system's palette both read —
 /// so a test sees the app as that setting draws it. `-resetTutorial YES`
 /// forgets the tutorial was seen, so it shows as on a first launch — and,
-/// unlike `-tutorialSeen NO`, finishing it still sticks. `-showsFold YES`
+/// unlike `-tutorialSeen NO`, finishing it still sticks. `-emptyRound YES`
+/// starts hosting as a new install does, with no rounds kept: a test that
+/// writes a question doesn't have to delete the last run's first, which at
+/// the largest text sizes means scrolling a long form. `-showsFold YES`
 /// draws where a `Spread` folds: the hinge, on iPhone Duo.
 enum UITestSettings {
   private static var observer: (any NSObjectProtocol)?
@@ -17,6 +20,9 @@ enum UITestSettings {
     let defaults = UserDefaults.standard
     if defaults.bool(forKey: "resetTutorial") {
       defaults.removeObject(forKey: TutorialPage.seenKey)
+    }
+    if defaults.bool(forKey: "emptyRound"), let rounds = HostLibrary.defaultFileURL {
+      try? FileManager.default.removeItem(at: rounds)
     }
     guard defaults.bool(forKey: "increaseContrast") else { return }
     observer = NotificationCenter.default.addObserver(forName: UIScene.willConnectNotification, object: nil, queue: .main) { note in

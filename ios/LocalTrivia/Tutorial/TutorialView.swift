@@ -105,11 +105,11 @@ enum TutorialPage: Int, CaseIterable, Identifiable {
     case .standings:
       "After each question you'll see how the room voted and where you stand. The top three take the podium at the end. Lock your phone or lose Wi-Fi mid-game, and you're back in your seat when you return."
     case .host:
-      "Tap Host a Game and build a round: write questions, draft them with Apple Intelligence, import a CSV, or copy a prompt into any AI chat. Then Start Hosting, and everyone joins with your PIN or QR code. You play too."
+      "Tap Host a Game and pick a round: start from a ready-made one, write questions, draft them with Apple Intelligence, import a CSV, or copy a prompt into any AI chat. Then Start Hosting, and everyone joins with your PIN or QR code. You play too."
     case .safety:
       "No objectionable content, no abusive players. In a game, the ••• menu reports a question, a player or the game, or blocks the host; touch and hold a name to block that player. Hosts remove or block anyone from Players."
     case .looks:
-      "Pick a theme, answer markers and an app icon, all free, in Settings: the gear on the join screen. How to Play is there too, any time."
+      "Pick a theme and answer markers, or make your own from a color, a photo and the shapes you like. It's all free, in Settings: the gear on the join screen. How to Play is there too, any time."
     }
   }
 }
@@ -270,16 +270,28 @@ private struct SafetyPicture: View {
   }
 }
 
-/// Every set of answer markers, the one you wear lit.
+/// A few of the choices, as Themes & Markers lays them out — what you wear
+/// lit — and the bubble that makes your own.
 private struct LooksPicture: View {
+  @Environment(\.theme) private var theme
   @Environment(\.answerMarkers) private var markers
 
+  /// What's worn first, then others to show the range.
+  private var themes: [Theme] {
+    Array(([theme] + [Theme.aurora, .sakura, .synthwave, .phosphor].filter { $0.id != theme.id }).prefix(4))
+  }
+
+  private var sets: [AnswerMarkers] {
+    Array(([markers] + [AnswerMarkers.critters, .party, .classic].filter { $0.id != markers.id }).prefix(3))
+  }
+
   var body: some View {
-    HStack(spacing: Space.s) {
-      ForEach(AnswerMarkers.allCases) { set in
-        MarkerSwatch(markers: set, isShown: set == markers)
-      }
+    Honeycomb(diameter: Size.swatch, spacing: Space.s) {
+      ForEach(themes) { ThemeBubble(theme: $0, isWorn: $0.id == theme.id, diameter: Size.swatch) }
+      ForEach(sets) { MarkerBubble(markers: $0, isWorn: $0.id == markers.id, diameter: Size.swatch) }
+      MakeBubble(diameter: Size.swatch)
     }
+    .frame(maxWidth: (Size.swatch + Space.s) * 4)
     .padding(.vertical, Space.l)
   }
 }

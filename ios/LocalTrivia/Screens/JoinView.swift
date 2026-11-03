@@ -13,6 +13,7 @@ struct JoinView: View {
   @Environment(GameStore.self) private var store
   @Environment(GameBrowser.self) private var browser
   @Environment(Safety.self) private var safety
+  @Environment(HostController.self) private var host
   @Environment(\.horizontalSizeClass) private var sizeClass
   @Environment(\.hasRoomToSpread) private var spreads
 
@@ -62,6 +63,10 @@ struct JoinView: View {
       case .settings: SettingsView()
       case .hostSetup: HostSetupView()
       }
+    }
+    // A round arrived from another phone: open Host a Game on it.
+    .onChange(of: host.arrivals) { _, _ in
+      sheet = .hostSetup
     }
     // Setting out to join: now look for the game — and ask to, the first time.
     .onChange(of: focus) { _, field in

@@ -15,12 +15,16 @@ Drafting questions runs on the phone's own model. It can use Apple's larger
 model on Private Cloud Compute instead, which gets far more trivia right, but
 that takes the `com.apple.developer.private-cloud-compute` entitlement, which
 Apple has to grant the team first — a profile without it won't sign a build
-that asks for it. Once the team has it, turn it on in two places:
+that asks for it. Once the team has it, turn it on, and say so:
 
 1. Add the entitlement to `LocalTrivia/LocalTrivia.entitlements` (or add the
    Private Cloud Compute capability under *Signing & Capabilities*).
 2. Add `PRIVATE_CLOUD_COMPUTE` to the target's *Active Compilation
    Conditions* (Build Settings), for Debug and Release.
+3. Say so in the privacy policy (`docs/privacy.html`, "Drafting questions
+   with Apple Intelligence"): the topic and the drafts then go to Private
+   Cloud Compute for the request. The App Store's privacy label stays Data
+   Not Collected — neither Apple nor the app keeps them.
 
 The app can't read its own entitlements on iOS, so the second step is what
 tells it the first was done.
@@ -176,12 +180,19 @@ makes up the number with drafts only the cold answer doubted, marked
 answer, are left out.
 
 A build with Private Cloud Compute turned on (see *Build and run*) drafts
-with Apple's larger model there instead, and the sheet says so before
-anything is sent. It checks each draft once — which of the four options are
-right — and keeps it only when that's just its key; a round is written in
-one request (up to 12 questions, so 25 takes at least three) and checked in one more,
-since Private Cloud Compute has a usage quota. With no internet, over the
-quota, or where it isn't offered, the phone's own model takes over.
+with Apple's larger model there instead — the model Siri AI answers with —
+and the sheet says so before anything is sent. It's asked in exactly the
+words a host copies for any other AI (`AIPrompt`), and its CSV is read as a
+pasted reply is (`CSVImport`), so a round reads the same whoever wrote it.
+It checks each draft once — which of the four options are right — and keeps
+it only when that's just its key; a round is written in one request and
+checked in one more, since Private Cloud Compute has a usage quota. With no
+internet, over the quota, or where it isn't offered, the phone's own model
+takes over.
+
+The phone's own model isn't asked that way: graded by hand over eight
+topics, the shared prompt got 40 of its 80 answer keys right on it (and put
+most on A), where fact-first drafting showed 77 drafts, 71 right.
 
 Measured and graded by hand: on Private Cloud Compute, 60 drafts over 5
 topics (capitals, 90s films, Star Wars, chemistry, Olympic sports) had 58 right
@@ -226,13 +237,17 @@ that missed the goodbye (it was locked, say) lets go of the game once it
 can't reach it and nobody is advertising it, and says the game has ended,
 rather than retrying it for good.
 
-## Themes, icons and answer markers
+## Themes and answer markers
 
-Optional, and out of the way: a **Themes & Icons** button in the join
-screen's toolbar, and nowhere in a game. Every theme, marker set and icon is
-free: tapping one puts it on. The screen keeps each kind in a group of its
-own — themes, then answer markers, then app icons — closed until it's
-opened; a closed group says what's in use.
+Optional, and out of the way: **Themes & Markers** in Settings (the gear on
+the join screen), and nowhere in a game. Every theme and marker set is free,
+and so is making your own. The page is a honeycomb of bubbles, as watchOS
+lays out its apps — a Themes | Answer Markers switch above it, and what's on
+said in words at the top. Tapping a bubble puts it on; the last bubble makes
+your own; touch and hold a built-in to start one from it, or one of your own
+to edit, duplicate or delete it (with an undo). Scrolling, bubbles shrink
+toward the edges as watchOS's do; at rest, and under Reduce Motion, they
+don't.
 
 - **Themes** — Phosphor (the game's own), Amber, Cobalt, Synthwave, Noir,
   Gold, Holographic, Chalkboard, Glass, Titanium, Aurora, Ember, Sakura,
@@ -260,6 +275,15 @@ opened; a closed group says what's in use.
   with the app keep their own theme. A theme never touches the answer
   colours or the status colours: B is cyan on every phone in the room,
   whoever's wearing what, and red is still wrong.
+- **Your own themes** — a name, a colour (twelve suggestions, or any from
+  the system's picker) and a backdrop: any of the fourteen textures, or a
+  photo from the library. A colour is lightened as far as it takes to keep
+  the built-in themes' 7:1 contrast, and the editor says when it has. A
+  photo is chosen with the system's photo picker, which needs no permission
+  and shows the app only that photo; it's softened and dimmed once, kept on
+  this phone (`Looks.photos`, Application Support), shown on any TV the
+  phone drives, and offers its most vivid hue for the accent. A photo no
+  theme shows is let go at the next launch.
 - **Answer markers** — the shapes beside each answer's letter: Classic's
   circle, triangle, square and diamond, or Suits (club, spade, heart,
   diamond), Elements (leaf, water, fire, lightning), Sky (sun, moon, cloud,
@@ -267,34 +291,59 @@ opened; a closed group says what's in use.
   graduation cap), Game Night (dice, puzzle piece, controller, crown), Party
   (present, balloon, party popper, cake), Showtime (theater masks, ticket,
   popcorn, clapperboard), Quest (map, skeleton key, shield, flag) and Backyard
-  (lizard, bird, rabbit, ladybug). A set dresses this phone's
+  (lizard, bird, rabbit, ladybug) — or a set of your own: any four of the
+  150-odd shapes in `MarkerShape.library`, in categories and searchable,
+  each with its own name for VoiceOver. A set dresses this phone's
   answers and any TV it puts the game on. Letters and colours don't change,
   so B is cyan on every phone, and VoiceOver names the shape a set uses
   ("B, spade: Saturn"). Browser players keep the classic shapes.
-- **App icons** — one to match every theme: the classic icon's four
-  shapes, recoloured (Holographic's in foil, Chalkboard's in pastel chalk on
-  slate, Titanium's in brushed metal, Aurora's in the northern lights,
-  Circuit's gold-plated on the board's green). Glass's shapes are glass layers over
-  liquid colour, which the system refracts and lights. Each is an Icon
-  Composer file beside
-  `AppIcon.icon`, named in the target's *Alternate App Icon Sets* build
-  setting.
+
+The app has one icon. (Builds up to 8 had one to match every theme; they
+went in build 9, when the page became about the game alone.)
 
 How it's built:
 
-- `Looks` — the theme and marker set this phone wears, kept in preferences
-  so they're on screen from the first frame, and the icon, which iOS keeps
-  and the app reads at launch.
-- `Theme` — the catalog of looks, and the `theme` environment value the
-  `Backdrop` draws from. Views keep reading `accent`, which follows it.
-- `AnswerMarkers` — the catalog of marker sets, and the `answerMarkers`
-  environment value `AnswerKey`, `AnswerSetMark` and the TV's answers draw
-  their shapes from.
-- `LooksView` — Themes & Icons itself.
+- `Looks` — the theme and marker set this phone wears, and the player's own
+  (`OwnTheme`, `OwnMarkers`), kept in preferences so they're on screen from
+  the first frame; a theme's photo is a file beside them.
+- `Theme` — the built-in looks, and `Theme.own(...)`; the `theme`
+  environment value the `Backdrop` draws from. Views keep reading `accent`,
+  which follows it. `ThemePhoto` dresses and decodes a photo.
+- `AnswerMarkers` — the built-in sets and `AnswerMarkers.own(...)`; the
+  `answerMarkers` environment value `AnswerKey`, `AnswerSetMark` and the TV's
+  answers draw their shapes from. `MarkerShape.library` is what a set of
+  your own is made from.
+- `LooksView` — Themes & Markers itself; `ThemeEditor` and `MarkersEditor`.
+- `Honeycomb`, `.fisheye(band:)` and the bubbles are in the DesignSystem
+  package.
 
-To add a theme, marker set or icon, add its case; for an icon, add its
-`.icon` file and its name in the build setting too. `LooksTests` fails if an
-icon the code names isn't built into the app.
+To add a theme or marker set, add its case to `Theme.BuiltIn` or
+`AnswerMarkers.BuiltIn`; `ThemeTests` holds it to the contrast every theme
+keeps, and `AnswerMarkersTests` to four shapes that exist and are named
+apart. A shape added to the library needs a name no other has.
+
+## Rounds
+
+A host keeps as many rounds as they like (`HostLibrary`): the one being
+played, and a shelf of the rest, most recently played first. **Round** at the
+top of Host a Game's questions opens them: tap one to play it (the one it
+replaces stays on the shelf), start a new one, or touch and hold to rename,
+duplicate, share or delete it (with an undo). A round saved by a build
+before 9 reads as the one being played.
+
+**Starter rounds** come with the app, so a game can start with no typing
+and no Apple Intelligence: General Knowledge (50), Science Class, For Kids,
+The 2010s (25 each) and Throwback (30), CSVs in `LocalTrivia/Starter Rounds/`
+checked fact by fact — no records that can change, no question with two
+right answers. One opens as a copy, the host's to change.
+
+**Sharing** a round sends it as a CSV named after it (`RoundFile`): the
+columns `AIPrompt` asks for, which the web admin console imports too. It
+carries the answer key: it's for another host. The app opens CSVs from
+AirDrop, Messages and Files (`CFBundleDocumentTypes`, copied in rather than
+opened in place): one that arrives with no game under way becomes the round
+being played, and Host a Game opens on it; during a game it waits on the
+shelf.
 
 ## How to Play
 
@@ -302,7 +351,7 @@ A first launch shows the Terms of Use, then a short tutorial (`Tutorial/`,
 over everything from `RootView` as `FirstRunView`): seven pages drawn with
 the game's own pieces — joining, a practice question with the real clock and
 answer buttons, scored as a game scores it (`PracticeQuestion`), the
-standings and podium, hosting, playing nice, and Themes & Icons. Skip or
+standings and podium, hosting, playing nice, and Themes & Markers. Skip or
 Let's Play finishes it for good (`tutorialSeen`); **How to Play** (?) beside
 Safety on the join screen shows it again any time. UI tests skip it with
 `-tutorialSeen YES`, and `-resetTutorial YES` starts it as on a first launch.
@@ -399,21 +448,24 @@ LocalTrivia/
     HostModels.swift        The round: questions, rules, scoring, on-device storage
     QuestionDrafter.swift   Questions drafted on a topic — the phone's model, or Private Cloud Compute — for review
     CSVImport.swift         public/shared/csv.js, ported
-    AIPrompt.swift          The prompt a host copies into an AI chat, for a CSV this imports
+    AIPrompt.swift          The prompt a host copies into an AI chat — and the cloud is sent — for a CSV this imports
+    Rounds.swift            Starter rounds, a round as a CSV to share, a round received
     JoinLink.swift          Join links (http:// for the QR code, localtrivia://), QR codes, the LAN address
   BigScreen/
     BigScreen.swift         A connected TV gets its own scene (a scene accessory), not a mirror of the phone
     BigScreenView.swift     The game for the room: lobby, question, reveal, standings, podium
   Design/                   The in-game toolbar; screen states for previews; three prototype directions (debug builds)
   Looks/
-    Looks.swift             The theme, answer markers and icon this phone wears
-    LooksView.swift         Themes & Icons: themes, answer markers and app icons, each a group to open
-    AppIcon.swift           The alternate app icons, and a drawing of each
+    Looks.swift             The theme and answer markers this phone wears, and the player's own
+    OwnLooks.swift          A theme or set of markers of the player's own, as it's kept
+    LooksView.swift         Themes & Markers: the honeycomb of themes and marker sets
+    ThemeEditor.swift       Makes a theme: a name, a colour, a texture or a photo
+    MarkersEditor.swift     Makes a set of markers from the shape library
     ChosenLooks.swift       Dresses a view in the phone's theme and markers
   Screens/                  One view per game phase, the launch, and the QR scanner
     Host/                   Round setup, question editor, host controls
-LocalTriviaTests/           Swift Testing: wire format, payloads, the full game loop, themes and icons
-LocalTriviaUITests/         Hosts a game in the simulator and plays it through; picks a theme and markers
+LocalTriviaTests/           Swift Testing: wire format, payloads, the full game loop, looks, rounds
+LocalTriviaUITests/         Hosts a game in the simulator and plays it through; picks and makes looks
 Web/socket.io/              The web player's Socket.IO client, for phone-hosted games
 ```
 
@@ -447,11 +499,15 @@ back too late, quitting the app — tells the guest and leaves the port closed.
 
 `LooksTests` checks that any theme or marker set goes on when it's picked
 and is still on at the next launch, that a saved pick this build doesn't
-know falls back to the game's own, that an icon change reaches the Home
-Screen (and says so when iOS refuses it), and that every alternate icon is
-built into the app under the name it's set by. `AnswerMarkersTests` holds
-every marker set to four distinct shapes that exist, with four names for
-VoiceOver.
+know falls back to the game's own, and that the player's own are kept,
+changed in place, deleted and put back — photos moved in with their theme
+and let go once nothing shows them. `ThemeTests` holds every built-in theme,
+and one made from any colour a player picks, to 7:1. `AnswerMarkersTests`
+holds every marker set to four distinct shapes that exist, with four names
+for VoiceOver, and the library to shapes that exist and names no two share.
+`RoundsTests` covers keeping, playing, deleting and sharing rounds (a CSV
+reads back as it was written), reading a round saved before build 9, and
+that every starter round can be played as it is.
 
 `StringCatalogTests` resolves every plural written with grammar agreement
 through the app's bundle, as the screens do, and fails if one no longer

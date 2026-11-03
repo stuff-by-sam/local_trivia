@@ -109,14 +109,30 @@ extension Comparable {
   }
 }
 
-/// The host's round — name, questions and rules — kept on this phone between
-/// games. It holds the answer key, so the file is encrypted whenever the phone
-/// is locked (`.completeFileProtection`).
+/// A round of questions kept on this phone: the one being played, or one put
+/// by for another night (`HostLibrary.shelf`).
+nonisolated struct SavedRound: Codable, Identifiable, Hashable, Sendable {
+  var id = UUID()
+  var name: String
+  var questions: [HostQuestion]
+}
+
+/// The host's rounds, the game's name and how it scores, kept on this phone
+/// between games. One round is being played (`questions`, `roundName`); the
+/// rest are on the shelf, most recently played first, to come back to. It
+/// holds answer keys, so the file is encrypted whenever the phone is locked
+/// (`.completeFileProtection`).
 @Observable
 final class HostLibrary {
   var gameName: String { didSet { save() } }
+  /// The round being played.
   var questions: [HostQuestion] { didSet { save() } }
+  /// What the host calls the round being played.
+  var roundName: String { didSet { save() } }
   var rules: HostRules { didSet { save() } }
+  /// The rounds put by, most recently played first.
+  private(set) var shelf: [SavedRound] { didSet { save() } }
+  private(set) var roundID: UUID { didSet { save() } }
 
   /// What a game started now would play, in order.
   var playable: [HostQuestion] { questions.filter(\.isPlayable) }
@@ -149,6 +165,12 @@ final class HostLibrary {
     var gameName: String
     var questions: [HostQuestion]
     var rules: HostRules
+    // Since build 9, which keeps more than one round. Optional, so a file
+    // from before reads as its one round; a build from before reads this
+    // one's round being played and leaves the shelf be.
+    var roundName: String?
+    var roundID: UUID?
+    var shelf: [SavedRound]?
   }
 
   /// `fileURL: nil` keeps everything in memory (tests, previews).
@@ -164,6 +186,9 @@ final class HostLibrary {
     }
     questions = stored?.questions ?? []
     rules = stored?.rules.clamped() ?? HostRules()
+    roundName = stored?.roundName ?? String(localized: "My Round")
+    roundID = stored?.roundID ?? UUID()
+    shelf = stored?.shelf ?? []
     isLoading = false
   }
 
@@ -217,6 +242,113 @@ final class HostLibrary {
     questions = remaining
   }
 
+  // MARK: - Rounds
+
+  /// The round being played, as one for the shelf.
+  var current: SavedRound {
+    SavedRound(id: roundID, name: roundName, questions: questions)
+  }
+
+  /// Every round, the one being played first.
+  var rounds: [SavedRound] { [current] + shelf }
+
+  /// Plays the round on the shelf called `id`, putting the one being played
+  /// by in its place at the front.
+  func open(_ id: SavedRound.ID) {
+    guard id != roundID, let index = shelf.firstIndex(where: { $0.id == id }) else { return }
+    var shelf = shelf
+    let next = shelf.remove(at: index)
+    if !questions.isEmpty { shelf.insert(current, at: 0) }
+    self.shelf = shelf
+    play(next)
+  }
+
+  /// Plays `round` — a new one, a starter, one sent from another phone —
+  /// putting the one being played by. An empty round isn't worth a place on
+  /// the shelf, so it gives way.
+  func receive(_ round: SavedRound) {
+    if !questions.isEmpty { shelf.insert(current, at: 0) }
+    play(round)
+  }
+
+  /// Puts `round` on the shelf without playing it: one that arrives while a
+  /// game is under way.
+  func shelve(_ round: SavedRound) {
+    shelf.insert(round, at: 0)
+  }
+
+  /// Starts an empty round called `name`.
+  func startRound(named name: String) {
+    receive(SavedRound(name: name, questions: []))
+  }
+
+  func rename(_ id: SavedRound.ID, to name: String) {
+    let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !name.isEmpty else { return }
+    if id == roundID {
+      roundName = name
+    } else if let index = shelf.firstIndex(where: { $0.id == id }) {
+      shelf[index].name = name
+    }
+  }
+
+  /// A copy of the round called `id`, on the shelf beside it.
+  @discardableResult
+  func duplicate(_ id: SavedRound.ID) -> SavedRound? {
+    guard let original = rounds.first(where: { $0.id == id }) else { return nil }
+    let copy = SavedRound(
+      name: String(localized: "\(original.name) Copy"),
+      questions: original.questions.map { question in
+        var copy = question
+        copy.id = UUID()
+        return copy
+      })
+    let index = shelf.firstIndex(where: { $0.id == id }).map { $0 + 1 } ?? 0
+    shelf.insert(copy, at: index)
+    return copy
+  }
+
+  /// What deleting a round took away, to put it back (`undo`).
+  struct Removal {
+    let round: SavedRound
+    /// Where it was on the shelf; nil if it was being played.
+    let index: Int?
+  }
+
+  /// Deletes the round called `id`. The round being played gives way to the
+  /// most recent on the shelf, or to an empty one.
+  func remove(_ id: SavedRound.ID) -> Removal? {
+    if id == roundID {
+      let removed = current
+      if shelf.isEmpty {
+        play(SavedRound(name: String(localized: "My Round"), questions: []))
+      } else {
+        var shelf = shelf
+        let next = shelf.removeFirst()
+        self.shelf = shelf
+        play(next)
+      }
+      return Removal(round: removed, index: nil)
+    }
+    guard let index = shelf.firstIndex(where: { $0.id == id }) else { return nil }
+    return Removal(round: shelf.remove(at: index), index: index)
+  }
+
+  /// Puts back a round just deleted, where it was.
+  func undo(_ removal: Removal) {
+    if let index = removal.index {
+      shelf.insert(removal.round, at: min(index, shelf.count))
+    } else {
+      receive(removal.round)
+    }
+  }
+
+  private func play(_ round: SavedRound) {
+    roundID = round.id
+    roundName = round.name
+    questions = round.questions
+  }
+
   /// Appends what parses; reports what didn't.
   @discardableResult
   func importCSV(_ text: String) -> CSVImport.Result {
@@ -249,7 +381,8 @@ final class HostLibrary {
     isDirty = false
     let data: Data
     do {
-      data = try JSONEncoder().encode(Stored(gameName: gameName, questions: questions, rules: rules))
+      data = try JSONEncoder().encode(
+        Stored(gameName: gameName, questions: questions, rules: rules, roundName: roundName, roundID: roundID, shelf: shelf))
     } catch {
       Self.log.error("couldn't encode the round: \(error.localizedDescription, privacy: .public)")
       return

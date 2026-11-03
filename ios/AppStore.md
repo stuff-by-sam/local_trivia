@@ -87,8 +87,12 @@ Claim only what's been tested on a device:
 > no internet needed.
 >
 > HOST FROM YOUR PHONE
-> • Write a round in minutes: a question, four answers, tap the right one.
-> Add categories and time limits, or import a CSV.
+> • Start in seconds with a ready-made round: general knowledge, science,
+> kids, the 2010s or throwback pop culture, every answer checked.
+> • Or write your own in minutes: a question, four answers, tap the right
+> one. Add categories and time limits, or import a CSV.
+> • Keep as many rounds as you like, and send one to another host with
+> AirDrop or Messages.
 > • On an iPhone or iPad with Apple Intelligence, name a topic and draft
 > questions on the device, then review every answer before it goes in.
 > • Or name a topic and copy a ready-made prompt into the AI chat you already
@@ -116,8 +120,10 @@ Claim only what's been tested on a device:
 >
 > MAKE IT YOURS
 > • Fifteen themes, from phosphor green to holographic foil, northern lights
-> and cherry blossom.
-> • Eleven sets of answer markers, and an app icon to match every theme.
+> and cherry blossom, and eleven sets of answer markers, from card suits to
+> backyard critters.
+> • Or make your own: any color over a backdrop or one of your photos, and
+> answer markers from 150 shapes.
 > • All of it free.
 >
 > SAFE TO PLAY WITH ANYONE
@@ -165,9 +171,10 @@ smaller sizes.
 > tested on one device, because the host plays in their own game:
 >
 > 1. Tap Host a Game.
-> 2. Tap Write a Question: type a question and four answers, and tap a
-> letter to mark the right one. (On a device with Apple Intelligence, Draft
-> with Apple Intelligence writes some instead.)
+> 2. Tap Round and pick a starter round, such as General Knowledge — or tap
+> Write a Question: type a question and four answers, and tap a letter to
+> mark the right one. (On a device with Apple Intelligence, Draft with Apple
+> Intelligence writes some instead.)
 > 3. Tap Start Hosting and allow Local Network access, then Start Game.
 >
 > To add a second player, open the address shown under the host's QR code in
@@ -176,8 +183,10 @@ smaller sizes.
 > its join screen by itself.
 >
 > Local Network access is needed to find, host and join games. The camera is
-> used only to scan a host's QR code, and is optional. The app has no
-> accounts, and nothing leaves the local network.
+> used only to scan a host's QR code, and is optional. A theme of the
+> player's own can use a photo chosen with the system photo picker, which
+> needs no permission; it stays on the device. The app has no accounts, and
+> nothing leaves the local network.
 >
 > User-generated content (guideline 1.2): on first launch, the Terms of Use
 > (no tolerance for objectionable content or abusive users) must be agreed

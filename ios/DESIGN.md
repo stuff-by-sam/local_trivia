@@ -41,10 +41,10 @@ cut: tint is for selection and primary actions, and C tints everything.
 | Controls (glass) | Toolbar items, buttons, the answer buttons, input fields, sheets, menus | System components first (`.glass`, `.glassProminent`, `.toolbar`, `Form`, `.sheet`). Custom glass for the answer buttons, PIN cells, the prompt field and the picker. |
 | Content (glass) | The question, readouts, the join code card, name chips, status lines, badges, podium steps; on the TV, answer tiles, standings rows, name capsules | Real glass (`.panel()`, `.glassCard(in:)`), as clear or tinted as the screen's `GlassClarity`. Text on it is never glass. |
 | Wordmark (glass letters) | "TRIVIA" and its block cursor | The system's glass, in the letters' own outlines (`Lettering`: the word set in Core Text and turned into a shape), tinted in the accent at 55 % over its own phosphor bloom. The cursor is a block of the same glass in the next character cell, as tall as the capitals and standing on their baseline. |
-| Glass characters | Display type: rank, points, join code, verdict, medals' places, an answer's letter; on the TV, the masthead, "Standings", the PIN. Marks: every answer marker, the verdict and waiting symbols, the trophy, a standing's arrow, status dots. Shapes: the theme swatch's cursor, the app icons' shapes in Themes & Icons | The system's glass in the character's own outline, tinted in its colour (`GlassDepth.tint`: 90 % for a dot, 85 % beside a letter, 75 % in a card, 65 % at hero and TV sizes) over a bloom of it. Text is set in the font SwiftUI resolved for it (`Font.resolve(in:)`, `Lettering`): `GlassText`, and `GlassCounter` for a number that counts. Symbols are traced from the system's own with Vision, once, off the main actor (`SymbolOutlines`): `GlassSymbol`, `AnswerGlyph`; nothing of a symbol ships in the app. The real text or symbol still lays each one out, hidden, so it keeps its size, baseline, Dynamic Type and shrink-to-fit. Each character's glass has its own container, so it never melts into the glass it sits on. A traced symbol is drawn glass for the moment before its trace is in; everything is flat colour under Increase Contrast. Only for display type and marks — never body text, a question, an answer or what the player types. |
+| Glass characters | Display type: rank, points, join code, verdict, medals' places, an answer's letter; on the TV, the masthead, "Standings", the PIN. Marks: every answer marker, the verdict and waiting symbols, the trophy, a standing's arrow, status dots. Shapes: a theme swatch's or bubble's cursor, the plus of the bubble that makes your own | The system's glass in the character's own outline, tinted in its colour (`GlassDepth.tint`: 90 % for a dot, 85 % beside a letter, 75 % in a card, 65 % at hero and TV sizes) over a bloom of it. Text is set in the font SwiftUI resolved for it (`Font.resolve(in:)`, `Lettering`): `GlassText`, and `GlassCounter` for a number that counts. Symbols are traced from the system's own with Vision, once, off the main actor (`SymbolOutlines`): `GlassSymbol`, `AnswerGlyph`; nothing of a symbol ships in the app. The real text or symbol still lays each one out, hidden, so it keeps its size, baseline, Dynamic Type and shrink-to-fit. Each character's glass has its own container, so it never melts into the glass it sits on. A traced symbol is drawn glass for the moment before its trace is in; everything is flat colour under Increase Contrast. Only for display type and marks — never body text, a question, an answer or what the player types. |
 | Backdrop (drawn) | Ink, the glow, the theme's texture | What the glass refracts. Colour lives here. |
 
-**Clarity.** Menus — the join screen, the lobby, Themes & Icons, the TV while
+**Clarity.** Menus — the join screen, the lobby, Themes & Markers, the TV while
 people arrive — use clear glass (`GlassClarity.clear`): their content is short
 and high-contrast, so the backdrop shows through. The game — the question,
 results, standings, the podium — uses glass tinted toward the ink
@@ -75,7 +75,7 @@ from the asset catalog's `AccentColor`.)
 | `ink` | theme ink (Phosphor `#04080A`) | same | the ground under everything |
 | `primary` / `secondary` text | system `.primary` / `.secondary` | system (raised) | content / labels. **`.tertiary` is never used for text a player needs.** |
 | `panel` | white 4 % | white 10 % | a drawn fill, where glass can't go |
-| `panelStroke` | white 12 % | white 40 % | a card's edge under Increase Contrast; swatch and icon tile borders |
+| `panelStroke` | white 12 % | white 40 % | a card's edge under Increase Contrast; swatch and bubble borders |
 | `hairline` | white 8 % | white 30 % | row dividers |
 | `slot` | white 14 % | white 40 % | an empty PIN cell's underscore |
 | `success` | `#56FF8A` | same | correct, online — always with ✓ or a dot and a word |
@@ -92,17 +92,34 @@ now gold, silver, bronze, so "third place" no longer reads as "B".)
 **The shapes** beside the letters are the phone's `AnswerMarkers`: Classic's
 circle, triangle, square and diamond (the web game's), or another set the player picks —
 Suits, Elements, Sky, Critters, Smarts, Game Night, Party, Showtime, Quest,
-Backyard. A set dresses its phone and the TV that phone
-drives, and nothing else; the web game keeps Classic. Every set's four shapes
-differ in silhouette, not just colour, and have their own names for VoiceOver.
+Backyard — or one they make, from four of the 150-odd shapes in
+`MarkerShape.library`. A set dresses its phone and the TV that phone
+drives, and nothing else; the web game keeps Classic. Every built-in set's four shapes
+differ in silhouette, not just colour, and have their own names for VoiceOver;
+a set of the player's own has four different shapes, and every shape in the
+library has a name no other has. The library is chosen, not all of SF
+Symbols: solid enough to read as glass at a key's size, nothing that says
+right or wrong (no checkmarks or crosses), nothing Apple's own.
 A key is still colour + shape + letter, so no answer depends on colour alone.
 
-**Themes** (picked in Themes & Icons) change `accent`, `ink` and the backdrop texture
+**Themes** (picked in Themes & Markers) change `accent`, `ink` and the backdrop texture
 only. Five are scenes — Aurora's northern lights, Ember's campfire sparks,
 Sakura's blossom, Abyss's deep water, Circuit's board — each keeping its
 colour where the game's isn't (the sky above the question, a glow under the
 answers), the bright ones at half strength while a question is up. They never touch the answer colours, the shapes or the status colours. `ThemeTests` holds
 each theme's accent on its ink, and `onAccent` on its accent, to 7:1.
+
+**A theme of the player's own** is a colour they pick over one of the
+fourteen textures, or over a photo of theirs. The colour is lightened, keeping
+its hue, as far as it takes to keep the same 7:1 (`Theme.legibleAccent(for:)`;
+the editor says when it has), and the ink is a breath of its hue in the dark
+(`Theme.ink(for:)`) — so no colour a player picks can make the game hard to
+read. The editor's twelve suggestions need no lightening. A photo
+(`ThemePhoto`) is dressed once, when it's picked: scaled to a TV's width,
+softened, and dimmed until its average and brightest light are about a
+scene texture's; it offers its most vivid hue for the accent. The backdrop
+lays the glow over it at partial strength, so the mood still reads, and sets
+it aside under Increase Contrast and Reduce Transparency like any texture.
 
 ## Type
 
@@ -191,7 +208,6 @@ symbols, trophy), `.tv` 65 % / 10.
 | `.regular.tint(colour, 20 %)` | podium steps (medal), the viewer's own name chip (accent), badges (verdict); on the TV, answer tiles (answer, 16 %; the right one 90 %) | system frosted | 30 % |
 | `.regular.tint(accent, 55 %)` in the letters' outlines | the wordmark and its cursor, over a bloom of the accent at the `Glow` radius | system frosted | solid accent, no bloom |
 | `.regular.tint(colour, 65–90 %)` in a character's outline | every other glass character (`GlassDepth`), over a bloom of its colour | system frosted | the text or symbol in flat colour |
-| `Glass.clear` in each shape's outline | the app icons in Themes & Icons, over each shape's own paint | system frosted | the paint alone |
 | Backdrop (drawn) | behind every screen | glow only: no texture, no tilt | glow only: no texture, no vignette |
 
 An answer's key is glass characters on a drawn cap with a lit edge
@@ -202,8 +218,9 @@ ink, which reads best there; so is the chosen answer's checkmark.
 Glass inside a system `Menu`'s label doesn't draw, so a `GameLine`'s status
 mark sits beside the menu, outside its label.
 Sheets use the system sheet material — they don't draw the backdrop. The
-one exception is Themes & Icons, whose job is showing a theme on its backdrop:
-its rows are clear glass over it.
+exceptions are Themes & Markers and its two editors, whose job is showing a
+theme on its backdrop: their bubbles and rows are clear glass over it, and
+an editor wears the theme being made, so the sheet is its own preview.
 
 Lit glass glows up through a sheet's glass — even hidden, it still does. So
 while one of the host's sheets is up, the host's action button under it is
@@ -276,6 +293,7 @@ Only through `Haptic`; one per event, never on scroll or incidental change.
 | `.rejected` | error | wrong PIN, taken name |
 | `.action` | impact medium | host taps the action bar |
 | `.found` | success | QR code read |
+| `.pick` | selection | a theme or set of markers put on, a shape placed in the editor |
 
 ## Symbols
 
@@ -298,9 +316,46 @@ keys (`▲ B`) never mirror. Effects: a glass verdict or first place hops
 effects don't reach glass — and a checkmark `.appear`s; all quieted by Reduce
 Motion.
 
-The app icons are the exception: Apple's terms don't allow SF Symbols, or
-look-alikes, in app icons or logos, so the icons' shapes are their own
-drawings.
+The app icon is the exception: Apple's terms don't allow SF Symbols, or
+look-alikes, in app icons or logos, so its shapes are its own drawings.
+
+## Themes & Markers
+
+Choosing a look is a page of Settings, laid out the way watchOS lays out its
+apps: round bubbles packed in a honeycomb (`Honeycomb`), a whole set of
+choices taken in at a glance, each one tried on with a tap. The worn bubble
+has a ring a little out from its edge and a check badge on its shoulder —
+the check because the ring alone is colour, the ring because the badge alone
+is small.
+
+- **What's on stays said in words.** The top of the page is the join screen
+  in miniature — the answer set over the wordmark — with the theme's name
+  and tagline (or the markers'), always two tagline lines tall, so the
+  honeycomb under it never moves when a pick's tagline is shorter. A
+  segmented control switches the honeycomb between Themes and Answer Markers.
+- **The lens.** Bubbles shrink and fade as they near the top or bottom of the
+  scroll view (`.fisheye(band:)`, a third of their size at the edge), as on
+  watchOS — but the content has the lens's width of margin at both ends, so
+  at rest nothing is shrunk: it's what scrolling does, not how the page
+  looks. Under Reduce Motion the bubbles hold their size.
+- **Sizes.** `Size.bubble` (76 pt) grows with Dynamic Type, to 1.8× at most,
+  so a row always holds two; rows hold as many as fit, so an iPad gets longer
+  ones. The editors' choices are `Size.swatch` bubbles in the same honeycomb.
+- **Bubbles hold still.** A theme bubble is its theme's own backdrop, never
+  following the tilt, with a photo decoded small (`backdropIsMiniature`).
+- **Make your own.** The last bubble, a dashed accent ring around a glass
+  plus, opens an editor. Touch and hold a built-in to start one from it;
+  hold one of your own to edit, duplicate or delete it. Deleting asks
+  nothing first: an undo toast offers it back for a few seconds. An editor
+  asks before it discards changes (Cancel, or a swipe down, which it holds).
+- **The theme editor wears the theme being made.** Name; colour (twelve
+  suggestions, then the system's picker — "Lightened a little" says when the
+  colour had to be); backdrop (every texture, drawn in the colour, and the
+  photo once there is one). Picking a photo dresses it and takes its colour.
+- **The markers editor** shows the four keys as the game draws them, the one
+  taking the next shape lit in its answer's colour. Tapping a shape in the
+  library (searchable, in categories) puts it there and lights the next key,
+  so four taps make a set; a shape already in the set swaps places.
 
 ## Components
 
@@ -334,7 +389,9 @@ touches the network.
 | `GlassText`, `GlassCounter`, `GlassSymbol`, `AnswerGlyph`, `glassRim` | each `GlassDepth`; with a `Glow`; IC (flat) |
 | `NameChips` (`FlowLayout`) | names, the viewer's own (accent glass), a long name wrapping; read as one list |
 | `UndoToast` (`.undoToast`) | shown, counting down, undone |
-| `ThemeSwatch`, `IconArtwork`, `MarkerSwatch` | every theme (held still, whether or not it follows the tilt), icon and marker set; shown |
+| `ThemeSwatch`, `MarkerSwatch` | every theme (held still, whether or not it follows the tilt) and marker set, a theme of the player's own and one over a photo; shown |
+| `Honeycomb`, `.fisheye(band:)` | rows long and short, each bubble in the hollow of two above; bubbles full size at rest and shrinking toward the scroll view's edges (still under Reduce Motion); AX5 |
+| `ThemeBubble`, `MarkerBubble`, `MakeBubble`, `.bubble` button style | worn (ring and check badge), not; the player's own; pressed; AX5 |
 | `Backdrop` | moods idle/question/correct/wrong/missed/celebrate × 15 textures × RT/IC/RM; the scenes at rest and quietened |
 | Empty / loading / error | `ContentUnavailableView`, `StatusLine`, `FieldMessage` |
 
@@ -421,7 +478,7 @@ middle, with the fold drawn on its screenshots (`-showsFold YES`).
 
 | Surface | Treatment |
 |---|---|
-| App icon ×15 | Icon Composer: the answer set on ink, each shape its own glass layer (four groups, front to back circle, triangle, square, diamond), 272 pt across on a 2 × 2 grid centred at 320/704 of 1024. Checked with iOS 27's renderer (`ictool --design-generation 27`) in Default, Dark, Clear Light/Dark, Tinted Light/Dark. `IconArtwork` draws the same layers in the app. |
+| App icon | One, `AppIcon.icon` (Icon Composer): the answer set on ink, each shape its own glass layer (four groups, front to back circle, triangle, square, diamond), 272 pt across on a 2 × 2 grid centred at 320/704 of 1024. Checked with iOS 27's renderer (`ictool --design-generation 27`) in Default, Dark, Clear Light/Dark, Tinted Light/Dark. The alternate icons went in build 9: Themes & Markers is about the game, not the Home Screen. |
 | Launch | Plain black (`LaunchBackground`), straight into the game — no overlay |
 | TV (external display) | `BigScreenView`, same tokens and the same glass at `TVType` sizes; clear while people arrive, tinted once the game's on |
 | Sheets, alerts, menus | System, with `accent` tint |

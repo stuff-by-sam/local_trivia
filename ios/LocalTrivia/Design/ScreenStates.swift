@@ -5,7 +5,7 @@ import SwiftUI
 // Every screen in its main states, from models held in memory: a player's
 // store fed the events a host sends, with no socket behind it; the hosting
 // engine talking straight to the host's own store; a round that's never
-// saved; looks that never touch the real icon. Nothing here touches the
+// saved; looks kept apart from the app's own. Nothing here touches the
 // network.
 //
 // The screens' previews show these, and UI tests open one directly with
@@ -41,6 +41,7 @@ enum ScreenState: String, CaseIterable {
   case hostFinal = "host.final"
   case roundEmpty = "round.empty"
   case round
+  case rounds
   case editorNew = "editor.new"
   case editorEdit = "editor.edit"
   case drafting
@@ -53,6 +54,9 @@ enum ScreenState: String, CaseIterable {
   case settings
   case howToPlay
   case looks
+  case looksMarkers = "looks.markers"
+  case themeEditor = "editor.theme"
+  case markersEditor = "editor.markers"
   case tvIdle = "tv.idle"
   case tvLobby = "tv.lobby"
   case tvQuestion = "tv.question"
@@ -97,8 +101,8 @@ struct ScreenPreview: View {
     // From the launch arguments only: the app saves the theme and markers it's
     // wearing under the same keys, which would otherwise dress every fixture.
     let arguments = defaults.volatileDomain(forName: UserDefaults.argumentDomain)
-    let theme = (arguments["theme"] as? String).flatMap(Theme.init(rawValue:)) ?? .phosphor
-    let markers = (arguments["markers"] as? String).flatMap(AnswerMarkers.init(rawValue:)) ?? .classic
+    let theme = (arguments["theme"] as? String).flatMap { Theme.builtIn(id: $0) ?? Sample.theme(id: $0) } ?? .phosphor
+    let markers = (arguments["markers"] as? String).flatMap(AnswerMarkers.builtIn(id:)) ?? .classic
     let chosen = defaults.object(forKey: "chosen") == nil ? 1 : defaults.integer(forKey: "chosen")
     return ScreenPreview(state, theme: theme, markers: markers, chosen: chosen, page: defaults.integer(forKey: "page"))
   }
@@ -125,6 +129,8 @@ struct ScreenPreview: View {
       game(glassContainer: false)
     case .roundEmpty, .round:
       over(HostSetupView())
+    case .rounds:
+      over(NavigationStack { RoundsView() })
     case .editorNew:
       over(NavigationStack { QuestionEditorView(question: .blank(), isNew: true, onSave: { _ in }, onDelete: { _ in }) })
     case .editorEdit:
@@ -148,7 +154,13 @@ struct ScreenPreview: View {
     case .howToPlay:
       over(SettingsView(showing: .howToPlay))
     case .looks:
-      over(SettingsView(showing: .looks))
+      over(SettingsView(showing: .looks(.themes)))
+    case .looksMarkers:
+      over(SettingsView(showing: .looks(.markers)))
+    case .themeEditor:
+      over(ThemeEditor(own: OwnTheme(name: "Night Swim", color: Sample.ownColor, texture: .deepWater), isNew: true))
+    case .markersEditor:
+      over(MarkersEditor(own: OwnMarkers(name: "Space Race", symbols: ["sparkles", "moon.fill", "globe.americas.fill", "airplane"]), isNew: true))
     case .terms:
       cover(NavigationStack { TermsView(isAgreeing: true) })
     case .safety:
@@ -342,7 +354,18 @@ final class PreviewModels {
       break
     case .round, .editorNew, .editorEdit, .drafting, .drafts:
       host.library.questions = Sample.round
-    case .scannerOff, .scannerRestricted, .settings, .howToPlay, .looks, .terms, .safety, .report, .reportBlocked, .tutorial:
+    case .rounds:
+      host.library.roundName = "Friday Night"
+      host.library.questions = Sample.round
+      host.library.shelve(SavedRound(name: "Movie Night", questions: Array(Sample.round.prefix(2))))
+    case .looks, .looksMarkers:
+      // One of each of the player's own beside the game's, the game's worn.
+      try? looks.keep(OwnTheme(name: "Night Swim", color: Sample.ownColor, texture: .deepWater))
+      looks.keep(OwnMarkers(name: "Space Race", symbols: ["sparkles", "moon.fill", "globe.americas.fill", "airplane"]))
+      looks.wear(Theme.phosphor)
+      looks.wear(AnswerMarkers.classic)
+    case .scannerOff, .scannerRestricted, .settings, .howToPlay, .terms, .safety, .report, .reportBlocked, .tutorial,
+      .themeEditor, .markersEditor:
       // Over the join screen at rest.
       break
     }
@@ -370,6 +393,15 @@ private final class PreviewTokens: TokenStore, @unchecked Sendable {
 
 /// What the previews play with.
 enum Sample {
+  /// A colour a player might pick for a theme of their own: coral.
+  static let ownColor = Theme.suggestions[8].color
+
+  /// A theme of the player's own, for `-theme`: "photo" is sky blue over a
+  /// bright photo, the hardest backdrop to read over.
+  static func theme(id: String) -> Theme? {
+    guard id == "photo" else { return nil }
+    return .own(id: "photo", name: "Bright Day", color: Theme.suggestions[3].color, texture: .scanlines, photo: ThemePhoto.brightSample())
+  }
   static let player = "ROBIN"
   static let others = ["SAM", "Alex", "Jordan", "Priya", "Maximilian-Alexander"]
   static let game = GameServer(address: "192.168.1.20:3000", name: "Friday Quiz")!

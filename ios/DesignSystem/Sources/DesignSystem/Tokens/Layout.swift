@@ -64,10 +64,15 @@ nonisolated public enum Size {
   /// The QR code on a card, and at full size.
   public static let qrCard: CGFloat = 112
   public static let qrFull: CGFloat = 240
-  /// A theme's (or a marker set's) swatch in Themes & Icons.
+  /// A theme or a set of markers in miniature: in the tutorial, and among
+  /// the editor's choices.
   public static let swatch: CGFloat = 52
-  /// An app icon tile in Themes & Icons.
-  public static let iconTile: CGFloat = 64
+  /// A bubble in Themes & Markers' honeycomb, at the default text size. It
+  /// grows with Dynamic Type.
+  public static let bubble: CGFloat = 76
+  /// The ring around the worn bubble, and the dashes of the one that makes
+  /// your own.
+  public static let bubbleRing: CGFloat = 3
   /// The widest a column of game gets on a big screen — and each half of a
   /// `Spread`.
   public static let column: CGFloat = 540

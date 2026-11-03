@@ -89,6 +89,34 @@ struct QuestionDrafterTests {
     #expect(QuestionDrafter.timeLimit(for: 25) == .seconds(300))
   }
 
+  /// The cloud is asked in the shared prompt's words, and its reply is read
+  /// as a pasted one: the CSV inside the chat, each row a question with its
+  /// own category and time, and a row that can't be played left out.
+  @Test func readsTheCloudsReplyAsAPastedOne() {
+    let reply = """
+      Here's your round:
+      ```csv
+      question,option_a,option_b,option_c,option_d,correct,category,time_limit
+      "Which planet has the most moons?",Jupiter,Saturn,Uranus,Neptune,B,SPACE,20
+      What is the closest star to Earth?,Proxima Centauri,The Sun,Sirius,Vega,B,ASTRONOMY,30
+      Which planet has rings?,Mars,,Saturn,Venus,C,SPACE,20
+      ```
+      Enjoy!
+      """
+    let questions = QuestionDrafter.questions(in: reply)
+    #expect(questions.map(\.text) == ["Which planet has the most moons?", "What is the closest star to Earth?"])
+    #expect(questions.map(\.correct) == [1, 1])
+    #expect(questions.map(\.category) == ["SPACE", "ASTRONOMY"])
+    #expect(questions.map(\.timeLimit) == [20, 30])
+  }
+
+  @Test func asksTheCloudForMoreInTheSameWords() {
+    #expect(AIPrompt.more(5).contains("5 more questions"))
+    #expect(AIPrompt.more(1).contains("1 more question "))
+    #expect(AIPrompt.more(500).contains("100 more questions"))
+    #expect(AIPrompt.text(topic: "space", count: 10).contains(AIPrompt.header))
+  }
+
   @Test func namesTheCategoryAfterTheTopic() {
     #expect(QuestionDrafter.category(for: "  90s films ") == "90S FILMS")
     #expect(QuestionDrafter.category(for: "") == "GENERAL")
