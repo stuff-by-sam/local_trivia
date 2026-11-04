@@ -91,13 +91,17 @@ now gold, silver, bronze, so "third place" no longer reads as "B".)
 
 **The shapes** beside the letters are the phone's `AnswerMarkers`: Classic's
 circle, triangle, square and diamond (the web game's), or another set the player picks —
-Suits, Elements, Sky, Critters. A set dresses its phone and the TV that phone
+Suits, Elements, Sky, Critters, Smarts, Game Night, Party, Showtime, Quest,
+Backyard. A set dresses its phone and the TV that phone
 drives, and nothing else; the web game keeps Classic. Every set's four shapes
 differ in silhouette, not just colour, and have their own names for VoiceOver.
 A key is still colour + shape + letter, so no answer depends on colour alone.
 
 **Themes** (picked in Themes & Icons) change `accent`, `ink` and the backdrop texture
-only. They never touch the answer colours, the shapes or the status colours. `ThemeTests` holds
+only. Five are scenes — Aurora's northern lights, Ember's campfire sparks,
+Sakura's blossom, Abyss's deep water, Circuit's board — each keeping its
+colour where the game's isn't (the sky above the question, a glow under the
+answers), the bright ones at half strength while a question is up. They never touch the answer colours, the shapes or the status colours. `ThemeTests` holds
 each theme's accent on its ink, and `onAccent` on its accent, to 7:1.
 
 ## Type
@@ -213,7 +217,12 @@ is up. Everywhere else it's soft, so the backdrop runs to the bottom.
 
 The answer-to-verdict morph needs one `GlassEffectContainer` around the
 in-game screens. The join screen sits outside it: on iOS 27.0, glass buttons
-in a `safeAreaBar` inside a container don't receive taps.
+in a `safeAreaBar` inside a container don't receive taps. The lobby, the one
+in-game screen of clear glass, keeps its glass in a container of its own
+(`ownGlass()`), or as the first question takes over its cards melt into the
+question's; and each screen's clarity is set inside its own identity, so a
+screen on its way out keeps its own. Nothing nests a container inside the
+question or the result: there it holds the lit answer back a beat.
 
 ## Motion
 
@@ -233,12 +242,26 @@ transitions become opacity, and the points don't wait.
 | `Motion.pop` | `.spring(duration: 0.35, bounce: 0.45)` | verdict badge, rank on the podium |
 | `Motion.count` | `.smooth(duration: 0.6)` — no bounce, so the count never passes the score | points counting up in glass (`GlassCounter`), `pointsDelay` (0.22 s) after the verdict |
 | `Motion.breathe` | `.smooth(duration: 0.8)`, back and forth | a glass mark waiting: the hourglass, a connecting dot (`.glassPulse`); steady under Reduce Motion |
+| `Motion.drift` | `.smooth(duration: 0.3)` | a backdrop following the phone's tilt, gliding between the sensor's readings (30 a second) instead of stepping on each |
 | `.glassBounce(trigger:)` | spring keyframes 1 → 1.2 → 0.94 → 1 | a glass verdict or trophy landing — SF Symbols' bounce doesn't reach glass; still under Reduce Motion |
 | `Motion.reject` | keyframes −14 → 12 → −8 → 0 over 0.3 s | wrong PIN / taken name (off under Reduce Motion) |
 
 Signature motion: the chosen answer's glass flows into the verdict badge
 (`glassEffectID`). It's the one morph kept, because it carries meaning —
 *your answer became this result*.
+
+**Holding still.** Nothing moves that the player didn't move. What comes and
+goes keeps its room from the first frame: the status line under the answers
+(so tapping one never nudges the other three), the game's line under the PIN
+while it's looked for, the host's next move (one slot, the action bar's
+height, whether it holds the button or a status line). A chosen answer is
+laid out in its bold, checkmark and all, from the start, so lighting up
+never re-wraps it. A count keeps the width of the figure it counts to, its
+digits arriving at the front. Every blinking cursor keeps one beat, however
+often the screen around it redraws. The host's engine runs a beat ahead of
+the host's own seat, so a move that turns up mid-screen waits that beat
+before it shows, and one just made holds, working, until its screen gives
+way.
 
 ## Haptics
 
@@ -262,7 +285,7 @@ Weight follows the adjacent text's weight; scale `.medium`, `.small` inside
 keys. Monochrome by default. Where SF Symbols has no symbol for a mark, the
 design system draws one as an SF Symbol template (`Resources/Symbols.xcassets`,
 named in `Symbols.custom`) — the Critters' fox — so it sizes and weighs like
-the rest. The answer markers — every set's, from `circle.fill` to `dog.fill` —
+the rest. The answer markers — every set's, from `circle.fill` to `ladybug.fill` —
 are Liquid Glass in their answer colour, cut to the symbol's traced outline
 (`AnswerGlyph`). Every marker of a set takes the room of the set's largest
 (`markerSlot`), so a set's four keys match and the answers line up after them;
@@ -311,8 +334,8 @@ touches the network.
 | `GlassText`, `GlassCounter`, `GlassSymbol`, `AnswerGlyph`, `glassRim` | each `GlassDepth`; with a `Glow`; IC (flat) |
 | `NameChips` (`FlowLayout`) | names, the viewer's own (accent glass), a long name wrapping; read as one list |
 | `UndoToast` (`.undoToast`) | shown, counting down, undone |
-| `ThemeSwatch`, `IconArtwork`, `MarkerSwatch` | every theme, icon and marker set; shown |
-| `Backdrop` | moods idle/question/correct/wrong/missed/celebrate × 10 textures × RT/IC/RM |
+| `ThemeSwatch`, `IconArtwork`, `MarkerSwatch` | every theme (held still, whether or not it follows the tilt), icon and marker set; shown |
+| `Backdrop` | moods idle/question/correct/wrong/missed/celebrate × 15 textures × RT/IC/RM; the scenes at rest and quietened |
 | Empty / loading / error | `ContentUnavailableView`, `StatusLine`, `FieldMessage` |
 
 ## Voice
@@ -342,7 +365,7 @@ spinner stands in for a button that can't be pressed.
 | Rejoining | `REJOINING YOUR GAME_` (or *Host unreachable, retrying*) | Start Over |
 | Starting to host | The Start Hosting button's spinner; the reason, if it fails | Start Hosting again |
 | Drafting | *Writing and checking 3 of 10…* under the drafts so far; VoiceOver hears when it's done | Stop Drafting (keeps what's drafted), Add, Cancel |
-| Between moments | A status capsule ending in the cursor; the hourglass breathing while spectating | The host's next move |
+| Between moments | A status capsule ending in the cursor; the hourglass breathing while spectating; the host's move just made, its spinner holding until the next screen | The host's next move |
 | Reconnecting | The toolbar's *Reconnecting*, its dot breathing | Leave, once the host has gone quiet |
 
 **Glass at launch.** Every symbol the game makes of glass is traced in the
@@ -398,7 +421,7 @@ middle, with the fold drawn on its screenshots (`-showsFold YES`).
 
 | Surface | Treatment |
 |---|---|
-| App icon ×10 | Icon Composer: the answer set on ink, each shape its own glass layer (four groups, front to back circle, triangle, square, diamond), 272 pt across on a 2 × 2 grid centred at 320/704 of 1024. Checked with iOS 27's renderer (`ictool --design-generation 27`) in Default, Dark, Clear Light/Dark, Tinted Light/Dark. `IconArtwork` draws the same layers in the app. |
+| App icon ×15 | Icon Composer: the answer set on ink, each shape its own glass layer (four groups, front to back circle, triangle, square, diamond), 272 pt across on a 2 × 2 grid centred at 320/704 of 1024. Checked with iOS 27's renderer (`ictool --design-generation 27`) in Default, Dark, Clear Light/Dark, Tinted Light/Dark. `IconArtwork` draws the same layers in the app. |
 | Launch | Plain black (`LaunchBackground`), straight into the game — no overlay |
 | TV (external display) | `BigScreenView`, same tokens and the same glass at `TVType` sizes; clear while people arrive, tinted once the game's on |
 | Sheets, alerts, menus | System, with `accent` tint |

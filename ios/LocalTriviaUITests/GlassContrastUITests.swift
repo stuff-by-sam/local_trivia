@@ -3,7 +3,7 @@ import XCTest
 
 /// The text on the glass the player needs most — a chosen answer, the
 /// primary action, the undo toast — measured against the glass behind it,
-/// in all ten themes, from what's actually on screen.
+/// in every theme, from what's actually on screen.
 ///
 /// Glass takes its colour from the phone's settings as well as the app's:
 /// the Liquid Glass slider (clear to tinted), Reduce Transparency and
@@ -12,7 +12,7 @@ import XCTest
 /// It fails below WCAG AA for text, 4.5:1, and attaches every screenshot
 /// with a table of what it measured.
 final class GlassContrastUITests: XCTestCase {
-  private static let themes = ProcessInfo.processInfo.environment["CONTRAST_THEMES"].flatMap { $0.isEmpty ? nil : $0.split(separator: ",").map(String.init) } ?? ["phosphor", "amber", "cobalt", "synthwave", "noir", "gold", "holographic", "chalkboard", "glass", "titanium"]
+  private static let themes = ProcessInfo.processInfo.environment["CONTRAST_THEMES"].flatMap { $0.isEmpty ? nil : $0.split(separator: ",").map(String.init) } ?? ["phosphor", "amber", "cobalt", "synthwave", "noir", "gold", "holographic", "chalkboard", "glass", "titanium", "aurora", "ember", "sakura", "abyss", "circuit"]
   private static let minimum = 4.5
 
   override func setUp() {

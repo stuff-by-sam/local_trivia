@@ -124,7 +124,10 @@ struct JoinView: View {
     }
     .defaultScrollAnchor(.center, for: .alignment)
     .scrollDismissesKeyboard(.interactively)
-    .scrollBounceBehavior(.basedOnSize)
+    // While typing, it always gives under a swipe, so a swipe down puts the
+    // keyboard away even when the form fits above it. The number pad has no
+    // key for that, and Host a Game waits under it.
+    .scrollBounceBehavior(focus == nil ? .basedOnSize : .always)
     .safeAreaBar(edge: .bottom) { actions }
     // On a phone with the keyboard up the form runs under the bar, and the
     // nickname would show through the glass of a disabled Join button: a
@@ -149,7 +152,7 @@ struct JoinView: View {
       }
       .defaultScrollAnchor(.center, for: .alignment)
       .scrollDismissesKeyboard(.interactively)
-      .scrollBounceBehavior(.basedOnSize)
+      .scrollBounceBehavior(focus == nil ? .basedOnSize : .always)
       .safeAreaBar(edge: .bottom) { actions }
     }
   }
@@ -162,6 +165,9 @@ struct JoinView: View {
       AnswerSetMark()
       Wordmark()
     }
+    // Tapping away from the fields puts the keyboard away, as anywhere else.
+    .contentShape(.rect)
+    .onTapGesture { focus = nil }
   }
 
   @ViewBuilder
@@ -182,7 +188,16 @@ struct JoinView: View {
           // Right under the cells: the keyboard can cover anything lower,
           // and this is exactly what the player is looking at.
           messages
-          game
+          // The game's line has its room from the moment the look starts —
+          // as the keyboard comes up — so the game turning up, or its link
+          // coming online, never pushes the nickname down mid-typing.
+          ZStack(alignment: .leading) {
+            if browser.isLooking || store.server != nil {
+              Color.clear
+                .frame(height: Size.target)
+            }
+            game
+          }
         }
         .motion(.settle, value: isStillLooking)
         .motion(.settle, value: store.server)

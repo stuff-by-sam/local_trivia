@@ -5,6 +5,7 @@ import SwiftUI
 /// can show them.
 nonisolated public enum IconDesign: String, CaseIterable, Sendable {
   case classic, amber, cobalt, synthwave, noir, gold, holographic, chalkboard, glass, titanium
+  case aurora, ember, sakura, abyss, circuit
 
   /// How the shapes are painted, as the icon's layers paint them.
   enum Paint {
@@ -30,6 +31,12 @@ nonisolated public enum IconDesign: String, CaseIterable, Sendable {
     case .chalkboard: .flat([0xF4F1E6, 0xA8D8F0, 0xFFF0A0, 0xFFB8C8].map(Color.init(hex:)))
     case .glass: .glass
     case .titanium: .sweep([0xF4F6F9, 0xA7AFBA, 0xE6EAEF, 0x858E9A, 0xD9DEE4].map(Color.init(hex:)))
+    case .aurora: .sweep([0x5CFFA8, 0x3FE6D2, 0x7AA8FF, 0xA58BFF, 0xFF9CD6].map(Color.init(hex:)))
+    case .ember: .flat([0xFF9466, 0xFFC857, 0xFF5E3A, 0xFFB38A].map(Color.init(hex:)))
+    case .sakura: .flat([0xFFADCB, 0xFFE3EE, 0xFF7FAE, 0xFFC8DC].map(Color.init(hex:)))
+    case .abyss: .flat([0x5CC4FF, 0x3FF2E0, 0x2E7BFF, 0xA8E6FF].map(Color.init(hex:)))
+    // Gold-plated pads, on the board's green.
+    case .circuit: .sweep([0xFFE08A, 0xD9A21E, 0xFFF3C4, 0xB8860B, 0xFFD35C].map(Color.init(hex:)))
     }
   }
 
@@ -52,6 +59,11 @@ nonisolated public enum IconDesign: String, CaseIterable, Sendable {
     case .chalkboard: return automatic(0.09, 0.13, 0.11)
     case .glass: return [Color(red: 0.16, green: 0.78, blue: 0.92), Color(red: 0.43, green: 0.25, blue: 0.90)]
     case .titanium: return [Color(red: 0.22, green: 0.24, blue: 0.27), Color(red: 0.07, green: 0.08, blue: 0.09)]
+    case .aurora: return automatic(0.02, 0.09, 0.12)
+    case .ember: return automatic(0.12, 0.05, 0.03)
+    case .sakura: return automatic(0.11, 0.05, 0.08)
+    case .abyss: return automatic(0.01, 0.05, 0.12)
+    case .circuit: return automatic(0.03, 0.13, 0.07)
     }
   }
 }
@@ -186,6 +198,10 @@ public struct ThemeSwatch: View {
     // The wordmark's block, at the swatch's size: as tall as a capital.
     let block = Lettering("", size: Size.swatch / 3, weight: .heavy, tracking: 0).cursor
     Backdrop(mood: .idle)
+      // Held still: a page of swatches all following the phone would keep
+      // the glass over them busy for a movement too small to see. The page's
+      // own backdrop follows it.
+      .environment(\.backdropFollowsTilt, false)
       .overlay {
         GlassCharacter(shape: RoundedRectangle(cornerRadius: block.width / 24), color: theme.accent, depth: .mark)
           .frame(width: block.width, height: block.height)

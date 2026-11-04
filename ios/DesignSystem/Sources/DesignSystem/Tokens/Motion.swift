@@ -18,6 +18,9 @@ public enum Motion: Sendable {
   case count
   /// Something waiting, breathing: the hourglass, a connecting dot.
   case breathe
+  /// A backdrop following the phone's tilt: it glides between the motion
+  /// sensor's readings, 30 a second, instead of stepping on each one.
+  case drift
 
   public var animation: Animation {
     switch self {
@@ -29,6 +32,9 @@ public enum Motion: Sendable {
     // No bounce: a count that overshoots shows points nobody scored.
     case .count: .smooth(duration: 0.6)
     case .breathe: .smooth(duration: 0.8)
+    // Longer than a reading's gap, so each glides into the next; no bounce,
+    // so the light never swings past where the phone points it.
+    case .drift: .smooth(duration: 0.3)
     }
   }
 

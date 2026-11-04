@@ -66,24 +66,81 @@ struct HostSheetView: View {
 }
 
 /// The host's next move, where players see what they're waiting for.
+///
+/// For a host it's one slot, as tall as the action bar whatever's in it. The
+/// hosting engine runs a beat ahead of the host's own seat, so the move
+/// changes a moment before this phone's screen does: Next Question turns up
+/// under a result that's about to become the standings, and goes the moment
+/// it's tapped, under standings about to become the question. A slot that
+/// changed height then would shove the screen up or down just as it gives way
+/// to the next. So a move that turns up mid-screen waits a beat before it
+/// shows — the screen has usually moved on by then — and a move just made
+/// holds, working, until it has.
 struct FooterStatus: View {
   let waiting: LocalizedStringKey
 
   init(_ waiting: LocalizedStringKey) { self.waiting = waiting }
 
   @Environment(HostController.self) private var host
+  /// The move on show, which trails `host.nextAction` by those beats.
+  @State private var shown: HostController.Action?
+  /// The move just made, while its screen gives way to the next.
+  @State private var isWorking = false
+  @State private var hasSettled = false
+
+  /// How long a move that turned up mid-screen waits before it shows, and how
+  /// long one just made holds: longer than the host's seat takes to catch
+  /// up, short enough that a seat that doesn't never strands the host.
+  private static let beat: Duration = .milliseconds(700)
 
   var body: some View {
-    if host.isHosting, let action = host.nextAction {
-      HostActionBar(action: action)
+    if host.isHosting {
+      // Until the screen's first look has settled, what's next as it is.
+      let move = hasSettled ? shown : host.nextAction
+      ZStack {
+        // The bar's room, held whatever's showing. Plain glass, so hidden it
+        // has no light to glow up through a sheet.
+        HostActionBar(action: .start, isWorking: false, prominence: .secondary)
+          .hidden()
+        if let move {
+          HostActionBar(action: move, isWorking: isWorking)
+        } else {
+          StatusLine(waiting)
+        }
+      }
+      .task(id: host.nextAction) { await follow(host.nextAction) }
     } else {
       StatusLine(waiting)
+    }
+  }
+
+  private func follow(_ next: HostController.Action?) async {
+    // As the screen first shows, it shows what's next as it is.
+    guard hasSettled, next != shown else {
+      shown = next
+      isWorking = false
+      hasSettled = true
+      return
+    }
+    // The move on show has been made — or overtaken, as Play Again is by
+    // Start Game: it holds, working, and takes no second tap.
+    if shown != nil {
+      isWorking = true
+    }
+    try? await Task.sleep(for: Self.beat)
+    guard !Task.isCancelled else { return }
+    Motion.settle.perform {
+      shown = next
+      isWorking = false
     }
   }
 }
 
 private struct HostActionBar: View {
   let action: HostController.Action
+  /// Made, and on its way: a spinner, and no second tap.
+  let isWorking: Bool
+  var prominence: ActionButton.Prominence = .primary
 
   @Environment(HostController.self) private var host
 
@@ -95,9 +152,10 @@ private struct HostActionBar: View {
       if let error = host.actionError {
         FieldMessage(Text(error), kind: .error)
       }
-      ActionButton(title, systemImage: symbol, prominence: isCovered ? .secondary : .primary, tapHaptic: .action) {
+      ActionButton(title, systemImage: symbol, prominence: isCovered ? .secondary : prominence, isLoading: isWorking, tapHaptic: .action) {
         host.perform(action)
       }
+      .allowsHitTesting(!isWorking)
     }
     // Pinned to the bottom like any action bar, so it stops growing where one does.
     .dynamicTypeSize(...Size.barTypeLimit)

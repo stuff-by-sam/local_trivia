@@ -101,7 +101,7 @@ enum TutorialPage: Int, CaseIterable, Identifiable {
     case .join:
       "Type the four-digit PIN from the host's screen and your nickname, and Trivia finds the game on your Wi-Fi. Can't find it? Scan the host's QR code instead."
     case .answer:
-      "Every answer has a letter, a shape and a colour. Right answers score more the faster they come in. Try one:"
+      "Every answer has a letter, a shape and a color. Right answers score more the faster they come in. Try one:"
     case .standings:
       "After each question you'll see how the room voted and where you stand. The top three take the podium at the end. Lock your phone or lose Wi-Fi mid-game, and you're back in your seat when you return."
     case .host:

@@ -103,18 +103,23 @@ struct RootView: View {
 
   private var column: some View {
     screen
+      // Inside the screen's identity, so a screen on its way out keeps its
+      // own glass: the lobby's clear cards don't turn tinted, in a flash of
+      // the accent, as the first question takes over.
+      .glassClarity(store.phase.glassClarity)
       .id(store.phase.screen)
       .screenTransition()
       // With room for a spread, each screen lays out its own halves.
       .gameColumn(unless: spreads)
-      .glassClarity(store.phase.glassClarity)
   }
 
   @ViewBuilder
   private var screen: some View {
     switch store.phase {
     case .join: JoinView()
-    case .lobby: LobbyView()
+    // The one screen of clear glass in the game: kept to itself, so its cards
+    // don't melt into the first question's, tinted, as it takes over.
+    case .lobby: LobbyView().ownGlass()
     case .spectating: SpectatingView()
     case .question(let round): QuestionView(round: round, glass: glass)
     case .result(let outcome): ResultView(outcome: outcome, glass: glass)
@@ -159,6 +164,16 @@ extension View {
   func gameColumn(unless spreads: Bool = false) -> some View {
     frame(maxWidth: spreads ? .infinity : Size.column)
       .frame(maxWidth: .infinity)
+  }
+
+  /// Glass kept to itself, in a container of its own, apart from the one the
+  /// in-game screens share so the answer you chose can flow into its verdict.
+  /// For a screen whose glass mustn't melt into the next one's where they
+  /// cross as it gives way. (Nested inside a screen that morphs, it holds the
+  /// lit answer back a beat; a screen of its own makes the glass of the one
+  /// before it vanish early, so it's kept to where it's needed.)
+  func ownGlass() -> some View {
+    GlassEffectContainer(spacing: Space.xs) { self }
   }
 }
 

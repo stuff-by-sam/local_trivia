@@ -68,7 +68,7 @@ Claim only what's been tested on a device:
 | Voice Control | Check on a device first | Every control has a label, but nobody has played a game by voice yet |
 | Larger Text | Yes | Every screen to AX5, audited for clipping |
 | Dark Interface | Yes | The app is dark only |
-| Differentiate Without Color Alone | Yes | Every answer has a letter and a shape as well as a colour |
+| Differentiate Without Color Alone | Yes | Every answer has a letter and a shape as well as a color |
 | Sufficient Contrast | Yes | `ThemeTests` (WCAG AAA) and `GlassContrastUITests` (4.5:1 on glass) |
 | Reduced Motion | Yes | Cursor stops blinking, shakes stilled, blurs become cross-fades |
 | Captions, Audio Descriptions | Not applicable | No video or spoken audio |
@@ -115,8 +115,9 @@ Claim only what's been tested on a device:
 > podium at the end.
 >
 > MAKE IT YOURS
-> • Ten themes, from phosphor green to holographic foil and chalkboard.
-> • Five sets of answer markers, and an app icon to match every theme.
+> • Fifteen themes, from phosphor green to holographic foil, northern lights
+> and cherry blossom.
+> • Eleven sets of answer markers, and an app icon to match every theme.
 > • All of it free.
 >
 > SAFE TO PLAY WITH ANYONE

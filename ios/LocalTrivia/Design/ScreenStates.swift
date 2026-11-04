@@ -213,7 +213,7 @@ struct ScreenPreview: View {
     let store = models.store
     switch store.phase {
     case .join: JoinView()
-    case .lobby: LobbyView()
+    case .lobby: LobbyView().ownGlass()
     case .spectating: SpectatingView()
     case .question(let round): QuestionView(round: round, glass: glass)
     case .result(let outcome): ResultView(outcome: outcome, glass: glass)
