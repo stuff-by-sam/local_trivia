@@ -313,13 +313,16 @@ extension View {
     let badge = diameter * 0.32
     return
       self
-      .scaleEffect(isWorn ? drawnIn : 1)
+      // Drawn in, but laid out and touched as the whole bubble.
+      .visualEffect { content, _ in content.scaleEffect(isWorn ? drawnIn : 1) }
+      // The ring and the badge take touches like the rest of the bubble:
+      // made untouchable, they left the worn bubble with no menu to touch
+      // and hold for (LooksUITests).
       .overlay {
         Circle()
           .strokeBorder(color, lineWidth: ring)
           .scaleEffect(isWorn ? 1 : drawnIn)
           .opacity(isWorn ? 1 : 0)
-          .allowsHitTesting(false)
       }
       .overlay(alignment: .bottomTrailing) {
         Image(systemName: "checkmark")
@@ -330,7 +333,6 @@ extension View {
           .overlay { Circle().strokeBorder(.ink, lineWidth: ring / 2) }
           .scaleEffect(isWorn ? 1 : 0.4)
           .opacity(isWorn ? 1 : 0)
-          .allowsHitTesting(false)
       }
       .motion(.pop, value: isWorn)
   }

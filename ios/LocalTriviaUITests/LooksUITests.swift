@@ -12,8 +12,13 @@ final class LooksUITests: XCTestCase {
   @MainActor
   func testPicksAThemeAndMarkers() throws {
     let app = XCUIApplication()
-    // Whatever an earlier run left on, this opens wearing the defaults.
-    app.launchArguments += ["-nickname", "UITest", "-termsAccepted", "1", "-tutorialSeen", "YES", "-theme", "phosphor", "-markers", "classic"]
+    // Whatever an earlier run left on, or left made — a run that failed
+    // before its clean-up — this opens wearing the defaults, with none of the
+    // player's own: an empty value hides what's kept.
+    app.launchArguments += [
+      "-nickname", "UITest", "-termsAccepted", "1", "-tutorialSeen", "YES", "-theme", "phosphor", "-markers", "classic",
+      "-ownThemes", "", "-ownMarkers", "",
+    ]
     app.launch()
 
     let settings = app.buttons["Settings"]
