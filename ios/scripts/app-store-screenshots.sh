@@ -36,6 +36,7 @@ SHOTS=(
   "06-podium|3|-screen final"
   "07-themes|4|-screen looks"
   "08-question-synthwave|2|-screen question.chosen -chosen 1 -theme synthwave -markers sky"
+  "09-markers|4|-screen looks.markers"
 )
 
 echo "Building the debug app…"

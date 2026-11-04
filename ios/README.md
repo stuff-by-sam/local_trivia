@@ -290,8 +290,12 @@ don't.
   star), Critters (turtle, fish, fox, dog), Smarts (light bulb, book, brain,
   graduation cap), Game Night (dice, puzzle piece, controller, crown), Party
   (present, balloon, party popper, cake), Showtime (theater masks, ticket,
-  popcorn, clapperboard), Quest (map, skeleton key, shield, flag) and Backyard
-  (lizard, bird, rabbit, ladybug) — or a set of your own: any four of the
+  popcorn, clapperboard), Quest (map, skeleton key, shield, flag), Backyard
+  (lizard, bird, rabbit, ladybug), and four for trivia's big categories:
+  Globetrotter (globe, sailboat, suitcase, airplane), Jam Session (guitars,
+  music note, horn, microphone), Varsity (soccer ball, hockey puck,
+  football, tennis racket) and Eureka (microbe, flask, atom, test tubes) —
+  fifteen in all, one for every theme — or a set of your own: any four of the
   150-odd shapes in `MarkerShape.library`, in categories and searchable,
   each with its own name for VoiceOver. A set dresses this phone's
   answers and any TV it puts the game on. Letters and colours don't change,
@@ -352,8 +356,10 @@ over everything from `RootView` as `FirstRunView`): seven pages drawn with
 the game's own pieces — joining, a practice question with the real clock and
 answer buttons, scored as a game scores it (`PracticeQuestion`), the
 standings and podium, hosting, playing nice, and Themes & Markers. Skip or
-Let's Play finishes it for good (`tutorialSeen`); **How to Play** (?) beside
-Safety on the join screen shows it again any time. UI tests skip it with
+Let's Play finishes it for good (`tutorialSeen`); **How to Play** in
+Settings (the gear on the join screen) shows it again any time. A round that
+arrives while the first run is up — AirDropped to a phone that's only just
+installed the app — waits until it's over. UI tests skip it with
 `-tutorialSeen YES`, and `-resetTutorial YES` starts it as on a first launch.
 
 ## Safety (App Review guideline 1.2)

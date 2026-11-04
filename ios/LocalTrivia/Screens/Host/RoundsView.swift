@@ -145,7 +145,7 @@ private struct StarterRow: View {
         Text(starter.summary)
           .textRole(.detail)
           .foregroundStyle(.secondary)
-        if let count = starter.questions?.count {
+        if let count = starter.count {
           Text("^[\(count) question](inflect: true)")
             .textRole(.detail)
             .foregroundStyle(.secondary)

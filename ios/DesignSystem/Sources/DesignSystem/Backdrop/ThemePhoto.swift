@@ -196,7 +196,9 @@ final class ThemePhotos {
       Task {
         let (url, side) = (photo.url, fit.side)
         let image = await Task.detached(priority: .userInitiated) { Self.decode(url, side: side) }.value
-        images[key] = image
+        // Only news is written: a photo that won't decode, written as nil,
+        // would redraw what asked, which would ask again, for good.
+        if let image { images[key] = image }
         loading.remove(key)
       }
     }

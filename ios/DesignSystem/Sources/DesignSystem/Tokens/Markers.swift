@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The four shapes beside the answers' letters. Classic's — circle, triangle,
 /// square, diamond — are the game's own, and what the web game shows (`PAL`
-/// in public/shared/common.js); ten more sets come with it, and the player
+/// in public/shared/common.js); fourteen more sets come with it, and the player
 /// can make their own from the shapes in `MarkerShape.library`
 /// (`own(id:name:shapes:)`).
 ///
@@ -37,6 +37,10 @@ nonisolated public struct AnswerMarkers: Hashable, Identifiable, Sendable {
   public static let showtime = AnswerMarkers(kind: .builtIn(.showtime))
   public static let quest = AnswerMarkers(kind: .builtIn(.quest))
   public static let backyard = AnswerMarkers(kind: .builtIn(.backyard))
+  public static let globetrotter = AnswerMarkers(kind: .builtIn(.globetrotter))
+  public static let jamSession = AnswerMarkers(kind: .builtIn(.jamSession))
+  public static let varsity = AnswerMarkers(kind: .builtIn(.varsity))
+  public static let eureka = AnswerMarkers(kind: .builtIn(.eureka))
 
   /// The sets that come with the game, Classic first.
   public static let builtIn: [AnswerMarkers] = BuiltIn.allCases.map { AnswerMarkers(kind: .builtIn($0)) }
@@ -119,6 +123,8 @@ nonisolated extension AnswerMarkers {
   enum BuiltIn: String, CaseIterable, Sendable {
     case classic, suits, elements, sky, critters
     case smarts, gameNight, party, showtime, quest, backyard
+    // Trivia's big categories: geography, music, sports and science.
+    case globetrotter, jamSession, varsity, eureka
 
     var name: LocalizedStringResource {
       switch self {
@@ -133,6 +139,10 @@ nonisolated extension AnswerMarkers {
       case .showtime: "Showtime"
       case .quest: "Quest"
       case .backyard: "Backyard"
+      case .globetrotter: "Globetrotter"
+      case .jamSession: "Jam Session"
+      case .varsity: "Varsity"
+      case .eureka: "Eureka"
       }
     }
 
@@ -149,6 +159,10 @@ nonisolated extension AnswerMarkers {
       case .showtime: "Theater masks, a ticket, popcorn and a clapperboard"
       case .quest: "A map, a key, a shield and a flag"
       case .backyard: "A lizard, a bird, a rabbit and a ladybug"
+      case .globetrotter: "A globe, a sailboat, a suitcase and an airplane: for the well-traveled"
+      case .jamSession: "Guitars, a music note, a horn and a microphone"
+      case .varsity: "A soccer ball, a hockey puck, a football and a tennis racket"
+      case .eureka: "A microbe, a flask, an atom and test tubes, from the science lab"
       }
     }
 
@@ -170,6 +184,15 @@ nonisolated extension AnswerMarkers {
       case .quest: ["map.fill", "key.fill", "shield.fill", "flag.fill"]
       // A green lizard, a bluebird, a sandy rabbit.
       case .backyard: ["lizard.fill", "bird.fill", "hare.fill", "ladybug.fill"]
+      // A green globe, a sailboat out on a cyan sea, a leather suitcase.
+      case .globetrotter: ["globe.americas.fill", "sailboat.fill", "suitcase.rolling.fill", "airplane"]
+      // The horn in amber, as brass is.
+      case .jamSession: ["guitars.fill", "music.note", "horn.fill", "mic.fill"]
+      // A ball on green grass, a puck on cyan ice, a leather football. Only
+      // one ball is round: two would be told apart by colour alone.
+      case .varsity: ["soccerball", "hockey.puck.fill", "football.fill", "tennis.racket"]
+      // A green microbe, a flask of something cyan.
+      case .eureka: ["microbe.fill", "flask.fill", "atom", "testtube.2"]
       }
       return symbols[style.rawValue]
     }
@@ -220,6 +243,22 @@ nonisolated extension AnswerMarkers {
       case (.backyard, .b): "bird"
       case (.backyard, .c): "rabbit"
       case (.backyard, .d): "ladybug"
+      case (.globetrotter, .a): "globe"
+      case (.globetrotter, .b): "sailboat"
+      case (.globetrotter, .c): "suitcase"
+      case (.globetrotter, .d): "airplane"
+      case (.jamSession, .a): "guitars"
+      case (.jamSession, .b): "music note"
+      case (.jamSession, .c): "horn"
+      case (.jamSession, .d): "microphone"
+      case (.varsity, .a): "soccer ball"
+      case (.varsity, .b): "hockey puck"
+      case (.varsity, .c): "football"
+      case (.varsity, .d): "tennis racket"
+      case (.eureka, .a): "microbe"
+      case (.eureka, .b): "flask"
+      case (.eureka, .c): "atom"
+      case (.eureka, .d): "test tubes"
       }
     }
   }
