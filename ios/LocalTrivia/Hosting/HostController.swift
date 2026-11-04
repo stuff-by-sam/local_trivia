@@ -51,6 +51,9 @@ final class HostController {
   private(set) var lanAddress: String?
   private(set) var actionError: String?
   var sheet: Sheet?
+  /// Counts rounds that have arrived — sent from another phone, or opened
+  /// from Files — for the join screen to open Host a Game on each.
+  private(set) var arrivals = 0
   /// The host's theme. Browser players, who have no theme of their own, are
   /// dressed in its accent — the page they're served, and any change after;
   /// phones with the app keep their own.
@@ -64,6 +67,18 @@ final class HostController {
 
   var isHosting: Bool {
     if case .live = status { true } else { false }
+  }
+
+  /// Takes in a round that's arrived. With no game under way it's the round
+  /// being played, and Host a Game opens on it; during one, it waits on the
+  /// shelf, so nothing changes under the game.
+  func receive(_ round: SavedRound, duringGame: Bool) {
+    if duringGame || !canStart {
+      library.shelve(round)
+    } else {
+      library.receive(round)
+      arrivals += 1
+    }
   }
 
   /// Free to start a game: nothing running, starting or winding down.

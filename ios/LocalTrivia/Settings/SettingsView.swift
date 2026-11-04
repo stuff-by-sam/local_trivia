@@ -7,7 +7,8 @@ import SwiftUI
 struct SettingsView: View {
   /// The pages it opens.
   enum Page: Hashable {
-    case looks, safety, howToPlay
+    case looks(LooksView.Kind)
+    case safety, howToPlay
   }
 
   @Environment(Looks.self) private var looks
@@ -23,11 +24,11 @@ struct SettingsView: View {
     NavigationStack(path: $path) {
       List {
         Section {
-          NavigationLink(value: Page.looks) {
+          NavigationLink(value: Page.looks(.themes)) {
             LabeledContent {
               Text(looks.theme.name)
             } label: {
-              Label("Themes & Icons", systemImage: "paintpalette")
+              Label("Themes & Markers", systemImage: "paintpalette")
             }
           }
         }
@@ -50,7 +51,7 @@ struct SettingsView: View {
       }
       .navigationDestination(for: Page.self) { page in
         switch page {
-        case .looks: LooksView()
+        case .looks(let kind): LooksView(showing: kind)
         case .safety: SafetyView()
         // Let's Play goes back to the game, not to Settings.
         case .howToPlay: TutorialView { dismiss() }

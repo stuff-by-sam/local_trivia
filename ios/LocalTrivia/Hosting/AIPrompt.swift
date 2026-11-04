@@ -3,7 +3,10 @@ import Foundation
 /// A prompt the host can take to any AI chat they like, which asks for a
 /// round on their topic as a CSV that imports here as it is (`CSVImport`):
 /// the columns in order, a letter for the right answer, the time limits this
-/// app allows. The app sends it nowhere: the host copies it.
+/// app allows. The host copies it; the app itself sends it only to Apple's
+/// model on Private Cloud Compute, in a build that may use it
+/// (`QuestionDrafter`), so a round drafted there is asked for in the same
+/// words and read in the same way as one pasted from any other AI.
 ///
 /// In English whatever the phone's language: the columns are, and every
 /// chat reads it. The questions come back in the topic's language.
@@ -39,6 +42,16 @@ nonisolated enum AIPrompt {
       For example:
       \(header)
       "Which planet has the most moons?",Jupiter,Saturn,Uranus,Neptune,B,SPACE,20
+      """
+  }
+
+  /// The same conversation's next request: `count` more, in the same form.
+  static func more(_ count: Int) -> String {
+    let count = count.clamped(to: counts)
+    let questions = count == 1 ? "1 more question" : "\(count) more questions"
+    return """
+      Write \(questions) on the same topic, as another CSV file in one code block, starting with the same header line. \
+      Ask about different facts from every question above, and keep to the same rules.
       """
   }
 }

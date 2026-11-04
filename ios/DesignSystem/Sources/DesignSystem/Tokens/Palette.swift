@@ -57,7 +57,8 @@ nonisolated public struct Palette: Equatable, Sendable {
     reducesTransparency = reduceTransparency
   }
 
-  public static let onAccentInk = Color(hex: 0x04080A)
+  public static let onAccentInk = Color(hex: onAccentInkRGB)
+  static let onAccentInkRGB: UInt32 = 0x04080A
   public static let success = Color(hex: 0x56FF8A)
   public static let danger = Color(hex: 0xFF6A6A)
   public static let warning = Color(hex: 0xFFD60A)

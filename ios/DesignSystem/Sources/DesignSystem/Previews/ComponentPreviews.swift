@@ -331,7 +331,7 @@ private struct SpreadFold: View {
           ForEach([Backdrop.Mood.idle, .question], id: \.self) { mood in
             Backdrop(mood: mood)
               .frame(height: Size.qrFull)
-              .overlay { Text(verbatim: "\(theme.rawValue) · \(mood)").textRole(.status) }
+              .overlay { Text(verbatim: "\(theme.id) · \(mood)").textRole(.status) }
               .clipShape(.rect(cornerRadius: Radius.panel))
           }
         }
@@ -346,7 +346,7 @@ private struct SpreadFold: View {
 #Preview("Answer markers") {
   ScrollView {
     VStack(alignment: .leading, spacing: Space.l) {
-      ForEach(AnswerMarkers.allCases) { markers in
+      ForEach(AnswerMarkers.builtIn + [Own.markers]) { markers in
         HStack(spacing: Space.m) {
           MarkerSwatch(markers: markers, isShown: markers == .classic)
           VStack(alignment: .leading, spacing: Space.s) {
@@ -365,13 +365,64 @@ private struct SpreadFold: View {
   .preferredColorScheme(.dark)
 }
 
-#Preview("Themes") {
+/// A theme and a set of markers of the player's own, for the previews.
+private enum Own {
+  static let theme = Theme.own(id: "preview", name: "Midnight Orchard", color: 0xD9480F, texture: .blossom)
+  static let markers = AnswerMarkers.own(
+    id: "preview", name: "Space Race",
+    shapes: ["sparkles", "moon.fill", "globe.americas.fill", "airplane"].compactMap(MarkerShape.named))
+}
+
+#Preview("Honeycomb") {
+  // Every theme and the make-your-own bubble, the one worn lit, as Themes &
+  // Markers lays them out; scroll to see the edges' lens.
+  ScrollView {
+    VStack(spacing: Space.xl) {
+      Honeycomb(diameter: Size.bubble) {
+        ForEach(Theme.builtIn + [Own.theme]) { theme in
+          ThemeBubble(theme: theme, isWorn: theme == .aurora)
+            .fisheye(band: Size.bubble)
+        }
+        MakeBubble()
+          .fisheye(band: Size.bubble)
+      }
+      Honeycomb(diameter: Size.bubble) {
+        ForEach(AnswerMarkers.builtIn + [Own.markers]) { markers in
+          MarkerBubble(markers: markers, isWorn: markers == .critters)
+            .fisheye(band: Size.bubble)
+        }
+        MakeBubble()
+          .fisheye(band: Size.bubble)
+      }
+    }
+    .padding(.horizontal, Space.screen)
+  }
+  .contentMargins(.vertical, Size.bubble, for: .scrollContent)
+  .background { Backdrop(mood: .idle) }
+  .glassClarity(.clear)
+  .theme(.aurora)
+  .preferredColorScheme(.dark)
+}
+
+#Preview("Bubbles at AX5") {
+  Honeycomb(diameter: Size.bubble * 1.6) {
+    ThemeBubble(theme: .phosphor, isWorn: true, diameter: Size.bubble * 1.6)
+    ThemeBubble(theme: Own.theme, isWorn: false, diameter: Size.bubble * 1.6)
+    MarkerBubble(markers: .classic, isWorn: false, diameter: Size.bubble * 1.6)
+    MarkerBubble(markers: Own.markers, isWorn: true, diameter: Size.bubble * 1.6)
+    MakeBubble(diameter: Size.bubble * 1.6)
+  }
+  .padding(Space.screen)
+  .background { Backdrop(mood: .idle) }
+  .preferredColorScheme(.dark)
+}
+
+#Preview("Theme swatches") {
   ScrollView {
     LazyVGrid(columns: [GridItem(.adaptive(minimum: Size.qrCard))], spacing: Space.m) {
-      ForEach(Theme.allCases) { theme in
+      ForEach(Theme.builtIn + [Own.theme]) { theme in
         VStack(spacing: Space.s) {
           ThemeSwatch(theme: theme, isShown: theme == .phosphor)
-          IconArtwork(IconDesign(rawValue: theme == .phosphor ? "classic" : theme.rawValue) ?? .classic)
           Text(theme.name).textRole(.labelSmall)
         }
       }

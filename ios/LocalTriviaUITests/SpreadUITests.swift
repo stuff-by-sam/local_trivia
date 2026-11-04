@@ -100,9 +100,10 @@ final class SpreadUITests: XCTestCase {
       }
       let scrollers = app.scrollViews.allElementsBoundByIndex.map(\.frame)
       for element in readableAndTappable(in: app) {
-        // A half's scroll view clips what's scrolled past its edge.
-        let center = CGPoint(x: element.frame.midX, y: element.frame.midY)
-        let scroller = scrollers.filter { $0.contains(center) }.min { $0.width * $0.height < $1.width * $1.height }
+        // A half's scroll view clips what's scrolled past its edge: the
+        // smallest one the element is in, even partly — a paragraph its
+        // half's edge cuts off can have its middle past that edge.
+        let scroller = scrollers.filter { $0.intersects(element.frame) }.min { $0.width * $0.height < $1.width * $1.height }
         let shown = scroller.map { element.frame.intersection($0) } ?? element.frame
         if shown.intersects(fold) {
           XCTFail("\(screen), \(orientation == .portrait ? "standing up" : "on its side"): “\(element.label)” sits on the fold at \(shown)")

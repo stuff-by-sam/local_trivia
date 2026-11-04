@@ -161,3 +161,27 @@ nonisolated enum CSVImport {
     Int(String(value.unicodeScalars.prefix { ("0"..."9").contains($0) }))
   }
 }
+
+/// Questions → CSV: what `CSVImport` reads back, and the web admin console
+/// imports — the header `AIPrompt` asks for, a letter for the right answer,
+/// and a time limit only where the question has its own. A round shared from
+/// this phone opens on another as the round it was.
+nonisolated enum CSVExport {
+  static func text(for questions: [HostQuestion]) -> String {
+    let rows = questions.map { question -> String in
+      let letter = question.options.indices.contains(question.correct) ? ["A", "B", "C", "D"][question.correct] : ""
+      let cells = [question.text] + question.options + [letter, question.category, question.timeLimit.map(String.init) ?? ""]
+      return cells.map(field).joined(separator: ",")
+    }
+    return ([AIPrompt.header] + rows).joined(separator: "\n") + "\n"
+  }
+
+  /// A value as a CSV field: in quotes, with its quotes doubled, if it holds
+  /// a comma, a quote, a line break, or space at either end.
+  private static func field(_ value: String) -> String {
+    let needsQuotes =
+      value.contains { $0 == "," || $0 == "\"" || $0.isNewline }
+      || value.first?.isWhitespace == true || value.last?.isWhitespace == true
+    return needsQuotes ? "\"" + value.replacingOccurrences(of: "\"", with: "\"\"") + "\"" : value
+  }
+}

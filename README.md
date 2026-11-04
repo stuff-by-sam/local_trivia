@@ -50,9 +50,11 @@ this repo's player page itself, in the colour of the host's theme. Standings go 
 phone to a TV (AirPlay, or an HDMI adapter), the TV becomes the big screen: the
 join code, each question and its answers, the reveal and the standings.
 
-Themes, app icons and answer markers (other shapes in place of the circle,
-triangle, square and diamond) are free to pick, under **Settings → Themes &
-Icons** on the join screen. On an iPad, or an iPhone Duo open, every game
+Themes and answer markers (other shapes in place of the circle, triangle,
+square and diamond) are free to pick — or to make, from your own colour,
+photo and shapes — under **Settings → Themes & Markers** on the join screen.
+A host keeps as many rounds as they like, starts from one of five ready-made
+ones, and can send a round to another phone as a CSV. On an iPad, or an iPhone Duo open, every game
 screen spreads across two halves, either side of the Duo's hinge.
 
 The laptop server above is for browser players; the app doesn't join it.

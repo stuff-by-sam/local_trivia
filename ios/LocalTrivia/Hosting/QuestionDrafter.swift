@@ -8,19 +8,30 @@ import UIKit
 ///
 /// It drafts with the phone's own model (`Engine.device`). A build carrying
 /// the Private Cloud Compute entitlement (`isCloudEnabled`) drafts with
-/// Apple's larger model there when it can (`Engine.cloud`), which knows far
-/// more trivia: the topic and the drafts go to Apple's servers for the
-/// request, and aren't kept. Offline, over the day's quota, or where Private
-/// Cloud Compute isn't offered, the phone's own model takes over.
+/// Apple's larger model there when it can (`Engine.cloud`) — the model
+/// Siri AI answers with — which knows far more trivia: the topic and the
+/// drafts go to Apple's servers for the request, and aren't kept. Offline,
+/// over the day's quota, or where Private Cloud Compute isn't offered, the
+/// phone's own model takes over.
 ///
-/// Either way, every draft is written from a fact the model states first
-/// and checked on its own before it's shown, and it keeps drafting until the
-/// host has as many as they asked for. Even so, nothing it writes goes into
-/// a round until the host has seen each question with its answer marked.
+/// The cloud is asked exactly as a host asks any other AI, in `AIPrompt`'s
+/// words, and its CSV is read as a pasted reply is (`CSVImport`): one prompt,
+/// one reader, whoever writes the round. The phone's model is too small to
+/// be asked that way, so it writes each draft from a fact it states first,
+/// guided field by field (`DraftedQuestion`). Graded by hand over eight
+/// topics on the same model, the shared prompt got 40 of 80 answer keys
+/// right — and put most on A — and the checks below kept 38 of its drafts,
+/// 33 of them right; fact first, they showed 77, 71 right.
+///
+/// Either way, every draft is checked on its own before it's shown, and it
+/// keeps drafting until the host has as many as they asked for. Even so,
+/// nothing it writes goes into a round until the host has seen each question
+/// with its answer marked.
 enum QuestionDrafter {
   /// Where drafts are written and checked.
   enum Engine: Equatable, Sendable {
-    /// Apple's larger model, on Private Cloud Compute.
+    /// Apple's larger model, on Private Cloud Compute: the one Siri AI
+    /// answers with.
     case cloud
     /// The model on this iPhone.
     case device
@@ -70,9 +81,8 @@ enum QuestionDrafter {
   static let batchSize = 4
   /// The cloud writes the whole round in one request and checks it in one
   /// more — its quota counts requests — asking for this many more than it
-  /// needs, for the few a check leaves out, up to `cloudBatchLimit`.
+  /// needs, for the few a check leaves out.
   static let cloudMargin = 3
-  static let cloudBatchLimit = 12
   /// Drafts it may write per question asked for, before settling. About
   /// half pass both checks, so this is room for a topic it knows less well.
   static let draftsPerQuestion = 4
@@ -199,10 +209,15 @@ enum QuestionDrafter {
       }
     }
     while confirmed.count < count, budget > 0, ContinuousClock.now < deadline, !Task.isCancelled {
-      let size = engine == .cloud ? min(cloudBatchLimit, count - confirmed.count + cloudMargin) : batchSize
-      let batch: [DraftedQuestion]
+      let size = engine == .cloud ? min(AIPrompt.counts.upperBound, count - confirmed.count + cloudMargin) : batchSize
+      let batch: [HostQuestion]
       do {
-        batch = try await write(min(size, budget), about: topic, on: engine, in: &session, avoiding: written)
+        if engine == .cloud {
+          batch = try await writeShared(min(size, budget), about: topic, in: &session)
+        } else {
+          batch = try await write(min(size, budget), about: topic, on: engine, in: &session, avoiding: written)
+            .compactMap { question(from: $0, category: category, correctAt: Int.random(in: 0..<4)) }
+        }
       } catch .cloudUnreachable {
         // The phone's model takes over, told what's been asked.
         guard SystemLanguageModel.default.isAvailable else {
@@ -221,11 +236,10 @@ enum QuestionDrafter {
       // Nothing new: the model has run out of things to say.
       guard !batch.isEmpty else { break }
       budget -= batch.count
-      written += batch.map(\.question)
+      written += batch.map(\.text)
       var fresh: [HostQuestion] = []
-      for draft in batch {
-        guard let question = question(from: draft, category: category, correctAt: Int.random(in: 0..<4)),
-          let new = dropRepeats([question], of: asked).first,
+      for question in batch {
+        guard let new = dropRepeats([question], of: asked).first,
           !sharesAnAnswer(new, with: (confirmed + likely).map(\.question) + fresh)
         else { continue }
         asked.append(new)
@@ -300,6 +314,45 @@ enum QuestionDrafter {
       log.error("drafting failed: \(error.localizedDescription, privacy: .public)")
       throw engine == .cloud ? .cloudUnreachable : .failed
     }
+  }
+
+  /// Writes up to `count` more drafts about `topic` in the cloud, asked for
+  /// in `AIPrompt`'s words and read as a pasted reply (`questions(in:)`).
+  /// One session carries a whole drafting, so the next request asks for more
+  /// knowing what's been asked; when it's full, a new one starts afresh,
+  /// and the repeats it writes are left out as any are.
+  static func writeShared(
+    _ count: Int, about topic: String, in session: inout LanguageModelSession?
+  ) async throws(Failure) -> [HostQuestion] {
+    let isNew = session == nil
+    if isNew { session = LanguageModelSession(model: Engine.cloud.model) }
+    guard let active = session else { throw .failed }
+    let prompt = isNew ? AIPrompt.text(topic: topic, count: count) : AIPrompt.more(count)
+    do {
+      return Array(questions(in: try await active.respond(to: prompt).content).prefix(count))
+    } catch LanguageModelError.contextSizeExceeded where !isNew {
+      session = nil
+      return try await writeShared(count, about: topic, in: &session)
+    } catch let error as LanguageModelError {
+      log.error("drafting in the cloud failed: \(error.localizedDescription, privacy: .public)")
+      switch error {
+      case .guardrailViolation, .refusal: throw .declined
+      case .unsupportedLanguageOrLocale: throw .unsupportedLanguage
+      default: throw .cloudUnreachable
+      }
+    } catch {
+      log.error("drafting in the cloud failed: \(error.localizedDescription, privacy: .public)")
+      throw .cloudUnreachable
+    }
+  }
+
+  /// The usable questions in a reply to `AIPrompt`: its CSV, read as a
+  /// pasted reply is (`CSVImport`), each tidied (`normalized()`), and none
+  /// with a problem — an empty answer, a word the filter keeps out.
+  static func questions(in reply: String) -> [HostQuestion] {
+    CSVImport.parse(reply).questions
+      .map { $0.normalized() }
+      .filter { $0.problem == nil }
   }
 
   enum Verdict: Equatable {
@@ -553,7 +606,8 @@ nonisolated struct ColdAnswer {
 
 @Generable(description: "A round of pub-quiz questions on one topic")
 nonisolated struct DraftedRound {
-  // `QuestionDrafter.cloudBatchLimit`: a guide takes only a literal.
+  // Room to spare over a batch (`QuestionDrafter.batchSize`): a guide takes
+  // only a literal.
   @Guide(description: "The questions, each about a different fact", .maximumCount(12))
   var questions: [DraftedQuestion]
 }

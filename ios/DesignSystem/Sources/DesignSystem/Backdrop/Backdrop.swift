@@ -11,10 +11,12 @@ import SwiftUI
 /// The ink and the texture come from the theme (`Theme`); what's described
 /// above is Phosphor, the game's own. Holographic's foil, Glass's liquid,
 /// Titanium's shine, Aurora's curtains, Sakura's petals and Abyss's plankton
-/// follow the phone's tilt — and hold still while a question is up.
+/// follow the phone's tilt — and hold still while a question is up. A theme
+/// of the player's own can show a photo of theirs instead of a texture
+/// (`ThemePhoto`), dimmed already, with the glow laid over it more lightly.
 ///
 /// Under Reduce Transparency or Increase Contrast it's the glow alone: no
-/// texture under text, and under Increase Contrast no vignette either.
+/// texture or photo under text, and under Increase Contrast no vignette either.
 public struct Backdrop: View {
   nonisolated public enum Mood: Hashable, Sendable {
     case idle
@@ -27,7 +29,7 @@ public struct Backdrop: View {
 
   /// What the glass has to bend. Each is drawn once and holds still, bar the
   /// ones that follow the phone's tilt (`Textures.swift`, `SceneTextures.swift`).
-  nonisolated public enum Texture: Equatable, Sendable {
+  nonisolated public enum Texture: String, CaseIterable, Hashable, Sendable {
     case scanlines
     /// A vector display's graticule.
     case grid
@@ -58,6 +60,26 @@ public struct Backdrop: View {
     case deepWater
     /// A circuit board's traces and pads, a few lit by a signal.
     case traces
+
+    /// What the editor calls it, for a theme of the player's own.
+    public var name: LocalizedStringResource {
+      switch self {
+      case .scanlines: "Scanlines"
+      case .grid: "Vector Grid"
+      case .horizon: "Horizon"
+      case .dotMatrix: "Dot Matrix"
+      case .brushed: "Brushed Lines"
+      case .holofoil: "Holofoil"
+      case .chalk: "Chalk Dust"
+      case .liquid: "Liquid Color"
+      case .metal: "Metal Sheen"
+      case .aurora: "Northern Lights"
+      case .embers: "Embers"
+      case .blossom: "Blossoms"
+      case .deepWater: "Deep Water"
+      case .traces: "Circuit Board"
+      }
+    }
   }
 
   let mood: Mood
@@ -73,6 +95,10 @@ public struct Backdrop: View {
 
   public var body: some View {
     ZStack {
+      if let photo {
+        theme.ink
+        PhotoGround(photo: photo)
+      }
       MeshGradient(
         width: 3,
         height: 3,
@@ -81,10 +107,10 @@ public struct Backdrop: View {
           [0, 0.45], [0.5, 0.4], [1, 0.45],
           [0, 1], [0.5, 1], [1, 1],
         ],
-        colors: colors,
+        colors: photo == nil ? colors : colors.enumerated().map { $1.opacity(Self.veil[$0]) },
         background: theme.ink
       )
-      if !isPlain {
+      if !isPlain, photo == nil {
         texture
       }
       if !palette.isHighContrast {
@@ -107,6 +133,21 @@ public struct Backdrop: View {
   private var isPlain: Bool {
     palette.isHighContrast || palette.reducesTransparency
   }
+
+  /// The theme's photo, when it has one and there's room for more than the
+  /// glow.
+  private var photo: ThemePhoto? {
+    isPlain ? nil : theme.photo
+  }
+
+  /// How much of the glow lies over a photo, point by point down the mesh:
+  /// the crown strongest, so the mood still reads at the top, and the ink a
+  /// veil, so the photo shows through it.
+  private static let veil: [Double] = [
+    0.7, 0.75, 0.7,
+    0.4, 0.4, 0.4,
+    0.45, 0.5, 0.45,
+  ]
 
   @ViewBuilder
   private var texture: some View {

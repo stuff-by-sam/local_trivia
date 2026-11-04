@@ -1,6 +1,6 @@
 import XCTest
 
-/// Every screen one phone can reach — joining, themes and icons, setting up a round,
+/// Every screen one phone can reach — joining, themes and markers, setting up a round,
 /// hosting it, playing it through and stopping — at the settings that
 /// stretch a layout most: the largest accessibility text size, Increase
 /// Contrast, and right-to-left. Each screen is attached as a screenshot and
@@ -35,7 +35,8 @@ final class AccessibilityUITests: XCTestCase {
   /// at the default size the audit flags system list rows that draw in full.
   private func captureEveryScreen(as setting: String, arguments: [String], failsOnClippedText: Bool = false) throws {
     let app = XCUIApplication()
-    app.launchArguments += ["-nickname", "UITest", "-termsAccepted", "1", "-tutorialSeen", "YES"] + arguments
+    // From an empty round: the walk writes the first question itself.
+    app.launchArguments += ["-nickname", "UITest", "-termsAccepted", "1", "-tutorialSeen", "YES", "-emptyRound", "YES"] + arguments
     app.launch()
     var screen = Screens(app: app, setting: setting, failsOnClippedText: failsOnClippedText, test: self)
 
@@ -46,17 +47,17 @@ final class AccessibilityUITests: XCTestCase {
     app.buttons["Settings"].tap()
     XCTAssertTrue(app.buttons["Done"].waitForExistence(timeout: 5))
     try screen.capture("Settings")
-    app.button(beginningWith: "Themes & Icons").tap()
+    app.button(beginningWith: "Themes & Markers").tap()
     XCTAssertTrue(app.element(containing: "Wearing").waitForExistence(timeout: 5))
-    try screen.capture("Themes & Icons")
-    app.navigationBars["Themes & Icons"].buttons.firstMatch.tap()
+    try screen.capture("Themes & Markers")
+    app.buttons["Answer Markers"].tap()
+    XCTAssertTrue(app.element(containing: "Using").waitForExistence(timeout: 5))
+    try screen.capture("Answer Markers")
+    app.navigationBars["Themes & Markers"].buttons.firstMatch.tap()
     app.buttons["Done"].tap()
 
     host.tap()
     XCTAssertTrue(app.buttons["Start Hosting"].waitForExistence(timeout: 10))
-    // The round is kept between launches: start from an empty one.
-    let deleteAll = app.buttons["Delete All"]
-    if app.reveal(deleteAll) { deleteAll.tap() }
     try screen.capture("Round, empty")
 
     XCTAssertTrue(app.reveal(app.buttons["Write a Question"]))

@@ -1,8 +1,9 @@
 import XCTest
 
-/// Finds Themes & Icons in Settings, opens its groups, and picks a theme and
-/// a set of answer markers — free, so each goes straight on — then puts the
-/// game's own back, so no later run starts in them.
+/// Finds Themes & Markers in Settings and tries on a theme and a set of
+/// answer markers from the honeycomb — free, so each goes straight on —
+/// makes a set of its own and deletes it again, then puts the game's own
+/// back, so no later run starts in them.
 final class LooksUITests: XCTestCase {
   override func setUp() {
     continueAfterFailure = false
@@ -18,72 +19,71 @@ final class LooksUITests: XCTestCase {
     let settings = app.buttons["Settings"]
     XCTAssertTrue(settings.waitForExistence(timeout: 10), "no way into Settings")
     settings.tap()
-    let link = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Themes & Icons")).firstMatch
-    XCTAssertTrue(link.waitForExistence(timeout: 5), "no way into Themes & Icons")
+    let link = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Themes & Markers")).firstMatch
+    XCTAssertTrue(link.waitForExistence(timeout: 5), "no way into Themes & Markers")
     link.tap()
     XCTAssertTrue(element(in: app, containing: "Wearing Phosphor").waitForExistence(timeout: 5))
     XCTAssertFalse(element(in: app, containing: "$").exists, "nothing has a price")
     XCTAssertFalse(element(in: app, containing: "Restore Purchases").exists)
-    // Every group starts closed, and the markers come before the icons.
-    let themes = button(in: app, startingWith: "Themes,")
-    let markers = button(in: app, startingWith: "Answer Markers")
-    let icons = button(in: app, startingWith: "App Icons")
-    XCTAssertFalse(button(in: app, startingWith: "Amber,").exists, "the themes should start closed")
-    XCTAssertLessThan(markers.frame.minY, icons.frame.minY, "the markers should sit above the icons")
-    capture(app, "1 Groups closed")
+    XCTAssertFalse(element(in: app, containing: "App Icon").exists, "the icons are gone")
+    XCTAssertTrue(bubble(in: app, named: "Make Your Own Theme").exists, "no way to make a theme")
+    capture(app, "1 Themes")
 
-    themes.tap()
-    let amber = button(in: app, startingWith: "Amber,")
-    XCTAssertTrue(amber.waitForExistence(timeout: 5), "the themes didn't open")
+    // A tap puts a theme on, and says so at the top.
+    let amber = bubble(in: app, named: "Amber.")
+    XCTAssertTrue(amber.waitForExistence(timeout: 5), "no Amber bubble")
     amber.tap()
     XCTAssertTrue(element(in: app, containing: "Wearing Amber").waitForExistence(timeout: 5), "the theme didn't go on")
+    XCTAssertTrue(isSelected(amber), "Amber's bubble isn't lit")
     capture(app, "2 Wearing Amber")
-    themes.tap()
 
-    markers.tap()
-    // The list makes rows only as they scroll in, and the sets run on past
-    // the screen: each row is scrolled to, and says itself that it's on.
-    let suits = button(in: app, startingWith: "Suits,")
-    XCTAssertTrue(reveal(suits, in: app), "the markers didn't open")
+    app.buttons["Answer Markers"].tap()
+    let suits = bubble(in: app, named: "Suits.")
+    XCTAssertTrue(suits.waitForExistence(timeout: 5), "the markers didn't show")
     suits.tap()
     XCTAssertTrue(isSelected(suits), "the markers didn't go on")
-    capture(app, "3 Wearing Suits")
+    XCTAssertTrue(element(in: app, containing: "Using Suits").exists)
+    capture(app, "3 Using Suits")
+
+    // Four taps make a set: each shape goes beside the lit key, A to D.
+    bubble(in: app, named: "Make Your Own Markers").tap()
+    XCTAssertTrue(app.navigationBars["New Markers"].waitForExistence(timeout: 5), "no markers editor")
+    for shape in ["pentagon", "hexagon", "octagon", "star"] {
+      let cell = app.buttons[shape]
+      XCTAssertTrue(cell.waitForExistence(timeout: 5), "no \(shape) in the library")
+      cell.tap()
+    }
+    XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "D, star")).firstMatch.exists, "the star isn't beside D")
+    capture(app, "4 New markers")
+    app.navigationBars["New Markers"].buttons["Save"].tap()
+    let own = bubble(in: app, named: "My Markers")
+    XCTAssertTrue(own.waitForExistence(timeout: 5), "the new set isn't in the honeycomb")
+    XCTAssertTrue(isSelected(own), "the new set didn't go on")
+
+    // Deleting the set being used puts Classic back on.
+    own.press(forDuration: 1)
+    let delete = app.buttons["Delete"]
+    XCTAssertTrue(delete.waitForExistence(timeout: 5), "no menu on the set")
+    delete.tap()
+    XCTAssertTrue(element(in: app, containing: "Using Classic").waitForExistence(timeout: 5), "Classic didn't go back on")
+    XCTAssertTrue(element(in: app, containing: "Deleted").exists, "no undo offered")
 
     // Back to the game's own.
-    let classic = button(in: app, startingWith: "Classic,")
-    XCTAssertTrue(reveal(classic, in: app))
-    classic.tap()
-    XCTAssertTrue(isSelected(classic), "the classic markers didn't go back on")
-    let wearing = element(in: app, containing: "Wearing")
-    for _ in 0..<4 where !wearing.exists {
-      // A screen at a time: a swipe down at the top would close the sheet.
-      app.collectionViews.firstMatch.swipeDown()
-    }
-    themes.tap()
-    button(in: app, startingWith: "Phosphor,").tap()
+    app.buttons["Themes"].tap()
+    bubble(in: app, named: "Phosphor.").tap()
     XCTAssertTrue(element(in: app, containing: "Wearing Phosphor").waitForExistence(timeout: 5))
 
-    app.navigationBars["Themes & Icons"].buttons.firstMatch.tap()
+    app.navigationBars["Themes & Markers"].buttons.firstMatch.tap()
     XCTAssertTrue(app.buttons["Done"].waitForExistence(timeout: 5), "not back in Settings")
     app.buttons["Done"].tap()
     XCTAssertTrue(settings.waitForExistence(timeout: 5))
-    capture(app, "4 Back, in Phosphor")
+    capture(app, "5 Back, in Phosphor")
   }
 
-  /// Drags the list a little at a time until `element` sits where it can be
-  /// tapped, clear of the bars: down the list first, then back up.
+  /// A bubble, by the start of what VoiceOver calls it.
   @MainActor
-  private func reveal(_ element: XCUIElement, in app: XCUIApplication) -> Bool {
-    let window = app.windows.firstMatch.frame
-    let band = (window.minY + window.height * 0.15)...(window.maxY - window.height * 0.15)
-    for step in 0..<12 {
-      if element.exists, element.isHittable, band.contains(element.frame.midY) { return true }
-      let isDown = element.exists ? element.frame.midY > band.upperBound : step < 5
-      let from = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: isDown ? 0.7 : 0.35))
-      let to = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: isDown ? 0.4 : 0.65))
-      from.press(forDuration: 0.05, thenDragTo: to)
-    }
-    return false
+  private func bubble(in app: XCUIApplication, named name: String) -> XCUIElement {
+    app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
   }
 
   /// Whether `element` says it's the one on, within a few seconds.
@@ -91,13 +91,6 @@ final class LooksUITests: XCTestCase {
   private func isSelected(_ element: XCUIElement) -> Bool {
     let selected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isSelected == true"), object: element)
     return XCTWaiter().wait(for: [selected], timeout: 5) == .completed
-  }
-
-  /// A button in the list — not Settings' row behind it, whose "Themes &
-  /// Icons" starts the same way.
-  @MainActor
-  private func button(in app: XCUIApplication, startingWith text: String) -> XCUIElement {
-    app.collectionViews.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", text)).firstMatch
   }
 
   @MainActor

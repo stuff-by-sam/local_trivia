@@ -126,8 +126,17 @@ struct HostSetupView: View {
 
   private var questionsSection: some View {
     Section {
+      NavigationLink {
+        RoundsView()
+      } label: {
+        LabeledContent {
+          Text(verbatim: host.library.roundName)
+        } label: {
+          Label("Round", systemImage: "rectangle.stack")
+        }
+      }
       if host.library.questions.isEmpty {
-        Text("No questions yet. Write one, or import a CSV — the same format the web admin console takes.")
+        Text("No questions yet. Write one, import a CSV — the same format the web admin console takes — or pick a starter round in Round.")
           .textRole(.detail)
           .foregroundStyle(.secondary)
           .padding(.vertical, Space.xs)
@@ -158,6 +167,11 @@ struct HostSetupView: View {
         isImporting = true
       } label: {
         Label("Import CSV…", systemImage: "square.and.arrow.down")
+      }
+      if !host.library.questions.isEmpty {
+        ShareLink(item: RoundFile(round: host.library.current), preview: SharePreview(host.library.roundName)) {
+          Label("Share Round…", systemImage: "square.and.arrow.up")
+        }
       }
       if !host.library.questions.isEmpty {
         Button(role: .destructive) {

@@ -49,8 +49,8 @@ struct RootView: View {
     // it's needed — the worn markers first, then the reveal's — so none shows
     // as a stand-in first. After the first launch they're all kept already.
     .task(priority: .utility) {
-      let markers = AnswerMarkers.allSymbols(first: looks.markers)
-      let game = ResultView.Verdict.allCases.map(\.symbol) + ["trophy.fill", "arrowtriangle.up.fill", "arrowtriangle.down.fill", "hourglass"]
+      let markers = AnswerMarkers.allSymbols(first: looks.markers, in: looks.markerSets)
+      let game = ResultView.Verdict.allCases.map(\.symbol) + ["trophy.fill", "arrowtriangle.up.fill", "arrowtriangle.down.fill", "hourglass", "plus"]
       await GlassSymbol.prepare(Array(markers.prefix(AnswerStyle.allCases.count)) + game + markers.dropFirst(AnswerStyle.allCases.count))
     }
     .onChange(of: looks.theme, initial: true) { _, theme in host.theme = theme }
@@ -73,6 +73,12 @@ struct RootView: View {
     }
     // A host's QR code, scanned with the Camera: straight into their game.
     .onOpenURL { url in
+      // A round, sent from another phone or opened from Files.
+      if url.isFileURL {
+        guard safety.hasAcceptedTerms, let round = SavedRound.received(from: url) else { return }
+        host.receive(round, duringGame: store.isInGame)
+        return
+      }
       guard safety.hasAcceptedTerms, let link = JoinLink(url: url), !host.isHosting, !store.isInGame || store.server == link.server
       else { return }
       store.join(link, safety: safety, browser: browser)

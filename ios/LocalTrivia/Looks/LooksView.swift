@@ -1,298 +1,272 @@
 import DesignSystem
 import SwiftUI
 
-/// Themes, answer markers and app icons: how this phone dresses the game.
-/// Every one is free; tapping one puts it on.
+/// Themes and answer markers: how this phone dresses the game. Every one is
+/// free; tapping a bubble puts it on, and the last bubble makes one of your
+/// own.
 ///
 /// Out of the way on purpose — a page of Settings — because the game is the
-/// point. Each kind is a group that opens when it's wanted, and says what's
-/// in use while it's closed.
+/// point. The choices are bubbles in a honeycomb, as watchOS lays out its
+/// apps, so a glance takes them all in: what's on is lit, and said in words
+/// at the top, where the page shows it off. Trying one on is a tap, and
+/// taking it off is another.
 struct LooksView: View {
-  @Environment(Looks.self) private var looks
-  @Environment(\.dynamicTypeSize) private var typeSize
+  /// Which choices the honeycomb shows.
+  enum Kind: Hashable {
+    case themes, markers
+  }
 
-  @State private var showsThemes = false
-  @State private var showsMarkers = false
-  @State private var showsIcons = false
-  /// The last notice, held here so the alert keeps its words while it
-  /// animates away.
-  @State private var alert = ""
-  @State private var isAlerting = false
+  @Environment(Looks.self) private var looks
+  @ScaledMetric(relativeTo: .body) private var scaledBubble = Size.bubble
+  @State private var kind: Kind
+  @State private var editing: Editing?
+  @State private var undo: UndoItem?
+
+  init(showing kind: Kind = .themes) {
+    _kind = State(initialValue: kind)
+  }
+
+  /// Bigger with the text, but never so big a row holds fewer than two.
+  private var bubble: CGFloat { min(scaledBubble, Size.bubble * 1.8) }
+  /// How near the top or bottom a bubble starts to shrink, as on watchOS.
+  private var lens: CGFloat { bubble * 0.6 }
 
   var body: some View {
-    List {
-      Section {
-        Showcase(theme: looks.theme)
+    VStack(spacing: Space.m) {
+      Showcase(kind: kind)
+        .dynamicTypeSize(...Size.barTypeLimit)
+      Picker(selection: $kind) {
+        Text("Themes").tag(Kind.themes)
+        Text("Answer Markers").tag(Kind.markers)
+      } label: {
+        Text("Choices")
       }
-      .listRowBackground(Color.clear)
+      .pickerStyle(.segmented)
+      .padding(.horizontal, Space.screen)
+      .dynamicTypeSize(...Size.barTypeLimit)
 
-      Group {
-        themes
-        markers
-
-        if looks.canChangeIcon {
-          icons
+      ScrollView {
+        VStack(spacing: Space.xl) {
+          switch kind {
+          case .themes: Honeycomb(diameter: bubble) { themes }
+          case .markers: Honeycomb(diameter: bubble) { markerSets }
+          }
+          Text(footer)
+            .textRole(.detail)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
         }
+        .padding(.horizontal, Space.screen)
       }
-      // Clear glass over the backdrop: the theme shows through every row.
-      .listRowBackground(Rectangle().fill(.clear).glassCard(in: .rect))
+      // At rest nothing sits in the lens: it's what scrolling does.
+      .contentMargins(.vertical, lens, for: .scrollContent)
+      .scrollBounceBehavior(.always)
     }
-    // The one page of a sheet that shows the backdrop: showing a theme is the point.
-    .scrollContentBackground(.hidden)
     .background { Backdrop(mood: .idle) }
     .glassClarity(.clear)
-    .navigationTitle("Themes & Icons")
+    .navigationTitle("Themes & Markers")
     .navigationBarTitleDisplayMode(.inline)
-    .alert(Text(verbatim: alert), isPresented: $isAlerting) {
-      Button("OK") {}
-    }
     .theme(looks.theme)
     .environment(\.answerMarkers, looks.markers)
     .motion(.settle, value: looks.theme)
     .motion(.settle, value: looks.markers)
-    .onChange(of: looks.notice) { _, notice in
-      guard let notice else { return }
-      alert = notice
-      isAlerting = true
-      looks.notice = nil
+    .motion(.settle, value: kind)
+    .haptic(.pick, trigger: looks.theme.id)
+    .haptic(.pick, trigger: looks.markers.id)
+    .undoToast($undo)
+    .sheet(item: $editing) { editing in
+      switch editing {
+      case .theme(let own, let isNew): ThemeEditor(own: own, isNew: isNew)
+      case .markers(let own, let isNew): MarkersEditor(own: own, isNew: isNew)
+      }
+    }
+  }
+
+  /// What a pick changes, and what it never does.
+  private var footer: LocalizedStringResource {
+    let isPad = UIDevice.current.userInterfaceIdiom == .pad
+    return switch (kind, isPad) {
+    case (.themes, false): "A theme dresses this phone, any TV it puts the game on, and the browsers in a game it hosts. Touch and hold a theme for more."
+    case (.themes, true): "A theme dresses this iPad, any TV it puts the game on, and the browsers in a game it hosts. Touch and hold a theme for more."
+    case (.markers, false): "The shapes beside each answer's letter, on this phone and any TV it puts the game on. Letters and colors stay the same on every phone, so B is always cyan."
+    case (.markers, true): "The shapes beside each answer's letter, on this iPad and any TV it puts the game on. Letters and colors stay the same on every phone, so B is always cyan."
     }
   }
 
   // MARK: - Themes
 
+  @ViewBuilder
   private var themes: some View {
-    Section {
-      DisclosureGroup(isExpanded: $showsThemes) {
-        ForEach(Theme.allCases) { theme in
-          ThemeRow(theme: theme) { looks.wear(theme) }
-        }
+    ForEach(looks.themes) { theme in
+      let isWorn = theme.id == looks.theme.id
+      Button {
+        looks.wear(theme)
       } label: {
-        GroupLabel("Themes", current: looks.theme.name) {
-          ThemeSwatch(theme: looks.theme, isShown: false)
-        }
+        ThemeBubble(theme: theme, isWorn: isWorn, diameter: bubble)
       }
-    } footer: {
-      if UIDevice.current.userInterfaceIdiom == .pad {
-        Text("A theme dresses this iPad, any TV it puts the game on, and the browsers in a game it hosts.")
-      } else {
-        Text("A theme dresses this phone, any TV it puts the game on, and the browsers in a game it hosts.")
+      .buttonStyle(.bubble)
+      .fisheye(band: lens)
+      .contextMenu { menu(for: theme) }
+      .accessibilityLabel(Text(verbatim: "\(theme.name.string). \(theme.tagline.string)"))
+      .accessibilityHint(isWorn ? Text(verbatim: "") : Text("Wears this theme."))
+      .accessibilityAddTraits(isWorn ? .isSelected : [])
+    }
+    Button {
+      let name = looks.freshName(String(localized: "My Theme"), taken: looks.ownThemes.map(\.name))
+      editing = .theme(OwnTheme(startingFrom: looks.theme, name: name), isNew: true)
+    } label: {
+      MakeBubble(diameter: bubble)
+    }
+    .buttonStyle(.bubble)
+    .fisheye(band: lens)
+    .accessibilityLabel(Text("Make Your Own Theme"))
+  }
+
+  @ViewBuilder
+  private func menu(for theme: Theme) -> some View {
+    if let own = looks.ownTheme(theme.id) {
+      Button("Edit", systemImage: "pencil") {
+        editing = .theme(own, isNew: false)
       }
+      Button("Duplicate", systemImage: "plus.square.on.square") {
+        var copy = own
+        copy.id = "own-" + UUID().uuidString
+        copy.name = looks.freshName(own.displayName, taken: looks.ownThemes.map(\.name))
+        editing = .theme(copy, isNew: true)
+      }
+      Divider()
+      Button("Delete", systemImage: "trash", role: .destructive) {
+        delete(own)
+      }
+    } else {
+      Button("Make Your Own from This", systemImage: "plus.square.on.square") {
+        let name = looks.freshName(String(localized: "My \(theme.name.string)"), taken: looks.ownThemes.map(\.name))
+        editing = .theme(OwnTheme(startingFrom: theme, name: name), isNew: true)
+      }
+    }
+  }
+
+  private func delete(_ own: OwnTheme) {
+    guard let index = looks.ownThemes.firstIndex(of: own) else { return }
+    let wasWorn = looks.theme.id == own.id
+    Motion.settle.perform { looks.remove(own) }
+    undo = UndoItem(String(localized: "Deleted “\(own.displayName)”")) {
+      Motion.settle.perform { looks.restore(own, at: index, wearing: wasWorn) }
     }
   }
 
   // MARK: - Markers
 
-  private var markers: some View {
-    Section {
-      DisclosureGroup(isExpanded: $showsMarkers) {
-        ForEach(AnswerMarkers.allCases) { markers in
-          MarkerRow(markers: markers) { looks.wear(markers) }
-        }
+  @ViewBuilder
+  private var markerSets: some View {
+    ForEach(looks.markerSets) { markers in
+      let isWorn = markers.id == looks.markers.id
+      Button {
+        looks.wear(markers)
       } label: {
-        GroupLabel("Answer Markers", current: looks.markers.name) {
-          MarkerSwatch(markers: looks.markers, isShown: false)
-        }
+        MarkerBubble(markers: markers, isWorn: isWorn, diameter: bubble)
       }
-    } footer: {
-      if UIDevice.current.userInterfaceIdiom == .pad {
-        Text("The shapes beside each answer's letter, on this iPad and any TV it puts the game on. Letters and colors stay the same on every phone, so B is always cyan.")
-      } else {
-        Text("The shapes beside each answer's letter, on this phone and any TV it puts the game on. Letters and colors stay the same on every phone, so B is always cyan.")
+      .buttonStyle(.bubble)
+      .fisheye(band: lens)
+      .contextMenu { menu(for: markers) }
+      .accessibilityLabel(Text(verbatim: "\(markers.name.string). \(markers.tagline.string)"))
+      .accessibilityHint(isWorn ? Text(verbatim: "") : Text("Uses these markers."))
+      .accessibilityAddTraits(isWorn ? .isSelected : [])
+    }
+    Button {
+      let name = looks.freshName(String(localized: "My Markers"), taken: looks.ownMarkers.map(\.name))
+      editing = .markers(OwnMarkers(startingFrom: looks.markers, name: name), isNew: true)
+    } label: {
+      MakeBubble(diameter: bubble)
+    }
+    .buttonStyle(.bubble)
+    .fisheye(band: lens)
+    .accessibilityLabel(Text("Make Your Own Markers"))
+  }
+
+  @ViewBuilder
+  private func menu(for markers: AnswerMarkers) -> some View {
+    if let own = looks.ownMarkers(markers.id) {
+      Button("Edit", systemImage: "pencil") {
+        editing = .markers(own, isNew: false)
+      }
+      Button("Duplicate", systemImage: "plus.square.on.square") {
+        let name = looks.freshName(own.displayName, taken: looks.ownMarkers.map(\.name))
+        editing = .markers(OwnMarkers(name: name, symbols: own.symbols), isNew: true)
+      }
+      Divider()
+      Button("Delete", systemImage: "trash", role: .destructive) {
+        delete(own)
+      }
+    } else {
+      Button("Make Your Own from This", systemImage: "plus.square.on.square") {
+        let name = looks.freshName(String(localized: "My \(markers.name.string)"), taken: looks.ownMarkers.map(\.name))
+        editing = .markers(OwnMarkers(startingFrom: markers, name: name), isNew: true)
       }
     }
   }
 
-  // MARK: - Icons
-
-  private var icons: some View {
-    Section {
-      DisclosureGroup(isExpanded: $showsIcons) {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: Size.iconTile * (typeSize.isAccessibilitySize ? 2.4 : 1.4)), spacing: Space.m)], spacing: Space.l) {
-          ForEach(AppIcon.allCases) { icon in
-            IconTile(icon: icon) {
-              Task { await looks.setIcon(icon) }
-            }
-          }
-        }
-        .padding(.vertical, Space.s)
-      } label: {
-        GroupLabel("App Icons", current: looks.icon.name) {
-          IconArtwork(looks.icon.design, size: Size.swatch)
-        }
-      }
-    } footer: {
-      Text("Changes Trivia's icon on your Home Screen.")
+  private func delete(_ own: OwnMarkers) {
+    guard let index = looks.ownMarkers.firstIndex(of: own) else { return }
+    let wasWorn = looks.markers.id == own.id
+    Motion.settle.perform { looks.remove(own) }
+    undo = UndoItem(String(localized: "Deleted “\(own.displayName)”")) {
+      Motion.settle.perform { looks.restore(own, at: index, wearing: wasWorn) }
     }
   }
 }
 
-/// What's on, drawn the way the join screen draws itself: the theme, and the
-/// answer markers above the wordmark.
+/// What the page's sheet is editing: a theme or a set of markers of the
+/// player's own, new or being changed.
+private enum Editing: Identifiable {
+  case theme(OwnTheme, isNew: Bool)
+  case markers(OwnMarkers, isNew: Bool)
+
+  var id: String {
+    switch self {
+    case .theme(let own, _): own.id
+    case .markers(let own, _): own.id
+    }
+  }
+}
+
+/// What's on, drawn the way the join screen draws itself — the theme, and
+/// the answer markers above the wordmark — and said in words: the theme's
+/// name and tagline, or the markers'. Always two lines of tagline tall, so
+/// the honeycomb under it never moves when a pick has a shorter one.
 private struct Showcase: View {
-  let theme: Theme
+  let kind: LooksView.Kind
+
+  @Environment(Looks.self) private var looks
 
   var body: some View {
+    let (name, tagline) =
+      switch kind {
+      case .themes: (String(localized: "Wearing \(looks.theme.name.string)"), looks.theme.tagline)
+      case .markers: (String(localized: "Using \(looks.markers.name.string)"), looks.markers.tagline)
+      }
     VStack(spacing: Space.l) {
       AnswerSetMark(depth: .mark)
         .font(.subheadline)
       Wordmark(scale: .showcase)
       VStack(spacing: Space.xs) {
-        StatusLine("Wearing \(String(localized: theme.name))")
-        Text(theme.tagline)
+        StatusLine(verbatim: name)
+        Text(tagline)
           .textRole(.detail)
           .foregroundStyle(.secondary)
           .multilineTextAlignment(.center)
+          .lineLimit(2, reservesSpace: true)
       }
     }
     .frame(maxWidth: .infinity)
-    .padding(.vertical, Space.s)
+    .padding(.horizontal, Space.screen)
+    .padding(.top, Space.s)
     .accessibilityElement(children: .ignore)
-    .accessibilityLabel(Text("Wearing \(String(localized: theme.name)). \(String(localized: theme.tagline))"))
-  }
-}
-
-/// A group's row while it's closed: what's in it, and what's on now.
-private struct GroupLabel<Artwork: View>: View {
-  let title: LocalizedStringKey
-  let current: LocalizedStringResource
-  @ViewBuilder var artwork: Artwork
-
-  init(_ title: LocalizedStringKey, current: LocalizedStringResource, @ViewBuilder artwork: () -> Artwork) {
-    self.title = title
-    self.current = current
-    self.artwork = artwork()
-  }
-
-  var body: some View {
-    HStack(spacing: Space.m) {
-      artwork
-      VStack(alignment: .leading, spacing: Space.xxs) {
-        Text(title)
-          .textRole(.bodyEmphasis)
-          .foregroundStyle(.primary)
-        Text(current)
-          .textRole(.detail)
-          .foregroundStyle(.secondary)
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
-    }
-    .padding(.vertical, Space.xs)
-    .accessibilityElement(children: .combine)
-  }
-}
-
-private struct ThemeRow: View {
-  let theme: Theme
-  let onSelect: () -> Void
-
-  @Environment(Looks.self) private var looks
-
-  var body: some View {
-    let isWorn = looks.theme == theme
-    Button(action: onSelect) {
-      HStack(spacing: Space.m) {
-        ThemeSwatch(theme: theme, isShown: isWorn)
-        VStack(alignment: .leading, spacing: Space.xxs) {
-          Text(theme.name)
-            .textRole(.bodyEmphasis)
-            .foregroundStyle(.primary)
-          Text(theme.tagline)
-            .textRole(.detail)
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        if isWorn {
-          Image(systemName: "checkmark")
-            .fontWeight(.bold)
-            .foregroundStyle(theme.accent)
-        }
-      }
-      .contentShape(.rect)
-    }
-    .buttonStyle(.plain)
-    .padding(.vertical, Space.xs)
-    .accessibilityAddTraits(isWorn ? .isSelected : [])
-    .accessibilityHint(isWorn ? Text(verbatim: "") : Text("Wears this theme."))
-  }
-}
-
-private struct MarkerRow: View {
-  let markers: AnswerMarkers
-  let onSelect: () -> Void
-
-  @Environment(Looks.self) private var looks
-
-  var body: some View {
-    let isWorn = looks.markers == markers
-    Button(action: onSelect) {
-      HStack(spacing: Space.m) {
-        MarkerSwatch(markers: markers, isShown: isWorn)
-        VStack(alignment: .leading, spacing: Space.xxs) {
-          Text(markers.name)
-            .textRole(.bodyEmphasis)
-            .foregroundStyle(.primary)
-          Text(markers.tagline)
-            .textRole(.detail)
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        if isWorn {
-          Image(systemName: "checkmark")
-            .fontWeight(.bold)
-            .foregroundStyle(.themeAccent)
-        }
-      }
-      .contentShape(.rect)
-    }
-    .buttonStyle(.plain)
-    .padding(.vertical, Space.xs)
-    .accessibilityAddTraits(isWorn ? .isSelected : [])
-    .accessibilityHint(isWorn ? Text(verbatim: "") : Text("Uses these markers."))
-  }
-}
-
-/// One icon: tapping it puts it on the Home Screen.
-private struct IconTile: View {
-  let icon: AppIcon
-  let action: () -> Void
-
-  @Environment(Looks.self) private var looks
-
-  var body: some View {
-    let isWorn = looks.icon == icon
-    Button(action: action) {
-      VStack(spacing: Space.s) {
-        IconArtwork(icon.design)
-          .overlay {
-            RoundedRectangle(cornerRadius: Size.iconTile * IconArtwork.cornerRatio + Space.xs, style: .continuous)
-              .strokeBorder(.themeAccent, lineWidth: 2)
-              .padding(-Space.xs)
-              .opacity(isWorn ? 1 : 0)
-          }
-        Text(icon.name)
-          .textRole(.detail)
-          .fontWeight(.semibold)
-          .foregroundStyle(.primary)
-          .lineLimit(1)
-          .minimumScaleFactor(0.7)
-        // Room for the check under every tile, so the rows line up.
-        Image(systemName: "checkmark")
-          .textRole(.figureSmall)
-          .foregroundStyle(.themeAccent)
-          .opacity(isWorn ? 1 : 0)
-          .frame(minHeight: Space.l)
-      }
-      .frame(maxWidth: .infinity)
-      .contentShape(.rect)
-    }
-    .buttonStyle(.plain)
-    .accessibilityLabel(Text("\(String(localized: icon.name)) icon"))
-    .accessibilityAddTraits(isWorn ? .isSelected : [])
+    .accessibilityLabel(Text(verbatim: "\(name). \(tagline.string)"))
   }
 }
 
 #if DEBUG
-#Preview("Themes & Icons") { ScreenPreview(.looks) }
+#Preview("Themes") { ScreenPreview(.looks) }
+#Preview("Answer Markers") { ScreenPreview(.looksMarkers) }
 #endif

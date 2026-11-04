@@ -169,6 +169,8 @@ private struct RejectionShake: ViewModifier {
 /// the player didn't cause or need to notice.
 public enum Haptic: Sendable {
   case lock, correct, wrong, missed, joined, questionStart, rejected, action, found
+  /// A theme or a set of markers put on: the tick of a choice moving.
+  case pick
 
   public var feedback: SensoryFeedback {
     switch self {
@@ -178,6 +180,7 @@ public enum Haptic: Sendable {
     case .missed: .warning
     case .questionStart: .start
     case .action: .impact(weight: .medium)
+    case .pick: .selection
     }
   }
 
@@ -188,6 +191,7 @@ public enum Haptic: Sendable {
     case .wrong, .rejected: UINotificationFeedbackGenerator().notificationOccurred(.error)
     case .missed: UINotificationFeedbackGenerator().notificationOccurred(.warning)
     case .lock, .action, .questionStart: UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    case .pick: UISelectionFeedbackGenerator().selectionChanged()
     }
   }
 }
