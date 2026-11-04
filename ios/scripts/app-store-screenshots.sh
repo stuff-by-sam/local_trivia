@@ -26,16 +26,17 @@ DEVICES=(
 
 # File name | seconds to settle | launch arguments. In App Store order.
 # A question's clock starts at 0:14 and turns red at 0:10, so questions are
-# taken quickly; sheets need longer to slide up.
+# taken at 0:12 or so — not sooner: a busy Mac caught them still fading in at
+# 2 s. Sheets need longer to slide up.
 SHOTS=(
-  "01-question|2|-screen question.chosen -chosen 1"
+  "01-question|4|-screen question.chosen -chosen 1"
   "02-reveal|3|-screen result.correct"
   "03-host-lobby|3|-screen host.lobby"
   "04-standings|3|-screen standings"
   "05-drafts|4|-screen drafts"
   "06-podium|3|-screen final"
   "07-themes|4|-screen looks"
-  "08-question-synthwave|2|-screen question.chosen -chosen 1 -theme synthwave -markers sky"
+  "08-question-synthwave|4|-screen question.chosen -chosen 1 -theme synthwave -markers sky"
   "09-markers|4|-screen looks.markers"
 )
 
