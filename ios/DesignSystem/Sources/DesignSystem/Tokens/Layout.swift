@@ -23,6 +23,11 @@ nonisolated public enum Space {
   public static let capsuleInset: CGFloat = 16
   /// The same, inside something as small as an answer's key.
   public static let keyInset: CGFloat = 10
+
+  /// The gutter down the middle of a `Spread`. On iPhone Duo the hinge runs
+  /// along it, so it's wide enough to keep a tap off the display's curve
+  /// when the phone's partly folded.
+  public static let fold: CGFloat = xxxl
 }
 
 /// Corner radii. Nested shapes are concentric: an inner radius is its
@@ -48,8 +53,6 @@ nonisolated public enum Size {
   public static let answer: CGFloat = 60
   /// A text field drawn by the design system.
   public static let field: CGFloat = 56
-  /// The game picker, with its two lines.
-  public static let picker: CGFloat = 64
   /// One PIN cell.
   public static let pinCell: CGFloat = 72
   /// The verdict badge and the waiting badge.
@@ -65,7 +68,8 @@ nonisolated public enum Size {
   public static let swatch: CGFloat = 52
   /// An app icon tile in Themes & Icons.
   public static let iconTile: CGFloat = 64
-  /// The widest a column of game gets, on iPad.
+  /// The widest a column of game gets on a big screen — and each half of a
+  /// `Spread`.
   public static let column: CGFloat = 540
   /// The largest text a pinned bar grows to: the first accessibility size.
   /// Past it, a bar would cover the content it's for.

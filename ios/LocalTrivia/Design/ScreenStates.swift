@@ -15,8 +15,13 @@ import SwiftUI
 
 /// A screen, in one of its states.
 enum ScreenState: String, CaseIterable {
-  case joinSearching = "join.searching"
+  /// At rest: nothing looked for yet.
+  case join
   case joinFound = "join.found"
+  /// Two games on the Wi-Fi, and the player's to pick.
+  case joinChoose = "join.choose"
+  /// Local Network off for the app.
+  case joinNoNetwork = "join.noNetwork"
   case joinWrongPIN = "join.wrongPIN"
   case joinLeft = "join.left"
   case joinHostEnded = "join.hostEnded"
@@ -45,6 +50,8 @@ enum ScreenState: String, CaseIterable {
   case players
   case joinCode
   case tvGuide
+  case settings
+  case howToPlay
   case looks
   case tvIdle = "tv.idle"
   case tvLobby = "tv.lobby"
@@ -70,6 +77,7 @@ struct ScreenPreview: View {
 
   @State private var models: PreviewModels
   @Namespace private var glass
+  @Environment(\.hasRoomToSpread) private var spreads
 
   /// `chosen` is the answer a chosen question has picked, 0–3.
   init(_ state: ScreenState, theme: Theme = .phosphor, markers: AnswerMarkers = .classic, chosen: Int = 1, page: Int = 0) {
@@ -107,12 +115,13 @@ struct ScreenPreview: View {
       .environment(models.safety)
       // As `RootView` shows a report: over the screen.
       .reportSheet(Binding { models.safety.report } set: { models.safety.report = $0 })
+      .measuresWindow()
   }
 
   @ViewBuilder
   private var content: some View {
     switch state {
-    case .joinSearching, .joinFound, .joinWrongPIN, .joinLeft, .joinHostEnded, .joinRemoved:
+    case .join, .joinFound, .joinChoose, .joinNoNetwork, .joinWrongPIN, .joinLeft, .joinHostEnded, .joinRemoved:
       game(glassContainer: false)
     case .roundEmpty, .round:
       over(HostSetupView())
@@ -134,16 +143,20 @@ struct ScreenPreview: View {
       game(hostSheet: .joinCode)
     case .tvGuide:
       game(hostSheet: .tv)
+    case .settings:
+      over(SettingsView())
+    case .howToPlay:
+      over(SettingsView(showing: .howToPlay))
     case .looks:
-      over(LooksView())
+      over(SettingsView(showing: .looks))
     case .terms:
-      over(TermsView(isAgreeing: true))
+      cover(NavigationStack { TermsView(isAgreeing: true) })
     case .safety:
-      over(SafetyView())
+      over(SettingsView(showing: .safety))
     case .report:
       over(ReportSheet(report: Report(.question(text: Sample.question(elapsed: 0).text, options: Sample.question(elapsed: 0).options, category: "SPACE"), gameName: Sample.game.name, isHost: false)))
     case .tutorial:
-      over(TutorialView(isFirstRun: true, page: TutorialPage(rawValue: page) ?? .welcome))
+      cover(NavigationStack { TutorialView(isFirstRun: true, page: TutorialPage(rawValue: page) ?? .welcome) })
     case .reportBlocked:
       over(ReportSheet(report: Report(.host(gameName: Sample.game.name), gameName: Sample.game.name, isHost: false, blocked: "This player blocked the host and left the game. The host's games are hidden on their phone.")))
     case .tvIdle, .tvLobby, .tvQuestion, .tvReveal, .tvStandings, .tvFinal:
@@ -159,14 +172,18 @@ struct ScreenPreview: View {
     NavigationStack {
       Group {
         if glassContainer {
-          GlassEffectContainer(spacing: Space.xs) { screen.gameColumn() }
+          GlassEffectContainer(spacing: Space.xs) { column }
         } else {
-          screen.gameColumn()
+          column
         }
       }
       .glassClarity(models.store.phase.glassClarity)
       .containerBackground(for: .navigation) { Backdrop(mood: mood) }
     }
+  }
+
+  private var column: some View {
+    screen.gameColumn(unless: spreads)
   }
 
   /// A host sheet, over the screen it opens from — opened as `RootView`
@@ -182,6 +199,13 @@ struct ScreenPreview: View {
   private func over(_ sheet: some View) -> some View {
     game(glassContainer: false)
       .sheet(isPresented: .constant(true)) { sheet }
+  }
+
+  /// The first run's terms or tutorial, covering the join screen as
+  /// `RootView` covers it.
+  private func cover(_ screen: some View) -> some View {
+    game(glassContainer: false)
+      .fullScreenCover(isPresented: .constant(true)) { screen }
   }
 
   @ViewBuilder
@@ -237,10 +261,15 @@ final class PreviewModels {
     let question = Sample.question(elapsed: 6)
     let reveal = Reveal(correctIndex: 1, distribution: [1, 3, 1, 1])
     switch state {
-    case .joinSearching, .tvIdle:
+    case .join, .tvIdle:
       break
     case .joinFound:
+      browser.preview(games: [Sample.game])
       online()
+    case .joinChoose:
+      browser.preview(games: [Sample.game, Sample.otherGame])
+    case .joinNoNetwork:
+      browser.preview(games: [], hasFailed: true)
     case .joinWrongPIN:
       online()
       store.apply(.joinError(Notice(code: "WRONG_PIN", message: "WRONG PIN — CHECK THE HOST'S SCREEN")))
@@ -313,9 +342,8 @@ final class PreviewModels {
       break
     case .round, .editorNew, .editorEdit, .drafting, .drafts:
       host.library.questions = Sample.round
-    case .scannerOff, .scannerRestricted, .looks, .terms, .safety, .report, .reportBlocked, .tutorial:
-      // Over a join screen still looking: the join screen's own sheets keep
-      // its keyboard down, but these are presented from outside it.
+    case .scannerOff, .scannerRestricted, .settings, .howToPlay, .looks, .terms, .safety, .report, .reportBlocked, .tutorial:
+      // Over the join screen at rest.
       break
     }
   }
@@ -345,6 +373,7 @@ enum Sample {
   static let player = "ROBIN"
   static let others = ["SAM", "Alex", "Jordan", "Priya", "Maximilian-Alexander"]
   static let game = GameServer(address: "192.168.1.20:3000", name: "Friday Quiz")!
+  static let otherGame = GameServer(address: "192.168.1.31:3000", name: "Kitchen Table")!
 
   static let round = [
     HostQuestion(text: "Which planet has the most moons?", options: ["Jupiter", "Saturn", "Uranus", "Neptune"], correct: 1, category: "SPACE"),

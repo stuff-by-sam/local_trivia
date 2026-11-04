@@ -124,12 +124,24 @@ private enum Sample {
   }
 }
 
-#Preview("PickerRow") {
+#Preview("GameLine") {
   PreviewMatrix {
-    VStack(spacing: Space.m) {
-      PickerRow(title: "Looking for games…", detail: "JOIN THE HOST'S WI-FI") { ProgressView().controlSize(.small) }
-      PickerRow(title: "Friday Quiz", detail: "192.168.1.20 · ONLINE") { StatusDot(.online) }
-      PickerRow(title: "Friday Quiz", detail: "192.168.1.20 · UNREACHABLE") { StatusDot(.failed) }
+    VStack(alignment: .leading, spacing: Space.xs) {
+      GameLine { StatusDot(.online) } label: {
+        GameLineLabel(Text(verbatim: "Friday Quiz"), detail: Text(verbatim: "Online"))
+      }
+      GameLine { StatusDot(.connecting) } label: {
+        GameLineLabel(Text(verbatim: "Friday Quiz"), detail: Text(verbatim: "Connecting"), isMenu: false)
+      }
+      GameLine { StatusDot(.failed) } label: {
+        GameLineLabel(Text(verbatim: Sample.longName), detail: Text(verbatim: "Unreachable"))
+      }
+      GameLine { Image(systemName: "list.bullet").foregroundStyle(.themeAccent) } label: {
+        GameLineLabel(Text(verbatim: "Pick your game"), detail: Text(verbatim: "3 on this Wi-Fi"))
+      }
+      GameLine { ProgressView().controlSize(.mini) } label: {
+        GameLineLabel(Text(verbatim: "Looking for the game"), isMenu: false)
+      }
     }
   }
 }
@@ -242,6 +254,56 @@ private enum Sample {
     }
     .scrollsWhenCrowded()
     .frame(height: Size.qrFull)
+  }
+}
+
+/// A question as a spread: side by side when it's wider than tall, stacked
+/// when it's taller — and stacked with the first half handed over, as a form
+/// does while its keyboard's up. The rule is where the fold falls.
+#Preview("Spread") {
+  PreviewMatrix {
+    VStack(spacing: Space.l) {
+      SpreadSample()
+        .frame(height: Size.qrFull)
+      SpreadSample()
+        .frame(height: Size.column)
+      SpreadSample(hidesStackedLead: true)
+        .frame(height: Size.column)
+    }
+  }
+}
+
+private struct SpreadSample: View {
+  var hidesStackedLead = false
+
+  var body: some View {
+    Spread(hidesStackedLead: hidesStackedLead) {
+      Text(verbatim: "Which planet has the most moons?")
+        .textRole(.question(length: 32))
+        .multilineTextAlignment(.center)
+        .padding(Space.inset)
+        .panel()
+    } trail: {
+      VStack(spacing: Space.s) {
+        AnswerButton(style: .a, text: "Saturn", longestOption: 7, state: .open) {}
+        AnswerButton(style: .b, text: "Jupiter", longestOption: 7, state: .chosen) {}
+      }
+    }
+    .overlay { SpreadFold() }
+  }
+}
+
+/// Where a spread's fold falls: its middle, with nothing else in the window.
+private struct SpreadFold: View {
+  var body: some View {
+    GeometryReader { proxy in
+      let isSideBySide = proxy.size.width >= proxy.size.height
+      Rectangle()
+        .fill(.danger)
+        .frame(width: isSideBySide ? 1 : nil, height: isSideBySide ? nil : 1)
+        .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
+    }
+    .allowsHitTesting(false)
   }
 }
 

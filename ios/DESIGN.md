@@ -140,7 +140,8 @@ on a long press.
 
 **Spacing** — 4-pt base. `Space.xxs 2 · xs 4 · s 8 · m 12 · l 16 · xl 24 ·
 xxl 32 · xxxl 48`. Screen margin `Space.l` (16), matching system list insets.
-Stack gaps: related `s`, grouped `m`, sections `xl`.
+Stack gaps: related `s`, grouped `m`, sections `xl`. A spread's gutter is
+`Space.fold` (48): on iPhone Duo the hinge runs down the middle of it.
 
 **Insets** — text never crowds the sides of the shape it sits in. It's
 `Space.inset` (20) in from the sides of an answer, a field, a readout row, a
@@ -194,8 +195,8 @@ An answer's key is glass characters on a drawn cap with a lit edge
 third layer of glass that small only blurs. On a lit answer it's plain dark
 ink, which reads best there; so is the chosen answer's checkmark.
 
-Glass inside a system `Menu`'s label doesn't draw, so the game picker's
-status mark is drawn over the menu, in the same place (`pickerMark(_:)`).
+Glass inside a system `Menu`'s label doesn't draw, so a `GameLine`'s status
+mark sits beside the menu, outside its label.
 Sheets use the system sheet material — they don't draw the backdrop. The
 one exception is Themes & Icons, whose job is showing a theme on its backdrop:
 its rows are clear glass over it.
@@ -295,10 +296,11 @@ touches the network.
 | `PINCells` | empty, next (lit edge + cursor), filled, rejected (`.rejectionShake`) |
 | `PromptField` (`> name`) | empty, focused, filled |
 | `FieldMessage` | error, notice, hint |
-| `PickerRow` | searching, online, connecting, unreachable |
+| `GameLine`, `GameLineLabel` (`● FRIDAY QUIZ · ONLINE`) | online, connecting, unreachable; a choice of several; looking; a long name wrapping |
 | `LabeledField`, `SectionHeader`, `DividerLabel` | — |
 | `Readout` / `ReadoutRow`, `.panel()` | inline, stacked (long value or AX size), empty; IC; RT |
 | `.scrollsWhenCrowded()` | centred when it fits, scrolling when it doesn't |
+| `Spread` | side by side, stacked, stacked with the first half handed over |
 | `StatusLine` | waiting (cursor), steady; on a glass capsule (a rounded rectangle at AX sizes) |
 | `StatusDot` | online, connecting (breathes), failed (breathes), idle; a glass bead |
 | `Wordmark`, `AnswerSetMark` | screen, showcase, tv (the TV's idle board, previewed there) |
@@ -335,7 +337,7 @@ spinner stands in for a button that can't be pressed.
 
 | Wait | What it shows | The way on |
 |---|---|---|
-| Finding games | A spinner in the picker, `JOIN THE HOST'S WI-FI`; after 6 s, why, and the QR code | Scan QR Code, Local Network Settings |
+| Finding the game | Nothing until the player sets out to join. Then the game's line under the PIN once it's found; if Join's been asked for first, the Join button's spinner and `LOOKING FOR THE GAME`; after 6 s with nothing, why, and the QR code | Scan QR Code, Local Network Settings |
 | Joining | The Join button's spinner; after 5 s, *The game didn't answer. Try again.* | Join again |
 | Rejoining | `REJOINING YOUR GAME_` (or *Host unreachable, retrying*) | Start Over |
 | Starting to host | The Start Hosting button's spinner; the reason, if it fails | Start Hosting again |
@@ -348,6 +350,49 @@ background as the app starts — the worn markers first, then the reveal's —
 and kept on the device, so after the first launch each draws as glass from
 its first frame. One shown before its trace is in (the first launch only) is
 drawn glass until then, and cross-fades; text is set as glass at once.
+
+## Big screens
+
+On a phone, every screen is one column, the answers and actions in the
+thumb zone at the bottom. Where there's room for two — regular in both size
+classes (`hasRoomToSpread`): iPad, and iPhone Duo open — each game screen is
+a `Spread`: two halves either side of the window's middle, along its longer
+side, `Space.fold` apart. The first half is what's read; the second, what's
+touched.
+
+| Screen | First half | Second half |
+|---|---|---|
+| Join | The answer set and the wordmark | PIN, nickname, Join, Host a Game |
+| Lobby | You're in, your name | Host and players, the status line |
+| Host's lobby | The join code at its largest: name, QR code and PIN — or its card, where that won't fit | Who's in, Start Game |
+| Question | The clock and the question | The four answers, the status line |
+| Result | The verdict and the points | The answer, total and rank; the next move |
+| Standings | Your position, at full size | The table; the next move |
+| Game over | Where you finished | The podium; the next move |
+| Terms, first run | The terms | Before you play, Agree and Continue |
+| How to Play | The page's picture — practising, the words and the question | The words — practising, the answers; the page's bar |
+
+On iPhone Duo the window's middle is the hinge, whichever way the phone's
+turned — the fold always halves the inner display's longer side — so
+nothing a player reads or taps sits on it. Held open like a book, the halves
+are facing pages. Propped up like a laptop, the first half stands up to be
+read across the table — the question, or the host's join code facing the
+room — and the second lies flat under the hand. Closed, the Duo is a phone,
+and every screen is its column again. The split follows the hinge where
+iOS 27.1 reports it (`reservedRegions(kind: .division)`), and a folded
+hinge's margins widen the gutter past `Space.fold` if they need to.
+Elsewhere — iOS 27.0, iPad — it's the window's middle (`measuresWindow()`),
+not the safe area's, which a vertical toolbar down one side makes
+lopsided. While the join screen's keyboard is up over
+stacked halves, the form takes the screen (`hidesStackedLead`).
+
+Each half centres its content at no more than a phone's column
+(`Size.column`), so a big screen never stretches a card. A bar that would
+run the width of a side-by-side spread keeps to its second half
+(`inSpreadsSecondHalf()`): How to Play's Next. Sheets stay the
+system's, which keep off the fold themselves. `SpreadUITests` checks every
+spread on an iPad in both orientations for anything that crosses the
+middle, with the fold drawn on its screenshots (`-showsFold YES`).
 
 ## Surfaces
 

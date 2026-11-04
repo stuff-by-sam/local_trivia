@@ -9,6 +9,7 @@ struct QuestionView: View {
   @Environment(GameStore.self) private var store
   @Environment(\.dynamicTypeSize) private var typeSize
   @Environment(\.horizontalSizeClass) private var sizeClass
+  @Environment(\.hasRoomToSpread) private var spreads
   @State private var isRunningLow = false
   @State private var isOver = false
   @AccessibilityFocusState private var isQuestionFocused: Bool
@@ -19,43 +20,28 @@ struct QuestionView: View {
   private var question: Question { round.question }
 
   var body: some View {
-    VStack(spacing: Space.m) {
-      clockBar
-
-      if typeSize.isAccessibilitySize {
-        // At accessibility sizes a question and four answers can't share one
-        // screen, and pinning the answers would cut the question off
-        // mid-sentence. Scroll the round as one column instead.
-        ScrollView {
-          VStack(spacing: Space.l) {
-            prompt
+    Group {
+      if spreads {
+        // The question on one half and the answers on the other: on iPhone
+        // Duo propped up like a laptop, the question stands up to be read
+        // and the answers lie under the thumbs, either side of the hinge.
+        Spread {
+          VStack(spacing: Space.m) {
+            clockBar
+            centredPrompt
+          }
+        } trail: {
+          VStack(spacing: Space.m) {
             answers
             status
           }
-        }
-        .scrollBounceBehavior(.basedOnSize)
-      } else if sizeClass == .regular {
-        // iPad: there's no thumb zone to reach for, and pinning the answers to
-        // the bottom of a tall screen strands the question mid-air. Keep the
-        // round together and centred instead.
-        ViewThatFits(in: .vertical) {
-          questionBlock
-            .frame(maxHeight: .infinity)
-          ScrollView { questionBlock }
-            .scrollBounceBehavior(.basedOnSize)
+          .scrollsWhenCrowded()
         }
       } else {
-        // Centred in the space above the answers when it fits; scrollable when
-        // a long question doesn't.
-        ViewThatFits(in: .vertical) {
-          prompt
-            .frame(maxHeight: .infinity)
-          ScrollView { prompt }
-            .scrollBounceBehavior(.basedOnSize)
-            .scrollIndicators(.hidden)
+        VStack(spacing: Space.m) {
+          clockBar
+          column
         }
-        answers
-        status
       }
     }
     .screenPadding()
@@ -68,6 +54,37 @@ struct QuestionView: View {
     .onAppear { isQuestionFocused = true }
   }
 
+  @ViewBuilder
+  private var column: some View {
+    if typeSize.isAccessibilitySize {
+      // At accessibility sizes a question and four answers can't share one
+      // screen, and pinning the answers would cut the question off
+      // mid-sentence. Scroll the round as one column instead.
+      ScrollView {
+        VStack(spacing: Space.l) {
+          prompt
+          answers
+          status
+        }
+      }
+      .scrollBounceBehavior(.basedOnSize)
+    } else if sizeClass == .regular {
+      // A big screen too short to spread: there's no thumb zone to reach
+      // for, and pinning the answers to the bottom strands the question
+      // mid-air. Keep the round together and centred instead.
+      ViewThatFits(in: .vertical) {
+        questionBlock
+          .frame(maxHeight: .infinity)
+        ScrollView { questionBlock }
+          .scrollBounceBehavior(.basedOnSize)
+      }
+    } else {
+      centredPrompt
+      answers
+      status
+    }
+  }
+
   private var questionBlock: some View {
     VStack(spacing: Space.xl) {
       prompt
@@ -75,6 +92,18 @@ struct QuestionView: View {
         answers
         status
       }
+    }
+  }
+
+  /// Centred in the space it has when it fits; scrollable when a long
+  /// question doesn't.
+  private var centredPrompt: some View {
+    ViewThatFits(in: .vertical) {
+      prompt
+        .frame(maxHeight: .infinity)
+      ScrollView { prompt }
+        .scrollBounceBehavior(.basedOnSize)
+        .scrollIndicators(.hidden)
     }
   }
 

@@ -8,7 +8,7 @@ browser clients carry on without it.
 
 ## Build and run
 
-Open `LocalTrivia.xcodeproj` in **Xcode 27** and run the `LocalTrivia` scheme.
+Open `LocalTrivia.xcodeproj` in **Xcode 27.1** (its SDK has iPhone Duo's hinge) and run the `LocalTrivia` scheme.
 To install on a device, set a team under *Signing & Capabilities* first.
 
 Drafting questions runs on the phone's own model. It can use Apple's larger

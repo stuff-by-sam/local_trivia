@@ -13,15 +13,6 @@
     "%@ pts" : {
 
     },
-    "%@ · CONNECTING" : {
-
-    },
-    "%@ · ONLINE" : {
-
-    },
-    "%@ · UNREACHABLE" : {
-
-    },
     "%lld of %lld answered" : {
       "localizations" : {
         "en" : {
@@ -41,6 +32,9 @@
           }
         }
       }
+    },
+    "%lld on this Wi-Fi" : {
+
     },
     "%lld seconds" : {
 
@@ -247,6 +241,9 @@
     "Connect a TV" : {
 
     },
+    "Connecting" : {
+
+    },
     "Cool blue on navy, over a vector display's grid" : {
       "extractionState" : "manual"
     },
@@ -382,9 +379,6 @@
     "Every player goes back to the join screen." : {
 
     },
-    "FOUND ON YOUR WI-FI · ONLINE" : {
-
-    },
     "Final Results" : {
 
     },
@@ -392,6 +386,9 @@
 
     },
     "Five" : {
+
+    },
+    "Found on your Wi-Fi" : {
 
     },
     "Friday Quiz" : {
@@ -426,9 +423,6 @@
       }
     },
     "Games have no accounts and no servers, so content is removed and users are ejected on the spot, by the people in the game: the host removes or blocks a player, and players block a host or another player." : {
-
-    },
-    "Games on your Wi-Fi show up by themselves. Type the four-digit PIN from the host's screen, add your nickname, and you're in. Nothing listed? Scan the host's QR code instead." : {
 
     },
     "Games run on the players' own devices, over the local network. Nothing anyone types is sent to us or to any server, and it's gone when the game ends — except what you choose to send us in a report, which we use only to review it." : {
@@ -506,9 +500,6 @@
     "Iridescent foil that catches the light as you tilt it" : {
       "extractionState" : "manual"
     },
-    "JOIN THE HOST'S WI-FI" : {
-
-    },
     "Join Game" : {
 
     },
@@ -561,7 +552,7 @@
     "Locking in…" : {
 
     },
-    "Looking for games…" : {
+    "Looking for the game" : {
 
     },
     "MATHS" : {
@@ -627,10 +618,7 @@
     "No answer." : {
 
     },
-    "No games on this network yet" : {
-
-    },
-    "No games yet. The host's phone has to be on this Wi-Fi." : {
+    "No game found. The host's phone has to be on this Wi-Fi." : {
 
     },
     "No objectionable content, no abusive players. In a game, the ••• menu reports a question, a player or the game, or blocks the host; touch and hold a name to block that player. Hosts remove or block anyone from Players." : {
@@ -679,10 +667,13 @@
     "OK" : {
 
     },
-    "On This Network" : {
+    "On This Wi-Fi" : {
 
     },
     "On the TV" : {
+
+    },
+    "Online" : {
 
     },
     "Only %lld of %lld passed the checks on this topic. Draft again for more, or try a broader topic." : {
@@ -744,13 +735,16 @@
     "Pick a CSV file to import." : {
 
     },
-    "Pick a theme, answer markers and an app icon in Themes & Icons, all free. See this again any time with How to Play, on the join screen." : {
+    "Pick a theme, answer markers and an app icon, all free, in Settings: the gear on the join screen. How to Play is there too, any time." : {
 
     },
     "Pick another game name" : {
 
     },
     "Pick another name to play under" : {
+
+    },
+    "Pick your game" : {
 
     },
     "Play Again" : {
@@ -829,7 +823,7 @@
     "Rank %lld" : {
       "extractionState" : "manual"
     },
-    "Read them again any time from Safety, on the join screen." : {
+    "Read them again any time in Settings, under Safety." : {
 
     },
     "Reason" : {
@@ -896,7 +890,7 @@
     "Safety" : {
 
     },
-    "Safety, on the join screen" : {
+    "Safety, in Settings" : {
 
     },
     "Sam" : {
@@ -927,6 +921,9 @@
 
     },
     "Send Report" : {
+
+    },
+    "Settings" : {
 
     },
     "Seven" : {
@@ -1164,6 +1161,9 @@
     "Turn on Wi-Fi or Personal Hotspot so others can join" : {
 
     },
+    "Type the four-digit PIN from the host's screen and your nickname, and Trivia finds the game on your Wi-Fi. Can't find it? Scan the host's QR code instead." : {
+
+    },
     "Unblock" : {
 
     },
@@ -1172,6 +1172,9 @@
     },
     "Unranked" : {
       "extractionState" : "manual"
+    },
+    "Unreachable" : {
+
     },
     "Uranus" : {
 

@@ -10,10 +10,10 @@ struct FirstRunView: View {
   var body: some View {
     Group {
       if safety.hasAcceptedTerms {
-        TutorialView(isFirstRun: true)
+        NavigationStack { TutorialView(isFirstRun: true) }
           .transition(.opacity)
       } else {
-        TermsView(isAgreeing: true)
+        NavigationStack { TermsView(isAgreeing: true) }
           .transition(.opacity)
       }
     }

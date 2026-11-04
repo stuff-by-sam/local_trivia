@@ -173,6 +173,20 @@ struct JoinCodeCard: View {
 
 /// The join code at full size, for holding the phone up to the room.
 private struct JoinCodeSheet: View {
+  var body: some View {
+    JoinCodeBoard()
+      .padding(Space.xxl)
+      .frame(maxWidth: .infinity)
+      .scrollsWhenCrowded()
+      .presentationDetents([.large])
+      .presentationDragIndicator(.visible)
+  }
+}
+
+/// The game's name, its QR code and PIN at their largest, and how to use
+/// them: what the room reads. In the host's sheet, and on a big screen's
+/// lobby — standing up to the room on iPhone Duo propped up like a laptop.
+struct JoinCodeBoard: View {
   @Environment(HostController.self) private var host
   @Environment(\.palette) private var palette
 
@@ -191,6 +205,7 @@ private struct JoinCodeSheet: View {
           .textRole(.label)
           .foregroundStyle(.secondary)
         GlassText(verbatim: host.game?.pin ?? "", role: .display(.pinLarge), color: palette.accent, depth: .hero, glow: .hero)
+          .accessibilityLabel(Text("PIN \((host.game?.pin ?? "").map(String.init).joined(separator: " "))"))
       }
       VStack(spacing: Space.xs) {
         Text("Scan with any phone's camera to play in the browser, or open Trivia on the same Wi-Fi.")
@@ -205,11 +220,6 @@ private struct JoinCodeSheet: View {
       }
       .multilineTextAlignment(.center)
     }
-    .padding(Space.xxl)
-    .frame(maxWidth: .infinity)
-    .scrollsWhenCrowded()
-    .presentationDetents([.large])
-    .presentationDragIndicator(.visible)
   }
 }
 

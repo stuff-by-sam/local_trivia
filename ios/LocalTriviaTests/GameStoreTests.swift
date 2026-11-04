@@ -225,6 +225,21 @@ import Testing
     #expect(!store.isRejoining)
   }
 
+  /// Only a seat brings a game back. The last game played, left, isn't one
+  /// to dial at launch: the app opens on nothing, looking for nothing.
+  @Test func opensOnNoGameWithoutASeat() {
+    do {
+      let (first, _) = makeStore()
+      first.connect(to: lan)
+      first.handle(.connected)
+    }
+    let (store, transport) = makeStore()
+    store.start()
+    #expect(store.server == nil)
+    #expect(!store.isRejoining)
+    #expect(transport() == nil, "dialled a game at launch")
+  }
+
   /// The Keychain survives an uninstall; preferences don't. A token without
   /// the server that issued it is a leftover, not a game to rejoin.
   @Test func dropsATokenLeftBehindByAReinstall() {
@@ -602,6 +617,8 @@ import Testing
     do {
       let (first, _) = makeStore()
       first.connect(to: lan)
+      first.handle(.connected)
+      joinedLobby(first)
     }
     let (store, transport) = makeStore()
     store.start()
@@ -640,6 +657,26 @@ import Testing
     #expect(store.server == nil)
     store.discovered([])  // gone
     store.discovered([party])  // hosting again: a new game
+    #expect(store.server == party)
+  }
+
+  /// The browser doesn't look between games, so it may never see an ended
+  /// game's advert go. Once it can't still be lingering, an advert at that
+  /// address is a new game.
+  @Test func takesANewGameWhereOneEndedOnceItsAdvertHasHadTimeToGo() throws {
+    let (store, _) = makeStore()
+    let party = try #require(GameServer(address: "10.0.0.8:3000", name: "FRIDAY QUIZ"))
+    store.discovered([party])
+    store.handle(.connected)
+    joinedLobby(store)
+    deliver(store, #"["kicked",{"code":"HOST_ENDED","message":"THE HOST ENDED THE GAME"}]"#)
+
+    clock.now += GameStore.advertLinger / 2
+    store.discovered([party])
+    #expect(store.server == nil, "still the old game's advert")
+
+    clock.now += GameStore.advertLinger
+    store.discovered([party])
     #expect(store.server == party)
   }
 
