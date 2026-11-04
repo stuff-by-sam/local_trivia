@@ -44,6 +44,12 @@ enum StarterRound: String, CaseIterable, Identifiable {
     }
   }
 
+  /// How many questions it has: read from the app once, not each time a
+  /// list of starters is drawn.
+  var count: Int? { Self.counts[self] ?? nil }
+
+  private static let counts: [StarterRound: Int?] = Dictionary(uniqueKeysWithValues: allCases.map { ($0, $0.questions?.count) })
+
   /// Its questions, read from the app: nil only if the file's missing.
   var questions: [HostQuestion]? {
     guard let url = Bundle.main.url(forResource: rawValue, withExtension: "csv"),

@@ -374,7 +374,7 @@ private enum Own {
 }
 
 #Preview("Honeycomb") {
-  // Every theme and the make-your-own bubble, the one worn lit, as Themes &
+  // Every theme and the make-your-own bubble, the one worn ringed, as Themes &
   // Markers lays them out; scroll to see the edges' lens.
   ScrollView {
     VStack(spacing: Space.xl) {

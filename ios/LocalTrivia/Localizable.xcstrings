@@ -64,6 +64,9 @@
     "A correct answer earns at least" : {
 
     },
+    "A globe, a sailboat, a suitcase and an airplane: for the well-traveled" : {
+      "extractionState" : "manual"
+    },
     "A host can remove or block any player at any time. A blocked player is removed at once, and their phone or browser can't join that host's games again." : {
 
     },
@@ -76,6 +79,9 @@
     "A map, a key, a shield and a flag" : {
       "extractionState" : "manual"
     },
+    "A microbe, a flask, an atom and test tubes, from the science lab" : {
+      "extractionState" : "manual"
+    },
     "A monochrome tube, warm as an old terminal" : {
       "extractionState" : "manual"
     },
@@ -83,6 +89,9 @@
 
     },
     "A present, a balloon, a party popper and a cake" : {
+      "extractionState" : "manual"
+    },
+    "A soccer ball, a hockey puck, a football and a tennis racket" : {
       "extractionState" : "manual"
     },
     "A theme dresses this iPad, any TV it puts the game on, and the browsers in a game it hosts. Touch and hold a theme for more." : {
@@ -502,6 +511,9 @@
     "Enter your name to play" : {
 
     },
+    "Eureka" : {
+      "extractionState" : "manual"
+    },
     "Every answer has a letter, a shape and a color. Right answers score more the faster they come in. Try one:" : {
 
     },
@@ -581,10 +593,16 @@
     "Glass" : {
       "extractionState" : "manual"
     },
+    "Globetrotter" : {
+      "extractionState" : "manual"
+    },
     "Gold" : {
       "extractionState" : "manual"
     },
     "Green" : {
+      "extractionState" : "manual"
+    },
+    "Guitars, a music note, a horn and a microphone" : {
       "extractionState" : "manual"
     },
     "Harassment or bullying" : {
@@ -657,6 +675,9 @@
 
     },
     "Iridescent foil that catches the light as you tilt it" : {
+      "extractionState" : "manual"
+    },
+    "Jam Session" : {
       "extractionState" : "manual"
     },
     "Join Game" : {
@@ -1539,6 +1560,9 @@
     "Using %@" : {
 
     },
+    "Varsity" : {
+      "extractionState" : "manual"
+    },
     "Vector Grid" : {
       "extractionState" : "manual"
     },
@@ -1677,6 +1701,9 @@
 
     },
     "ant" : {
+      "extractionState" : "manual"
+    },
+    "atom" : {
       "extractionState" : "manual"
     },
     "backpack" : {
@@ -2073,6 +2100,9 @@
     "storm cloud" : {
       "extractionState" : "manual"
     },
+    "suitcase" : {
+      "extractionState" : "manual"
+    },
     "sun" : {
       "extractionState" : "manual"
     },
@@ -2106,7 +2136,13 @@
     "tennis ball" : {
       "extractionState" : "manual"
     },
+    "tennis racket" : {
+      "extractionState" : "manual"
+    },
     "tent" : {
+      "extractionState" : "manual"
+    },
+    "test tubes" : {
       "extractionState" : "manual"
     },
     "theater masks" : {

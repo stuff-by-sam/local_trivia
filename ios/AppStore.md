@@ -120,8 +120,8 @@ Claim only what's been tested on a device:
 >
 > MAKE IT YOURS
 > • Fifteen themes, from phosphor green to holographic foil, northern lights
-> and cherry blossom, and eleven sets of answer markers, from card suits to
-> backyard critters.
+> and cherry blossom, and fifteen sets of answer markers, from card suits to
+> backyard critters, globes, guitars and test tubes.
 > • Or make your own: any color over a backdrop or one of your photos, and
 > answer markers from 150 shapes.
 > • All of it free.
@@ -190,8 +190,9 @@ smaller sizes.
 >
 > User-generated content (guideline 1.2): on first launch, the Terms of Use
 > (no tolerance for objectionable content or abusive users) must be agreed
-> before anyone can host or join; they're also under Safety on the join
-> screen. Nicknames, game names and questions are filtered. In a game, the
+> before anyone can host or join; they're also in Settings (the gear on the
+> join screen) under Safety. Nicknames, game names and questions are
+> filtered. In a game, the
 > ••• menu reports the question, a player or the game, and blocks the host;
 > touching and holding a name in the standings reports or blocks that player.
 > The host's Players screen removes or blocks players. Reports and blocks

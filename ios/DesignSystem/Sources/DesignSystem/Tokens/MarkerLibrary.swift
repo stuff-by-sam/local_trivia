@@ -143,6 +143,7 @@ nonisolated public struct MarkerShape: Hashable, Identifiable, Sendable {
     MarkerShape("skateboard.fill", "skateboard", in: .games),
     MarkerShape("surfboard.fill", "surfboard", in: .games),
     MarkerShape("dumbbell.fill", "dumbbell", in: .games),
+    MarkerShape("tennis.racket", "tennis racket", in: .games),
 
     MarkerShape("music.note", "music note", in: .arts),
     MarkerShape("guitars.fill", "guitars", in: .arts),
@@ -160,6 +161,7 @@ nonisolated public struct MarkerShape: Hashable, Identifiable, Sendable {
     MarkerShape("paintpalette.fill", "paint palette", in: .arts),
 
     MarkerShape("airplane", "airplane", in: .travel),
+    MarkerShape("suitcase.rolling.fill", "suitcase", in: .travel),
     MarkerShape("car.fill", "car", in: .travel),
     MarkerShape("bus.fill", "bus", in: .travel),
     MarkerShape("tram.fill", "tram", in: .travel),
@@ -177,6 +179,8 @@ nonisolated public struct MarkerShape: Hashable, Identifiable, Sendable {
     MarkerShape("lightbulb.fill", "light bulb", in: .school),
     MarkerShape("brain.fill", "brain", in: .school),
     MarkerShape("flask.fill", "flask", in: .school),
+    MarkerShape("testtube.2", "test tubes", in: .school),
+    MarkerShape("atom", "atom", in: .school),
     MarkerShape("book.fill", "book", in: .school),
     MarkerShape("books.vertical.fill", "books", in: .school),
     MarkerShape("graduationcap.fill", "graduation cap", in: .school),

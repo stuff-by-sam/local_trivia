@@ -180,3 +180,43 @@ struct LooksTests {
     #expect(symbols.first == "moon.fill")
   }
 }
+
+/// Themes & Markers' comb: every bubble on the lattice, none on another.
+struct HoneycombTests {
+  let comb = Honeycomb(diameter: Size.bubble)
+  let pitch = Size.bubble + Space.m
+
+  /// However many bubbles, and however many fit across, no two sit closer
+  /// than a pitch — none straight under another, where a last row centred
+  /// off the lattice put them — and none hangs off either side.
+  @Test func noBubbleSitsOnAnother() {
+    for across in 2...8 {
+      let width = CGFloat(across) * pitch - Space.m
+      for count in 1...40 {
+        let centres = comb.centres(of: count, width: width)
+        #expect(centres.count == count)
+        var closest = CGFloat.infinity
+        for (index, one) in centres.enumerated() {
+          for other in centres[(index + 1)...] {
+            closest = min(closest, hypot(one.x - other.x, one.y - other.y))
+          }
+        }
+        #expect(closest >= pitch - 0.5, "\(count) bubbles, \(across) across: two are \(closest) apart")
+        let sides = centres.map(\.x)
+        #expect((sides.min() ?? 0) >= Size.bubble / 2 - 0.5 && (sides.max() ?? 0) <= width - Size.bubble / 2 + 0.5, "\(count) bubbles, \(across) across: one hangs off the side")
+      }
+    }
+  }
+
+  /// Fifteen themes and the bubble that makes one — sixteen, and up with a
+  /// few of the player's own — end on a row centred under the rest.
+  @Test func theLastRowIsCentred() {
+    let width = 4 * pitch - Space.m
+    for count in 16...19 {
+      let centres = comb.centres(of: count, width: width)
+      let last = centres.filter { $0.y == centres.last?.y }
+      let middle = last.map(\.x).reduce(0, +) / CGFloat(last.count)
+      #expect(abs(middle - width / 2) < 0.5, "\(count) bubbles: the last row is centred on \(middle), not \(width / 2)")
+    }
+  }
+}

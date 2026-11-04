@@ -101,6 +101,11 @@ nonisolated enum SymbolOutlines {
 
   /// `name`'s outline in a unit square, y down: from the cache, or traced now.
   static func outline(_ name: String) async -> Path? {
+    await outline(name, keeping: true)
+  }
+
+  /// `name`'s outline; `keeping` writes the traces to the device once it's in.
+  private static func outline(_ name: String, keeping: Bool) async -> Path? {
     if let path = cached(name) { return path }
     let task = tracing.withLock { tasks in
       if let task = tasks[name] { return task }
@@ -115,17 +120,26 @@ nonisolated enum SymbolOutlines {
       // an older set over a newer one.
       traced.withLock { all in
         all[name] = path
-        Saved.store(all)
+        if keeping { Saved.store(all) }
       }
     }
     return path
   }
 
-  /// Traces `names` that aren't yet, one after another.
+  /// Traces `names` that aren't yet, one after another, and writes them to
+  /// the device a batch at a time — not the whole set again after every one
+  /// of sixty-odd traces. Then lets go of an older build's.
   static func prepare(_ names: [String]) async {
+    var unsaved = 0
     for name in names where cached(name) == nil {
-      _ = await outline(name)
+      if await outline(name, keeping: false) != nil { unsaved += 1 }
+      if unsaved == 16 {
+        traced.withLock { Saved.store($0) }
+        unsaved = 0
+      }
     }
+    if unsaved > 0 { traced.withLock { Saved.store($0) } }
+    Saved.sweep()
   }
 
   private static func trace(_ name: String) -> Path? {
@@ -195,6 +209,17 @@ nonisolated enum SymbolOutlines {
     static func store(_ outlines: [String: Path]) {
       guard let url, let data = try? PropertyListEncoder().encode(outlines.mapValues(\.description)) else { return }
       try? data.write(to: url, options: .atomic)
+    }
+
+    /// Removes the traces an earlier OS or app build kept: no build reads
+    /// another's, and each update would leave one more behind.
+    static func sweep() {
+      guard let url else { return }
+      let folder = url.deletingLastPathComponent()
+      let files = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? []
+      for file in files where file.lastPathComponent.hasPrefix("GlassOutlines-") && file.lastPathComponent != url.lastPathComponent {
+        try? FileManager.default.removeItem(at: file)
+      }
     }
   }
 }

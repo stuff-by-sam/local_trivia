@@ -271,7 +271,8 @@ private struct SafetyPicture: View {
 }
 
 /// A few of the choices, as Themes & Markers lays them out — what you wear
-/// lit — and the bubble that makes your own.
+/// ringed — and the bubble that makes your own: seven, so the comb is a full
+/// row of four over a row of three.
 private struct LooksPicture: View {
   @Environment(\.theme) private var theme
   @Environment(\.answerMarkers) private var markers
@@ -282,7 +283,7 @@ private struct LooksPicture: View {
   }
 
   private var sets: [AnswerMarkers] {
-    Array(([markers] + [AnswerMarkers.critters, .party, .classic].filter { $0.id != markers.id }).prefix(3))
+    Array(([markers] + [AnswerMarkers.critters, .party, .classic].filter { $0.id != markers.id }).prefix(2))
   }
 
   var body: some View {

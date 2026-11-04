@@ -6,8 +6,11 @@ import SwiftUI
 ///
 /// As many fit in a long row as the width allows, at least two, so a wider
 /// screen — an iPad, a bigger text size's bigger bubbles — gets longer or
-/// shorter rows, never a scrolling one. Rows are centred, and read first to
-/// last, row by row.
+/// shorter rows, never a scrolling one. Every bubble keeps to the comb's
+/// lattice, the last row's too, so none ever sits straight under another: a
+/// last row that isn't full is centred on the lattice, and the comb starts
+/// with its short row when that's what centres it. Rows read first to last,
+/// row by row.
 public struct Honeycomb: Layout {
   let diameter: CGFloat
   let spacing: CGFloat
@@ -27,39 +30,74 @@ public struct Honeycomb: Layout {
     max(2, Int((width + spacing) / pitch))
   }
 
-  /// How many go in each row, for `count` bubbles in rows of `long` and
-  /// `long - 1`.
-  private func rows(of count: Int, long: Int) -> [Int] {
-    var rows: [Int] = []
-    var left = count
-    while left > 0 {
-      let row = min(left, rows.count.isMultiple(of: 2) ? long : long - 1)
-      rows.append(row)
-      left -= row
+  /// A row of the comb: how many bubbles it holds, whether it's a long one,
+  /// and how many of its places it leaves empty before them.
+  private struct Row {
+    let count: Int
+    let isLong: Bool
+    let lead: Int
+  }
+
+  /// The rows, for `count` bubbles in rows of `long` and `long - 1`.
+  ///
+  /// A last row that isn't full can only be centred on the lattice when its
+  /// empty places split evenly either side of it; centred off it, its
+  /// bubbles would sit straight under the row above's and run into them. So
+  /// the comb starts on a long row, or on a short one when that centres the
+  /// last row instead — 17 bubbles four wide go 3, 4, 3, 4, 3 — and if
+  /// neither does, the last row keeps to the lattice half a place off centre.
+  private func rows(of count: Int, long: Int) -> [Row] {
+    func comb(startingLong: Bool) -> [Row] {
+      var rows: [Row] = []
+      var left = count
+      var isLong = startingLong
+      while left > 0 {
+        let places = isLong ? long : long - 1
+        let row = min(left, places)
+        rows.append(Row(count: row, isLong: isLong, lead: (places - row) / 2))
+        left -= row
+        isLong.toggle()
+      }
+      return rows
     }
-    return rows
+    func isCentred(_ rows: [Row]) -> Bool {
+      guard let last = rows.last else { return true }
+      return ((last.isLong ? long : long - 1) - last.count).isMultiple(of: 2)
+    }
+    let fromLong = comb(startingLong: true)
+    if isCentred(fromLong) { return fromLong }
+    let fromShort = comb(startingLong: false)
+    return isCentred(fromShort) ? fromShort : fromLong
   }
 
   public func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-    let width = proposal.width ?? CGFloat(4) * pitch - spacing
+    // Four across when asked its ideal size — or its largest, which a stack
+    // asks for and no row count can be made of.
+    let width = proposal.width.flatMap { $0.isFinite ? $0 : nil } ?? CGFloat(4) * pitch - spacing
     let rows = rows(of: subviews.count, long: longRow(in: width))
     guard !rows.isEmpty else { return CGSize(width: width, height: 0) }
     return CGSize(width: width, height: diameter + CGFloat(rows.count - 1) * rowPitch)
   }
 
   public func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-    let rows = rows(of: subviews.count, long: longRow(in: bounds.width))
-    var index = subviews.startIndex
-    for (row, count) in rows.enumerated() {
-      let width = CGFloat(count) * pitch - spacing
-      let y = bounds.minY + diameter / 2 + CGFloat(row) * rowPitch
-      for column in 0..<count {
-        let x = bounds.midX - width / 2 + diameter / 2 + CGFloat(column) * pitch
-        subviews[index].place(
-          at: CGPoint(x: x, y: y), anchor: .center,
-          proposal: ProposedViewSize(width: diameter, height: diameter))
-        index = subviews.index(after: index)
-      }
+    for (subview, centre) in zip(subviews, centres(of: subviews.count, width: bounds.width)) {
+      subview.place(
+        at: CGPoint(x: bounds.minX + centre.x, y: bounds.minY + centre.y), anchor: .center,
+        proposal: ProposedViewSize(width: diameter, height: diameter))
+    }
+  }
+
+  /// Where `count` bubbles' centres go in a comb `width` wide, measured from
+  /// its top left, first to last.
+  public func centres(of count: Int, width: CGFloat) -> [CGPoint] {
+    let long = longRow(in: width)
+    // The lattice, centred: where a long row's first bubble sits. A short
+    // row's places are half a pitch in from a long row's.
+    let first = width / 2 - (CGFloat(long) * pitch - spacing) / 2 + diameter / 2
+    return rows(of: count, long: long).enumerated().flatMap { number, row in
+      let y = diameter / 2 + CGFloat(number) * rowPitch
+      let start = first + (row.isLong ? 0 : pitch / 2) + CGFloat(row.lead) * pitch
+      return (0..<row.count).map { CGPoint(x: start + CGFloat($0) * pitch, y: y) }
     }
   }
 }
@@ -122,8 +160,10 @@ extension ButtonStyle where Self == BubbleButtonStyle {
   public static var bubble: BubbleButtonStyle { BubbleButtonStyle() }
 }
 
-/// A theme as a bubble in the honeycomb: its own backdrop, held still, and
-/// its cursor in glass. Lit when it's the one being worn.
+/// A theme as a bubble in the honeycomb: a lens on its own backdrop, held
+/// still, lit from within by its accent, with its cursor in glass — so a
+/// page of them reads as the themes' colours at a glance. Ringed when it's
+/// the one being worn.
 public struct ThemeBubble: View {
   let theme: Theme
   let isWorn: Bool
@@ -137,12 +177,21 @@ public struct ThemeBubble: View {
 
   public var body: some View {
     // The wordmark's block, at the bubble's size: as tall as a capital.
-    let block = Lettering("", size: diameter / 3.2, weight: .heavy, tracking: 0).cursor
+    let block = Lettering("", size: diameter / 2.7, weight: .heavy, tracking: 0).cursor
     Backdrop(mood: .idle)
       // Held still, and its photo read small: a page of bubbles all
       // following the phone would keep the glass over them busy for nothing.
       .environment(\.backdropFollowsTilt, false)
       .environment(\.backdropIsMiniature, true)
+      // The accent pooled behind the cursor, as the wordmark's bloom pools
+      // behind its letters: a dark texture at this size is all ink, and
+      // this is what tells one theme from the next.
+      .overlay {
+        RadialGradient(
+          colors: [theme.accent.opacity(0.6), theme.accent.opacity(0.22), theme.accent.opacity(0)],
+          center: .center, startRadius: 0, endRadius: diameter * 0.46)
+      }
+      .overlay { LensShade(diameter: diameter) }
       .overlay {
         GlassCharacter(shape: RoundedRectangle(cornerRadius: block.width / 24), color: theme.accent, depth: .mark)
           .frame(width: block.width, height: block.height)
@@ -150,7 +199,7 @@ public struct ThemeBubble: View {
       .theme(theme)
       .frame(width: diameter, height: diameter)
       .clipShape(.circle)
-      .overlay { Circle().strokeBorder(.panelStroke, lineWidth: 1) }
+      .glassRim(in: Circle())
       // The backdrop takes no touches of its own: the whole disc does.
       .contentShape(.circle)
       .worn(isWorn, in: theme.accent, diameter: diameter)
@@ -158,7 +207,7 @@ public struct ThemeBubble: View {
 }
 
 /// A set of answer markers as a bubble: its four shapes, two by two, in the
-/// answers' colours, in glass on a disc of glass. Lit when it's in use.
+/// answers' colours, in glass on a lens of glass. Ringed when it's in use.
 public struct MarkerBubble: View {
   let markers: AnswerMarkers
   let isWorn: Bool
@@ -173,7 +222,7 @@ public struct MarkerBubble: View {
   }
 
   public var body: some View {
-    Grid(horizontalSpacing: diameter * 0.05, verticalSpacing: diameter * 0.05) {
+    Grid(horizontalSpacing: diameter * 0.035, verticalSpacing: diameter * 0.035) {
       GridRow {
         glyph(.a)
         glyph(.b)
@@ -183,19 +232,23 @@ public struct MarkerBubble: View {
         glyph(.d)
       }
     }
-    .font(.system(size: diameter / 5, weight: .bold))
+    .font(.system(size: diameter / 4.6, weight: .bold))
     .frame(width: diameter, height: diameter)
+    // Under the shapes, over the glass: the lens's edge in shadow.
+    .background { LensShade(diameter: diameter) }
     .glassCard(in: .circle)
+    .glassRim(in: Circle())
     .contentShape(.circle)
     .environment(\.answerMarkers, markers)
     .worn(isWorn, in: palette.accent, diameter: diameter)
   }
 
-  /// Each in a cell of its own, scaled to fit it, as a swatch draws them.
+  /// Each in a cell of its own, scaled to fit it, as a swatch draws them —
+  /// as big as four can be and still clear the disc's edge.
   private func glyph(_ style: AnswerStyle) -> some View {
     AnswerGlyph(style: style, fitsFrame: true)
-      .frame(width: diameter * 0.25, height: diameter * 0.25)
-      .frame(width: diameter * 0.29, height: diameter * 0.29)
+      .frame(width: diameter * 0.27, height: diameter * 0.27)
+      .frame(width: diameter * 0.31, height: diameter * 0.31)
   }
 }
 
@@ -210,6 +263,7 @@ public struct MakeBubble: View {
   public var body: some View {
     AccentPlus(diameter: diameter)
       .frame(width: diameter, height: diameter)
+      .background { LensShade(diameter: diameter) }
       .glassCard(in: .circle)
       .contentShape(.circle)
       .overlay {
@@ -231,18 +285,43 @@ private struct AccentPlus: View {
   }
 }
 
+/// Where a bubble's edge falls into shadow, as a lens's does: what makes a
+/// flat disc read as one you could pick up.
+private struct LensShade: View {
+  let diameter: CGFloat
+
+  var body: some View {
+    RadialGradient(
+      colors: [.clear, .black.opacity(0.5)],
+      center: .center, startRadius: diameter * 0.3, endRadius: diameter * 0.5
+    )
+    .clipShape(.circle)
+    .allowsHitTesting(false)
+  }
+}
+
 extension View {
-  /// The worn bubble's ring, a little out from its edge, and a check badge
-  /// on its shoulder — the check because the ring alone is colour, and the
-  /// ring because the badge alone is small.
+  /// The worn bubble: drawn in from its edge, with a ring in the gap, and a
+  /// check badge on its shoulder — the check because the ring alone is
+  /// colour, and the ring because the badge alone is small. All of it
+  /// inside the bubble's own room, so a worn bubble never crowds the ones
+  /// beside it, however tight the comb (the tutorial's, the editor's).
   fileprivate func worn(_ isWorn: Bool, in color: Color, diameter: CGFloat) -> some View {
+    // The ring and the air inside it, in step with the bubble's size.
+    let ring = Size.bubbleRing * diameter / Size.bubble
+    let drawnIn = 1 - 4 * ring / diameter
     let badge = diameter * 0.32
     return
       self
+      // Drawn in, but laid out and touched as the whole bubble.
+      .visualEffect { content, _ in content.scaleEffect(isWorn ? drawnIn : 1) }
+      // The ring and the badge take touches like the rest of the bubble:
+      // made untouchable, they left the worn bubble with no menu to touch
+      // and hold for (LooksUITests).
       .overlay {
         Circle()
-          .strokeBorder(color, lineWidth: Size.bubbleRing)
-          .padding(-(Size.bubbleRing + Space.xs))
+          .strokeBorder(color, lineWidth: ring)
+          .scaleEffect(isWorn ? 1 : drawnIn)
           .opacity(isWorn ? 1 : 0)
       }
       .overlay(alignment: .bottomTrailing) {
@@ -251,8 +330,7 @@ extension View {
           .foregroundStyle(.onAccent)
           .frame(width: badge, height: badge)
           .background(color, in: .circle)
-          .overlay { Circle().strokeBorder(.ink, lineWidth: Size.bubbleRing / 2) }
-          .offset(x: Space.xs, y: Space.xs)
+          .overlay { Circle().strokeBorder(.ink, lineWidth: ring / 2) }
           .scaleEffect(isWorn ? 1 : 0.4)
           .opacity(isWorn ? 1 : 0)
       }

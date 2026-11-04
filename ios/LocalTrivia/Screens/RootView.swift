@@ -13,7 +13,16 @@ struct RootView: View {
   @Environment(\.scenePhase) private var scenePhase
   @Environment(\.hasRoomToSpread) private var spreads
   @AppStorage(TutorialPage.seenKey) private var hasSeenTutorial = false
+  /// A round that arrived before the first run was over — AirDropped to a
+  /// phone that's only just installed the app — taken in once it is.
+  @State private var waitingRound: SavedRound?
   @Namespace private var glass
+
+  /// Whether the terms are agreed to and How to Play is over: until then the
+  /// first run covers everything, and nothing opens under it.
+  private var isFirstRunOver: Bool {
+    safety.hasAcceptedTerms && hasSeenTutorial
+  }
 
   var body: some View {
     @Bindable var host = host
@@ -36,7 +45,9 @@ struct RootView: View {
     // Over whatever's on screen: a block can end the game under it.
     .reportSheet(Binding { safety.report } set: { safety.report = $0 })
     // Nobody hosts or joins before agreeing to the terms; then how to play.
-    .fullScreenCover(isPresented: Binding { !safety.hasAcceptedTerms || !hasSeenTutorial } set: { _ in }) {
+    // A round that arrived under it opens once it's gone — not as it goes,
+    // when Host a Game couldn't come up over it.
+    .fullScreenCover(isPresented: Binding { !isFirstRunOver } set: { _ in }, onDismiss: takeWaitingRound) {
       FirstRunView()
     }
     .motion(.screen, value: store.phase.screen)
@@ -73,10 +84,16 @@ struct RootView: View {
     }
     // A host's QR code, scanned with the Camera: straight into their game.
     .onOpenURL { url in
-      // A round, sent from another phone or opened from Files.
+      // A round, sent from another phone or opened from Files. Read now,
+      // while iOS still holds the file for the app; taken in once nothing
+      // covers the screen.
       if url.isFileURL {
-        guard safety.hasAcceptedTerms, let round = SavedRound.received(from: url) else { return }
-        host.receive(round, duringGame: store.isInGame)
+        guard let round = SavedRound.received(from: url) else { return }
+        if isFirstRunOver {
+          host.receive(round, duringGame: store.isInGame)
+        } else {
+          waitingRound = round
+        }
         return
       }
       guard safety.hasAcceptedTerms, let link = JoinLink(url: url), !host.isHosting, !store.isInGame || store.server == link.server
@@ -98,6 +115,13 @@ struct RootView: View {
     // Where a spread finds the middle of the window — on iPhone Duo, the
     // hinge. Outermost, so the first run's cover and every sheet know it too.
     .measuresWindow()
+  }
+
+  /// Takes in the round that arrived during the first run, if one did.
+  private func takeWaitingRound() {
+    guard isFirstRunOver, let round = waitingRound else { return }
+    waitingRound = nil
+    host.receive(round, duringGame: store.isInGame)
   }
 
   /// What the browser's found, for the store to pick a game from — only while

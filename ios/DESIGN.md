@@ -75,7 +75,7 @@ from the asset catalog's `AccentColor`.)
 | `ink` | theme ink (Phosphor `#04080A`) | same | the ground under everything |
 | `primary` / `secondary` text | system `.primary` / `.secondary` | system (raised) | content / labels. **`.tertiary` is never used for text a player needs.** |
 | `panel` | white 4 % | white 10 % | a drawn fill, where glass can't go |
-| `panelStroke` | white 12 % | white 40 % | a card's edge under Increase Contrast; swatch and bubble borders |
+| `panelStroke` | white 12 % | white 40 % | a card's edge under Increase Contrast; swatch borders |
 | `hairline` | white 8 % | white 30 % | row dividers |
 | `slot` | white 14 % | white 40 % | an empty PIN cell's underscore |
 | `success` | `#56FF8A` | same | correct, online — always with ✓ or a dot and a word |
@@ -92,7 +92,8 @@ now gold, silver, bronze, so "third place" no longer reads as "B".)
 **The shapes** beside the letters are the phone's `AnswerMarkers`: Classic's
 circle, triangle, square and diamond (the web game's), or another set the player picks —
 Suits, Elements, Sky, Critters, Smarts, Game Night, Party, Showtime, Quest,
-Backyard — or one they make, from four of the 150-odd shapes in
+Backyard, and four for trivia's big categories, Globetrotter, Jam Session,
+Varsity and Eureka — or one they make, from four of the 150-odd shapes in
 `MarkerShape.library`. A set dresses its phone and the TV that phone
 drives, and nothing else; the web game keeps Classic. Every built-in set's four shapes
 differ in silhouette, not just colour, and have their own names for VoiceOver;
@@ -324,9 +325,10 @@ look-alikes, in app icons or logos, so its shapes are its own drawings.
 Choosing a look is a page of Settings, laid out the way watchOS lays out its
 apps: round bubbles packed in a honeycomb (`Honeycomb`), a whole set of
 choices taken in at a glance, each one tried on with a tap. The worn bubble
-has a ring a little out from its edge and a check badge on its shoulder —
-the check because the ring alone is colour, the ring because the badge alone
-is small.
+draws in from its edge, with a ring in the gap and a check badge on its
+shoulder — the check because the ring alone is colour, the ring because the
+badge alone is small — all inside its own room, so it never crowds a
+neighbour, however tight the comb.
 
 - **What's on stays said in words.** The top of the page is the join screen
   in miniature — the answer set over the wordmark — with the theme's name
@@ -341,6 +343,15 @@ is small.
 - **Sizes.** `Size.bubble` (76 pt) grows with Dynamic Type, to 1.8× at most,
   so a row always holds two; rows hold as many as fit, so an iPad gets longer
   ones. The editors' choices are `Size.swatch` bubbles in the same honeycomb.
+- **Every bubble on the lattice.** A last row that isn't full is centred on
+  the comb's lattice, never off it, where its bubbles would sit straight
+  under the row above's; the comb starts on its short row when that's what
+  centres the last one (17 bubbles four wide: 3, 4, 3, 4, 3).
+- **Lenses.** Every bubble's edge falls into shadow and its rim catches the
+  light (`glassRim`), so a disc reads as one you could pick up. A theme
+  bubble is lit from within by its accent, pooled behind its cursor as the
+  wordmark's bloom is, so a page of them reads as the themes' colours; a
+  markers bubble's four shapes are as big as they can be and clear its edge.
 - **Bubbles hold still.** A theme bubble is its theme's own backdrop, never
   following the tilt, with a photo decoded small (`backdropIsMiniature`).
 - **Make your own.** The last bubble, a dashed accent ring around a glass
@@ -390,8 +401,8 @@ touches the network.
 | `NameChips` (`FlowLayout`) | names, the viewer's own (accent glass), a long name wrapping; read as one list |
 | `UndoToast` (`.undoToast`) | shown, counting down, undone |
 | `ThemeSwatch`, `MarkerSwatch` | every theme (held still, whether or not it follows the tilt) and marker set, a theme of the player's own and one over a photo; shown |
-| `Honeycomb`, `.fisheye(band:)` | rows long and short, each bubble in the hollow of two above; bubbles full size at rest and shrinking toward the scroll view's edges (still under Reduce Motion); AX5 |
-| `ThemeBubble`, `MarkerBubble`, `MakeBubble`, `.bubble` button style | worn (ring and check badge), not; the player's own; pressed; AX5 |
+| `Honeycomb`, `.fisheye(band:)` | rows long and short, each bubble in the hollow of two above, a last row that isn't full centred on the lattice; bubbles full size at rest and shrinking toward the scroll view's edges (still under Reduce Motion); AX5 |
+| `ThemeBubble`, `MarkerBubble`, `MakeBubble`, `.bubble` button style | worn (drawn in, ring and check badge), not; the player's own; pressed; AX5 |
 | `Backdrop` | moods idle/question/correct/wrong/missed/celebrate × 15 textures × RT/IC/RM; the scenes at rest and quietened |
 | Empty / loading / error | `ContentUnavailableView`, `StatusLine`, `FieldMessage` |
 
