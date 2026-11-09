@@ -68,6 +68,52 @@ struct PerformanceTests {
     Attachment.record("QR render — before, per call: \(before); now, first: \(cold); now, again: \(warm)", named: "qr-timings.txt")
   }
 
+  /// Host a Game asks what's in play every time it's drawn — at every
+  /// keystroke of the game's name — and each asking used to read every
+  /// question in the round against the word filter again, four times over.
+  /// Now a text's verdict is remembered, and what's in play is worked out
+  /// when the round changes.
+  @Test func readsARoundAgainstTheFilterOnce() {
+    // Words no other test has asked about, so the first reading is a real one.
+    let letters = Array("jqvxz")
+    func word(_ number: Int) -> String {
+      var number = number
+      var word = ""
+      repeat {
+        word.append(letters[number % letters.count])
+        number /= letters.count
+      } while number > 0
+      return word
+    }
+    let run = String((0..<12).map { _ in letters.randomElement()! })
+    let round = (0..<60).map { number in
+      HostQuestion(
+        text: "Which \(run) \(word(number)) is the largest of them all?",
+        options: ["The \(word(number)) one", "The \(word(number + 1000)) one", "The \(word(number + 2000)) one", "The \(word(number + 3000)) one"],
+        correct: 0, category: run.uppercased())
+    }
+    let clock = ContinuousClock()
+
+    // How it was: every question read, each time it's asked.
+    var inPlay = 0
+    let reading = clock.measure { inPlay = round.count(where: \.isPlayable) }
+    #expect(inPlay == round.count)
+    // Read once already: asking again is looking up what was found.
+    let asking = (0..<5).map { _ in clock.measure { inPlay = round.count(where: \.isPlayable) } }.min() ?? reading
+    #expect(inPlay == round.count)
+    #expect(asking * 5 < reading, "a second asking reads nothing again")
+
+    // And the round keeps the answer, so the screen doesn't ask at all.
+    let library = HostLibrary(fileURL: nil)
+    library.questions = round
+    let kept = (0..<5).map { _ in clock.measure { inPlay = library.playable.count } }.min() ?? reading
+    #expect(inPlay == round.count)
+    #expect(kept * 5 < reading)
+    Attachment.record(
+      "\(round.count) questions in play — read against the filter: \(reading); asked again: \(asking); kept by the round: \(kept)",
+      named: "filter-timings.txt")
+  }
+
   private static func renderAsBefore(_ text: String) -> UIImage? {
     let filter = CIFilter.qrCodeGenerator()
     filter.message = Data(text.utf8)

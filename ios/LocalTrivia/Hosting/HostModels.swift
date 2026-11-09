@@ -126,7 +126,12 @@ nonisolated struct SavedRound: Codable, Identifiable, Hashable, Sendable {
 final class HostLibrary {
   var gameName: String { didSet { save() } }
   /// The round being played.
-  var questions: [HostQuestion] { didSet { save() } }
+  var questions: [HostQuestion] {
+    didSet {
+      playable = questions.filter(\.isPlayable)
+      save()
+    }
+  }
   /// What the host calls the round being played.
   var roundName: String { didSet { save() } }
   var rules: HostRules { didSet { save() } }
@@ -134,8 +139,10 @@ final class HostLibrary {
   private(set) var shelf: [SavedRound] { didSet { save() } }
   private(set) var roundID: UUID { didSet { save() } }
 
-  /// What a game started now would play, in order.
-  var playable: [HostQuestion] { questions.filter(\.isPlayable) }
+  /// What a game started now would play, in order. Worked out when the round
+  /// changes, not each time it's asked for: Host a Game asks four times
+  /// every time it's drawn, and it's drawn at every keystroke of a name.
+  private(set) var playable: [HostQuestion]
 
   static let defaultName = "Trivia Night"
   /// The default from when names were upper-cased. A round saved with it
@@ -184,7 +191,9 @@ final class HostLibrary {
     } else {
       gameName = Self.defaultName
     }
-    questions = stored?.questions ?? []
+    let round = stored?.questions ?? []
+    questions = round
+    playable = round.filter(\.isPlayable)
     rules = stored?.rules.clamped() ?? HostRules()
     roundName = stored?.roundName ?? String(localized: "My Round")
     roundID = stored?.roundID ?? UUID()

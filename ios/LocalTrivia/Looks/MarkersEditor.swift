@@ -129,7 +129,9 @@ struct MarkersEditor: View {
   // MARK: - The library
 
   private var library: some View {
-    VStack(alignment: .leading, spacing: Space.l) {
+    // Worked out once a drawing: a search reads every shape's name.
+    let shelves = shelves
+    return VStack(alignment: .leading, spacing: Space.l) {
       if shelves.isEmpty {
         ContentUnavailableView.search(text: search)
       }

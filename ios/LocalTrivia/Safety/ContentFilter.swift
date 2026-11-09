@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 
 /// Keeps objectionable words out of a game: profanity, slurs and sexual
 /// terms in what people type for each other to see. App Review's guideline
@@ -21,8 +22,15 @@ import Foundation
 /// (`HostedGame`), questions before they play (`HostQuestion.problem`) — and
 /// a player's phone masks anything that still arrives (`GameStore`), from a
 /// host this app isn't running on.
+///
+/// A text reads the same way every time, so its verdict is worked out once
+/// and remembered (`Verdicts`). The screens ask over and over — the join
+/// screen about the nickname, Host a Game about the names and every
+/// question on show, each time they're drawn, which is every keystroke —
+/// and reading a question and its answers against the lists takes about a
+/// tenth of a millisecond.
 nonisolated enum ContentFilter {
-  enum Context: Sendable {
+  enum Context: Hashable, Sendable {
     /// A nickname or a game name.
     case name
     /// A question, its answers or its category.
@@ -31,14 +39,51 @@ nonisolated enum ContentFilter {
 
   /// No objectionable word in `text`.
   static func allows(_ text: String, as context: Context) -> Bool {
+    let asked = Verdicts.Asked(text: text, context: context)
+    if let verdict = verdicts.withLock({ $0.reached[asked] }) { return verdict }
+    let verdict = reads(text, as: context)
+    verdicts.withLock { $0.remember(verdict, for: asked) }
+    return verdict
+  }
+
+  /// `text` read against the lists: no objectionable word in it.
+  private static func reads(_ text: String, as context: Context) -> Bool {
     !words(in: text).contains { isObjectionable($0.token, as: context) }
       && !(context == .name && squeezedIsObjectionable(text))
   }
+
+  /// The verdicts reached so far. Kept behind a lock: a host's phone asks
+  /// from the main actor, and drafting and the game browser from off it.
+  private struct Verdicts {
+    struct Asked: Hashable {
+      let text: String
+      let context: Context
+    }
+
+    var reached: [Asked: Bool] = [:]
+
+    mutating func remember(_ verdict: Bool, for asked: Asked) {
+      // Typing leaves a verdict behind for every keystroke. Starting over
+      // now and then costs one more reading of what's on screen; keeping
+      // them all would cost memory for good.
+      if reached.count >= ContentFilter.remembered { reached.removeAll(keepingCapacity: true) }
+      reached[asked] = verdict
+    }
+  }
+
+  /// How many verdicts are kept before it starts over: several long rounds'
+  /// worth of questions and answers, in a few hundred kilobytes at most.
+  static let remembered = 8192
+
+  private static let verdicts = Mutex(Verdicts())
 
   /// `text` with every objectionable word starred out, letter for letter:
   /// "What the ****?". A name that's only objectionable squeezed is starred
   /// out whole.
   static func masked(_ text: String, as context: Context) -> String {
+    // Nearly everything is allowed, and what's allowed is left as it is:
+    // a room's standings are its names again after every question.
+    guard !allows(text, as: context) else { return text }
     if context == .name, squeezedIsObjectionable(text) {
       return String(text.map { $0.isWhitespace ? $0 : "*" })
     }

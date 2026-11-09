@@ -151,6 +151,68 @@ import Testing
     #expect(reopened(savedAs: "PUB QUIZ") == "PUB QUIZ")
     #expect(reopened(savedAs: "Friday quiz") == "Friday quiz")
   }
+
+  /// What's in play is worked out when the round changes, not each time
+  /// it's asked for — so it has to follow every way a round changes.
+  @Test func keepsWhatsInPlayInStepWithTheRound() throws {
+    let library = HostLibrary(fileURL: nil)
+    #expect(library.playable.isEmpty)
+
+    let moons = HostQuestion(text: "Which planet has the most moons?", options: ["Jupiter", "Saturn", "Uranus", "Neptune"], correct: 1)
+    var ocean = HostQuestion(text: "Which is the largest ocean?", options: ["Atlantic", "Pacific", "Indian", "Arctic"], correct: 1)
+    library.upsert(moons)
+    library.upsert(ocean)
+    #expect(library.playable.map(\.id) == [moons.id, ocean.id])
+
+    // Left out, unfinished, and holding a word that isn't allowed.
+    ocean.isIncluded = false
+    library.upsert(ocean)
+    #expect(library.playable.map(\.id) == [moons.id])
+    ocean.isIncluded = true
+    ocean.correct = -1
+    library.upsert(ocean)
+    #expect(library.playable.map(\.id) == [moons.id])
+    ocean.correct = 1
+    ocean.options[3] = "fuck"
+    library.upsert(ocean)
+    #expect(library.playable.map(\.id) == [moons.id])
+    ocean.options[3] = "Arctic"
+    library.upsert(ocean)
+    #expect(library.playable.map(\.id) == [moons.id, ocean.id])
+
+    library.move(from: IndexSet(integer: 1), to: 0)
+    #expect(library.playable.map(\.id) == [ocean.id, moons.id])
+    let removed = library.delete(at: IndexSet(integer: 0))
+    #expect(library.playable.map(\.id) == [moons.id])
+    library.reinsert(removed)
+    #expect(library.playable.map(\.id) == [ocean.id, moons.id])
+    library.importCSV("question,a,b,c,d,correct\nWhat is 2 + 2?,3,4,5,6,B\n")
+    #expect(library.playable.count == 3)
+
+    // Another round, and back to this one.
+    library.startRound(named: "Empty")
+    #expect(library.playable.isEmpty)
+    library.open(try #require(library.shelf.first).id)
+    #expect(library.playable.count == 3)
+  }
+
+  /// A round read back from the phone knows what's in play from the start.
+  @Test func knowsWhatsInPlayInARoundItReadsBack() {
+    let url = URL.temporaryDirectory.appending(path: "round-\(UUID().uuidString).json")
+    defer { try? FileManager.default.removeItem(at: url) }
+    let saving = HostLibrary(fileURL: url) { data, url in try data.write(to: url) }
+    var leftOut = HostQuestion(text: "Which is the largest ocean?", options: ["Atlantic", "Pacific", "Indian", "Arctic"], correct: 1)
+    leftOut.isIncluded = false
+    saving.questions = [
+      HostQuestion(text: "Which planet has the most moons?", options: ["Jupiter", "Saturn", "Uranus", "Neptune"], correct: 1),
+      leftOut,
+    ]
+    saving.flush(waiting: true)
+
+    let reopened = HostLibrary(fileURL: url) { _, _ in }
+    #expect(reopened.questions.count == 2)
+    #expect(reopened.playable.map(\.text) == ["Which planet has the most moons?"])
+  }
 }
 
 // MARK: - Engine

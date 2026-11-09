@@ -70,6 +70,32 @@ import Testing
     #expect(shown.standings.map(\.nickname) == ["Ada", "****"])
   }
 
+  /// A verdict is remembered for a text and what it's read as: the same
+  /// words pass as a question and not as a name, whichever is asked first,
+  /// and however often.
+  @Test func remembersAVerdictForEachWayOfReading() {
+    for _ in 0..<3 {
+      #expect(ContentFilter.allows("Moby-Dick", as: .question))
+      #expect(!ContentFilter.allows("Moby-Dick", as: .name))
+      #expect(ContentFilter.masked("Moby-Dick", as: .name) == "Moby-****")
+      #expect(ContentFilter.masked("Moby-Dick", as: .question) == "Moby-Dick")
+    }
+  }
+
+  /// Past as many verdicts as it keeps, it starts over, and reads as it did.
+  @Test func startsOverWhenItHasRememberedEnough() {
+    #expect(!ContentFilter.allows("What the fuck?", as: .question))
+    #expect(ContentFilter.allows("Who wrote Moby-Dick?", as: .question))
+    // More texts than it keeps, each with nothing in it to read — one
+    // private-use character — so asking is all this takes time for.
+    for number in 0...ContentFilter.remembered {
+      guard let character = UnicodeScalar(0xF0000 + number) else { continue }
+      #expect(ContentFilter.allows(String(character), as: .question))
+    }
+    #expect(!ContentFilter.allows("What the fuck?", as: .question))
+    #expect(ContentFilter.allows("Who wrote Moby-Dick?", as: .question))
+  }
+
   @Test func keepsObjectionableQuestionsOutOfPlay() {
     let clean = HostQuestion(text: "Which planet has the most moons?", options: ["Jupiter", "Saturn", "Uranus", "Neptune"], correct: 1)
     #expect(clean.isPlayable)
