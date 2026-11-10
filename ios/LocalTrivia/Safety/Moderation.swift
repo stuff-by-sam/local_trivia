@@ -176,6 +176,8 @@ private struct PlayerReportList: View {
   @State private var report: Report?
 
   var body: some View {
+    // Worked out once a drawing: it compares every name with every other.
+    let names = names
     NavigationStack {
       List {
         ForEach(names, id: \.self) { name in
